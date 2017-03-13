@@ -4,13 +4,14 @@ cd /d "D:\projects\embed_python\build"
 
 REM Build x86
 cl /Zl /MT /EHsc^
-    ..\src\embed.c ..\src\python_api.c^
+    ..\src\embed.cpp ..\src\python_api.cpp ..\src\tools\shader.cpp^
     /Fe:embed_x86.exe^
     /I"D:/libraries/glew-2.0.0/include"^
     /I"D:/libraries/glfw-3.2.1.bin.WIN32/include"^
     /I"D:\libraries\graphene-shared-x86\include"^
     /I"D:\libraries\graphene-shared-x86\lib\graphene-1.0\include"^
     /I"D:/python36/include/"^
+    /I"D:\libraries\glm"^
     /I"../src/"^
     /link^
     D:\python36\libs\python36.lib^
@@ -28,3 +29,5 @@ if errorlevel 1 (
    echo x86 Build Failed, Reason Given is %errorlevel%
    exit /b %errorlevel%
 )
+
+copy D:\libraries\graphene-shared-x86\bin\graphene-1.0-0.dll .\
