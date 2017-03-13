@@ -8,10 +8,9 @@ cl /Zl /MT /EHsc^
     /Fe:embed_x86.exe^
     /I"D:/libraries/glew-2.0.0/include"^
     /I"D:/libraries/glfw-3.2.1.bin.WIN32/include"^
-    /I"D:\libraries\graphene-shared-x86\include"^
-    /I"D:\libraries\graphene-shared-x86\lib\graphene-1.0\include"^
-    /I"D:/python36/include/"^
-    /I"D:\libraries\glm"^
+    /I"D:/python36/include"^
+    /I"D:/libraries/glm"^
+    /I"D:/libraries/soil/include"^
     /I"../src/"^
     /link^
     D:\python36\libs\python36.lib^
@@ -23,11 +22,9 @@ cl /Zl /MT /EHsc^
     shell32.lib^
     D:\libraries\glfw-3.2.1.bin.WIN32\lib-vc2015\glfw3.lib^
     D:\libraries\glew-2.0.0\lib\Release\Win32\glew32s.lib^
-    D:\libraries\graphene-shared-x86\lib\graphene-1.0.lib
+    D:\libraries\soil\lib\SOIL.lib
 echo ---------------------------------------------------------------------------
 if errorlevel 1 (
    echo x86 Build Failed, Reason Given is %errorlevel%
    exit /b %errorlevel%
 )
-
-copy D:\libraries\graphene-shared-x86\bin\graphene-1.0-0.dll .\

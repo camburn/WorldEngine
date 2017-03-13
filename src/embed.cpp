@@ -8,17 +8,21 @@ Python function calls that can be called from C.
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "python_api.hpp"
-#include "tools/shader.hpp"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <SOIL.h>
+
+#include "python_api.hpp"
+#include "tools/shader.hpp"
+#include "graphics/cube.hpp"
 
 GLFWwindow* window;
 int width = 1024;
 int height = 768;
 
 int main(int argc, char *argv[]) {
+
+    #pragma region "Python Code"
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
@@ -66,6 +70,7 @@ int main(int argc, char *argv[]) {
         "print('Result: {}'.format(emb.testfunction(2, 2, 2)))\n"
         "emb.stringfunc('A test c print')\n"
     );
+    #pragma endregion
 
     // OPENGL STUFF
     if (!glfwInit()) {
@@ -95,10 +100,13 @@ int main(int argc, char *argv[]) {
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-    // GL stuff
+    // ==== OPENGL START ====
+    //
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
     glUseProgram(programID);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     // Set up Cameras
     glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
@@ -117,33 +125,51 @@ int main(int argc, char *argv[]) {
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    // Create our Triangles data
-    static const GLfloat g_vertex_buffer_data[] = {
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-    };
     // Buffer data to VBO
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_data), cube_data, GL_STATIC_DRAW);
+    // Specify the vertex position attributes
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    // Specify the vertex color attributes
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    // Specify the vertex texture coordinate attributes
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+
     glBindVertexArray(0);
     glDisableVertexAttribArray(0);
 
+    //Load Textures
+    int tex_w, tex_h;
+    unsigned char* image = SOIL_load_image("./assets/textures/container.jpg", &tex_w, &tex_h, 0, SOIL_LOAD_RGB);
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_w, tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
-    do {
-        // Main Loop
+    do {    
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // Load camera to OpenGL
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         // Drawing tasks
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VertexArrayID);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
