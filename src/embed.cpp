@@ -4,97 +4,19 @@ It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
 #include <Python.h>
-#include "python_api.h"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <graphene/graphene.h>
+#include "python_api.hpp"
+#include "tools/shader.hpp"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 GLFWwindow* window;
-
-
-char* loadFile(const char* filepath) {
-    /*
-    Wrapper around a python call.
-    There must be a nice way to make this generic, will think about this later
-    */
-    PyObject *pName, *pModule, *pFunc;
-    PyObject *pArgs, *pValue;
-    char* contents;
-
-    pName = PyUnicode_FromString("console.utils");
-    pModule = PyImport_Import(pName);
-    if (pModule != NULL) {
-        pFunc = PyObject_GetAttrString(pModule, "load_file");
-        if (pFunc && PyCallable_Check(pFunc)) {
-            pArgs = PyTuple_Pack(1, Py_BuildValue("s", filepath));
-            pValue = PyObject_CallObject(pFunc, pArgs);
-            // This converts our python return object to something C understands
-            contents = PyBytes_AsString(PyUnicode_AsASCIIString(pValue));
-            Py_DECREF(pArgs);
-            Py_DECREF(pValue);
-        } else {
-            PyErr_Print();
-            fprintf(stderr, "Failed to find function - %s", "load_file");
-            return NULL;            
-        }
-    } else {
-        PyErr_Print();
-        fprintf(stderr, "Failed to load module - %s", "console.utils");
-        return NULL;
-    }
-    Py_DECREF(pModule);
-    Py_DECREF(pFunc);
-    return contents;
-}
-
-GLuint LoadShader(const char* file_path, GLuint ShaderID) {   
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
-
-    char* vertex_src = loadFile(file_path);
-    fprintf(stdout, "Got Shader Source\n\n%s\n\n", vertex_src);
-    // Compile the Shader
-    fprintf(stdout, "Compiling Shader: %s\n", file_path);
-    glShaderSource(ShaderID, 1, &vertex_src, NULL);
-    glCompileShader(ShaderID);
-    // Check result
-    glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        char* ShaderErrorMessage = (char *)malloc(InfoLogLength);
-        glGetShaderInfoLog(ShaderID, InfoLogLength, NULL, ShaderErrorMessage);
-        fprintf(stderr, "Shader Compile Failed:\n %s\n", ShaderErrorMessage);
-        free(ShaderErrorMessage);
-    }
-    return ShaderID;
-}
-
-GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_path) {
-    GLuint vertexShaderID = LoadShader(vertex_file_path, glCreateShader(GL_VERTEX_SHADER));
-    GLuint fragmentShaderID = LoadShader(fragment_file_path, glCreateShader(GL_FRAGMENT_SHADER));
-    GLuint programID = glCreateProgram();
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
-    fprintf(stdout, "Linking shaders to program\n");
-    glAttachShader(programID, vertexShaderID);
-    glAttachShader(programID, fragmentShaderID);
-    glLinkProgram(programID);
-
-    glGetProgramiv(programID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        char* ProgramErrorMessage = (char *)malloc(InfoLogLength);
-        glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
-        fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
-        free(ProgramErrorMessage);
-    }
-    glDetachShader(programID, vertexShaderID);
-    glDetachShader(programID, fragmentShaderID);
-    glDeleteShader(vertexShaderID);
-    glDeleteShader(fragmentShaderID);
-    return programID;
-}
+int width = 1024;
+int height = 768;
 
 int main(int argc, char *argv[]) {
     // Python stuff below
@@ -158,7 +80,7 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Disable legacy OpenGL
 
     //Create window
-    window = glfwCreateWindow(1024, 768, "Embedded Python", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Embedded Python", NULL, NULL);
     if(window == NULL) {
         fprintf(stderr, "Failed to open GLFW window\n");
         glfwTerminate();
@@ -177,6 +99,19 @@ int main(int argc, char *argv[]) {
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
     glUseProgram(programID);
+
+    // Set up Cameras
+    glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    glm::mat4 View = glm::lookAt(
+        glm::vec3(4, 3, 3),
+        glm::vec3(0, 0, 0),
+        glm::vec3(0, 1, 0)
+    );
+    glm::mat4 Model = glm::mat4(1.0f);
+    glm::mat4 mvp = Projection * View * Model;
+
+    GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+
     // Create our VAO
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -204,7 +139,8 @@ int main(int argc, char *argv[]) {
     do {
         // Main Loop
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        // Load camera to OpenGL
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         // Drawing tasks
         glBindVertexArray(VertexArrayID);
         glDrawArrays(GL_TRIANGLES, 0, 3);
