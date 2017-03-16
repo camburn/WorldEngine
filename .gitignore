@@ -4,4 +4,9 @@ settings.json
 *.pyc
 __pycache__
 .vscode
+.vs
 assets
+Debug
+Release
+*.sln
+*.vcxproj*
