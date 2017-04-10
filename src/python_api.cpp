@@ -34,7 +34,7 @@ static PyModuleDef EmbModule = {
     NULL, NULL, NULL, NULL
 };
 
-PyObject*
+PyObject* 
 PyInit_emb(void) {
     return PyModule_Create(&EmbModule);
 }
