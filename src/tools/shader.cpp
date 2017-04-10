@@ -1,4 +1,4 @@
-#include "shader.hpp"
+#include "graphics/shader.hpp"
 
 char* loadFile(const char* filepath) {
     /*

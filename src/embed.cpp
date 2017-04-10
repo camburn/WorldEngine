@@ -3,19 +3,23 @@ This is an example C application that has an embedded python interpreter.
 It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
-#include <Python.h>
 
+#include <Python.h>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SOIL.h>
+#include <imgui.h>
+#include "graphics/imgui_impl_glfw_gl3.h"
 
 #include "python_api.hpp"
-#include "tools/shader.hpp"
+#include "graphics/shader.hpp"
 #include "graphics/cube.hpp"
 #include "graphics/mesh.hpp"
+#include "graphics/console.hpp"
+//#include "graphics/text.hpp"
 
 GLFWwindow* window;
 int width = 1024;
@@ -103,13 +107,18 @@ int main(int argc, char *argv[]) {
 
     // ==== OPENGL START ====
     //
+	
+	// ------------ Graphics Engine ---------------
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
 	GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
 										   "./src/shaders/simple_fragment_shader.glsl");
     glUseProgram(programID);
+	//glEnable(GL_CULL_FACE); // FIX YA NORMALS!
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+
+	glViewport(0, 0, width, height);
 
 	// Mesh Objects
 	GLuint CubeMesh = BufferMeshDataVNT(cube_data_normal, sizeof(cube_data_normal));
@@ -172,17 +181,24 @@ int main(int argc, char *argv[]) {
 	GLint lightColorLoc = glGetUniformLocation(programID, "lightColor");
 	GLint lightPosLoc = glGetUniformLocation(programID, "lightPos");
 	GLint viewPosLoc = glGetUniformLocation(programID, "viewPos");
-	
-	
+
+	ImGui_ImplGlfwGL3_Init(window, true);
+	ImGuiIO& io = ImGui::GetIO();
+	//io.Fonts->AddFontDefault();
+	io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
+	bool show_test_window = true;
+	bool show_another_window = false;
+	ImVec4 clear_color = ImColor(114, 144, 154);
 
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
+		glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		for (int i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
 			if (drawObjects[i].name == "Light1") {
-				float x = glm::sin(glfwGetTime()) * 3;
+				float x = (float)glm::sin(glfwGetTime()) * 3;
 				lightPos.x = x;
 				drawObjects[i].pos.x = x;
 			}
@@ -212,12 +228,49 @@ int main(int argc, char *argv[]) {
 			glBindVertexArray(0);
 		}
 
+		ImGui_ImplGlfwGL3_NewFrame();
+		/*
+		// 1. Show a simple window
+		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+		{
+			static float f = 0.0f;
+			ImGui::Text("Hello, world!");
+			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+			ImGui::ColorEdit3("clear color", (float*)&clear_color);
+			if (ImGui::Button("Test Window")) show_test_window ^= 1;
+			if (ImGui::Button("Another Window")) show_another_window ^= 1;
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		}
+
+		// 2. Show another simple window, this time using an explicit Begin/End pair
+		if (show_another_window)
+		{
+			ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+			ImGui::Begin("Another Window", &show_another_window);
+			ImGui::Text("Hello");
+			ImGui::End();
+		}
+
+		// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+		if (show_test_window)
+		{
+			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+			ImGui::ShowTestWindow(&show_test_window);
+		}
+		*/
+		static bool p_open = true;
+		ShowExampleAppConsole(&p_open);
+		//static ExampleAppConsole console;
+		//console.Draw("Example: Console", p_open);
+
+		ImGui::Render();
         glfwSwapBuffers(window);
-        glfwPollEvents();
+        
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);
 
+	ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
     // END OPENGL STUFF
 
