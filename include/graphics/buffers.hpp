@@ -1,8 +1,8 @@
 /*
 This is for the management of meshes
 */
-#ifndef MESH_INCLUDED
-#define MESH_INCLUDED
+#ifndef BUFFERS_INCLUDED
+#define BUFFERS_INCLUDED
 #define GLEW_STATIC
 #include <stdio.h>
 #include <GL/glew.h>

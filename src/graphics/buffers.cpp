@@ -1,4 +1,4 @@
-#include "graphics/mesh.hpp"
+#include "graphics/buffers.hpp"
 
 GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size) {
 	// Create our VAO

@@ -17,7 +17,7 @@ Python function calls that can be called from C.
 #include "python_api.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/cube.hpp"
-#include "graphics/mesh.hpp"
+#include "graphics/buffers.hpp"
 #include "graphics/console.hpp"
 //#include "graphics/text.hpp"
 

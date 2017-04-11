@@ -8,7 +8,7 @@ const char *GetSP() {
 }
 
 void ConsoleInit() {
-    PyObject *pName, *pyModule, *pFunc;
+    PyObject *pName, *pyModule;
     pName = PyUnicode_FromString("console.console");
     pyModule = PyImport_Import(pName);
     PyObject *console = PyObject_GetAttrString(pyModule, "Console");
