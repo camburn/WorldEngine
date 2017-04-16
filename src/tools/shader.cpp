@@ -1,17 +1,26 @@
 #include "graphics/shader.hpp"
 
+PyObject *pModule;
+
+void unload_shaders() {
+    Py_DECREF(pModule);
+}
+
 char* loadFile(const char* filepath) {
     /*
     Wrapper around a python call.
     There must be a nice way to make this generic, will think about this later.
     TODO - This doesn't belong in our shader tools
     */
-    PyObject *pName, *pModule, *pFunc;
+    PyObject *pName, *pFunc;
     PyObject *pArgs, *pValue;
     char* contents;
 
-    pName = PyUnicode_FromString("console.utils");
-    pModule = PyImport_Import(pName);
+    if (!pModule) {
+        pName = PyUnicode_FromString("console.utils");
+        pModule = PyImport_Import(pName);
+    }
+
     if (pModule != NULL) {
         pFunc = PyObject_GetAttrString(pModule, "load_file");
         if (pFunc && PyCallable_Check(pFunc)) {
@@ -31,7 +40,7 @@ char* loadFile(const char* filepath) {
         fprintf(stderr, "Failed to load module - %s", "console.utils");
         return NULL;
     }
-    Py_DECREF(pModule);
+
     Py_DECREF(pFunc);
     return contents;
 }

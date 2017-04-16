@@ -1,10 +1,14 @@
 /*
-This is for the management of meshes
+This is for the management of buffers to OpenGL
+It manages data into OpenGL buffers and prepares it for drawing.
 */
 #ifndef BUFFERS_INCLUDED
 #define BUFFERS_INCLUDED
 #define GLEW_STATIC
+#include <string>
+using namespace std;
 #include <stdio.h>
+#include <SOIL.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -18,5 +22,6 @@ GLuint - VAO ID
 */
 GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataVT(GLfloat *mesh_data, int size);
+GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 
 #endif

@@ -6,11 +6,15 @@ in vec3 FragPos; // In world space
 
 out vec4 color;
 
-uniform sampler2D ourTexture;
+uniform sampler2D texture_diffuse1;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+
+uniform bool debug_draw_texcoords = false;
+uniform bool debug_draw_normals = false;
+uniform bool debug_disable_lighting = false;
 
 void main(){
 	float ambientStrength = 0.2f;
@@ -31,5 +35,15 @@ void main(){
 	vec3 specular = specularStrength * spec * lightColor;  
 
 	vec3 light_final = (ambientStrength  + diffuse + specular) * lightColor;
-	color = (texture(ourTexture, TexCoord) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
+	color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
+
+    if (debug_disable_lighting) {
+        color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0));
+    }
+    if (debug_draw_texcoords) {
+        color = vec4(TexCoord, 0.0f, 1.0f);
+    }
+    if (debug_draw_normals) {
+        color = vec4(Normal, 1.0f);
+    }
 }
