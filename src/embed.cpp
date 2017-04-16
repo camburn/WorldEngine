@@ -17,16 +17,67 @@ Python function calls that can be called from C.
 #include "python_api.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/cube.hpp"
-#include "graphics/mesh.hpp"
+#include "graphics/buffers.hpp"
 #include "graphics/console.hpp"
+#include "graphics/model.hpp"
 //#include "graphics/text.hpp"
 
 GLFWwindow* window;
 int width = 1024;
 int height = 768;
+bool debug_draw_normals = false;
+bool debug_draw_texcoords = false;
+bool debug_disable_lighting = false;
+
+void disable_debugs() {
+    debug_draw_normals = false;
+    debug_draw_texcoords = false;
+    debug_disable_lighting = false;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    // Key checking
+    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+        printf("Toggling Draw Normals - ");
+        if (debug_draw_normals) {
+            printf("Off\n");
+            disable_debugs();
+        }
+        else {
+            printf("On\n");
+            disable_debugs();
+            debug_draw_normals = true;
+        }
+    }
+    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+        printf("Toggling Draw Texure Coordinates - ");
+        if (debug_draw_texcoords) {
+            printf("Off\n");
+            disable_debugs();
+        }
+        else {
+            printf("On\n");
+            disable_debugs();
+            debug_draw_texcoords = true;
+        }
+    }
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        printf("Toggling Draw Lighting - ");
+        if (debug_disable_lighting) {
+            printf("On\n");
+            disable_debugs();
+        }
+        else {
+            printf("Off\n");
+            disable_debugs();
+            debug_disable_lighting = true;
+        }
+    }
+
+}
 
 int main(int argc, char *argv[]) {
-
+    
     #pragma region "Python Code"
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
@@ -70,13 +121,15 @@ int main(int argc, char *argv[]) {
         "the_time = time()\n"
         "print(f'Time is {the_time}')\n"
     );
+    /*
     PyRun_SimpleString(
         "import emb\n"
         "print('Result: {}'.format(emb.testfunction(2, 2, 2)))\n"
         "emb.stringfunc('A test c print')\n"
     );
+    */
     #pragma endregion
-
+    
     // OPENGL STUFF
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialise GLFW\n");
@@ -125,21 +178,7 @@ int main(int argc, char *argv[]) {
 	GLuint LightMesh = BufferMeshDataVT(cube_data, sizeof(cube_data));
 
     // Load Textures
-    int tex_w, tex_h;
-    unsigned char* image = SOIL_load_image("./assets/textures/container.jpg", &tex_w, &tex_h, 0, SOIL_LOAD_RGB);
-
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_w, tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    SOIL_free_image_data(image);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    GLuint texture = BufferTextureDataFromFile("container.jpg");
 
 	struct DrawObject {
 		GLuint mesh_id;
@@ -162,8 +201,8 @@ int main(int argc, char *argv[]) {
 		glm::vec3(0, 0, 0), // Look At
 		glm::vec3(0, 1, 0)  // Up
 	);
-	glm::mat4 Model = glm::mat4(1.0f);
-	glm::mat4 mvp = Projection * View * Model;
+	glm::mat4 model_mat = glm::mat4(1.0f);
+	glm::mat4 mvp = Projection * View * model_mat;
 
 
 	// Create our Objects
@@ -173,6 +212,14 @@ int main(int argc, char *argv[]) {
 		{ CubeMesh, texture, glm::vec3(1, 2, 2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
 		{ LightMesh, NULL, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
 	};
+
+    Model tester = Model("./assets/meshes/", "nanosuit.obj");
+    glm::mat4 tester_model = glm::mat4(1.0f);
+    tester_model = glm::translate(tester_model, glm::vec3(2, 0, -4));
+    //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
+    tester_model = glm::scale(tester_model, glm::vec3(0.2, 0.2, 0.2));
+    glm::mat4 tester_mvp = Projection * View * tester_model;
+    glm::mat3 tester_normalMat = (glm::mat3)glm::transpose(glm::inverse(tester_model));
 
 	GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
 	GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
@@ -190,12 +237,34 @@ int main(int argc, char *argv[]) {
 	bool show_another_window = false;
 	ImVec4 clear_color = ImColor(114, 144, 154);
 
+    // Register Key callbacks
+    // FIXME: this appears to break my console
+    glfwSetKeyCallback(window, key_callback);
+
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
+
 		glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"), 
+            debug_draw_normals);
+        glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
+            debug_draw_texcoords);
+        glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
+            debug_disable_lighting);
 		
+        glUseProgram(programID);
+        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &tester_mvp[0][0]);
+        glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &tester_model[0][0]);
+        glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &tester_normalMat[0][0]);
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
+        glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
+        tester.Draw(programID);
+
 		for (int i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
 			if (drawObjects[i].name == "Light1") {
 				float x = (float)glm::sin(glfwGetTime()) * 3;
@@ -214,8 +283,15 @@ int main(int argc, char *argv[]) {
 			glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
 			glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
+            
 			if (drawObjects[i].program == programID) {
-				glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+                glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
+                    debug_draw_normals);
+                glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
+                    debug_draw_texcoords);
+                glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
+                    debug_disable_lighting);
+				glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
 				glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
 				glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 				glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
@@ -273,6 +349,8 @@ int main(int argc, char *argv[]) {
 	ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
     // END OPENGL STUFF
+
+    unload_shaders();
 
     if (Py_FinalizeEx() < 0) {
         exit(120);

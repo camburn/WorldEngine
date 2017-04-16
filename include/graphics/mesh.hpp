@@ -1,22 +1,41 @@
 /*
-This is for the management of meshes
+This is the mesh class for creation and storage of meshes
 */
-#ifndef MESH_INCLUDED
-#define MESH_INCLUDED
+#pragma once
+
 #define GLEW_STATIC
+#include <vector>
+#include <string>
+#include <sstream>
+using namespace std;
 #include <stdio.h>
+#include <assimp/scene.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-/*
-Takes packed data in the form of:
-vertex_x, vertex_y, vertex_z, color_r, color_g, color_b, texcoord_u, texcoord_v
-and buffers it to the GPU for render
+struct Vertex {
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoord;
+};
 
-Returns:
-GLuint - VAO ID
-*/
-GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size);
-GLuint BufferMeshDataVT(GLfloat *mesh_data, int size);
+struct Texture {
+    GLuint id;
+    string type;
+    aiString path;
+};
 
-#endif
+class Mesh {
+public:
+    vector<Vertex> vertices;
+    vector<GLuint> indices;
+    vector<Texture> textures;
+
+    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures);
+    void Draw(GLuint shader);
+private:
+    GLuint VAO, VBO, EBO;
+    void setupMesh();
+};

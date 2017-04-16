@@ -1,55 +1,94 @@
 #include "graphics/mesh.hpp"
 
-GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size) {
-	// Create our VAO
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
+// FIXME: This has gone full c++ we might want to convert this to C
 
-	// Buffer data to VBO
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, size, mesh_data, GL_STATIC_DRAW);
-	// Specify the vertex position attributes
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-	// Specify the vertex normal attributes
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	// Specify the vertex texture coordinate attributes
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+/*
+A mesh should have the following
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDisableVertexAttribArray(0); 
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-	return VertexArrayID;
+vertex data
+normal data
+texture coordinate data
+index data
+
+Associated with a mesh are:
+
+textures: one to many
+ - diffuse map
+ - bump map
+ - specular map
+ - et cetera 
+
+A mesh also has a material (per mesh) that has the following attributes:
+ - diffuse (a flat color)
+ - specular
+ - shininess
+*/
+
+Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures) {
+    this->vertices = vertices;
+    this->indices = indices;
+    this->textures = textures;
+    this->setupMesh();
 }
 
-GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
-	// Create our VAO
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
+void Mesh::setupMesh() {
+    glGenVertexArrays(1, &this->VAO);
+    glGenBuffers(1, &this->VBO);
+    glGenBuffers(1, &this->EBO);
 
-	// Buffer data to VBO
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, size, mesh_data, GL_STATIC_DRAW);
-	// Specify the vertex position attributes
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-	// Specify the vertex texture coordinate attributes
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glBindVertexArray(this->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex),
+        &this->vertices[0], GL_STATIC_DRAW);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	return VertexArrayID;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint),
+        &this->indices[0], GL_STATIC_DRAW);
+
+    //Define our data for OpenGL
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+        (GLvoid*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+        (GLvoid*)offsetof(Vertex, Normal));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+        (GLvoid*)offsetof(Vertex, TexCoord));
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Mesh::Draw(GLuint shader) {
+    GLuint diffuseNr = 1;
+    GLuint specularNr = 1;
+    for (GLuint i = 0; i < this->textures.size(); i++) {
+        // Each bound texture requires its own texture unit
+        glActiveTexture(GL_TEXTURE0 + i); // Activate the correct texture unit
+        
+        stringstream ss;
+        string number;
+        string name = this->textures[i].type;
+        if (name == "texture_diffuse") {
+            ss << diffuseNr++;
+        }
+        else if (name == "texture_specular") {
+            ss << specularNr++;
+        }
+        number = ss.str();
+        GLuint tex_loc = glGetUniformLocation(shader, (name + number).c_str());
+        if (tex_loc != -1) {
+            glUniform1f(glGetUniformLocation(shader, (name + number).c_str()), (GLfloat)i);
+            glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
+        }
+    }
+    glActiveTexture(GL_TEXTURE0);
+    //Draw the mesh
+    glBindVertexArray(this->VAO);
+    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
