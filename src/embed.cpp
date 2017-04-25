@@ -277,9 +277,9 @@ int main(int argc, char *argv[]) {
 
 	// Create our Objects
 	DrawObject drawObjects[] = {
-		{ CubeMesh, texture, glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
-		{ CubeMesh, texture, glm::vec3(2, 1, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
-		{ CubeMesh, texture, glm::vec3(1, 2, 2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
+		{ CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
+		{ CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
+		{ CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
 		{ LightMesh, NULL, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
 	};
 
