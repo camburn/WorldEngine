@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     Py_SetProgramName(program);
-    PyImport_AppendInittab("emb", &PyInit_emb);
+    PyImport_AppendInittab("pyengine", &PyInit_PyEngine);
     Py_Initialize();
     PyRun_SimpleString(
         "import sys\n"
@@ -368,6 +368,11 @@ int main(int argc, char *argv[]) {
 			if (drawObjects[i].tex_id != NULL) {
 				glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
 			}
+            if (drawObjects[i].program == simple_program) {
+                glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), true);
+                glUniform3f(glGetUniformLocation(simple_program, "uniform_color"),
+                    1.0f, 1.0f, 1.0f);
+            }
 			glBindVertexArray(drawObjects[i].mesh_id);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0);
