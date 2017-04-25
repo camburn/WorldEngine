@@ -1,8 +1,8 @@
 
-# Embedded Python Example
+# PyEngine
 
-This is an example of an embedded python interpreter within a C program.
+Welcome to the world of the PyEngine! A C++ OpenGL engine written with an embedded Python
+interpreter. 
 
-It demonstrates created the interpreter then defining an extension module
-within C that can be imported and ran from Python. It also has an example of a
-Python module that is imported and called from within the C program.
+The goals of this is to be able to dynamically manage your engine with powerful Python commands.
+It also enables game logic to the written in Python.
