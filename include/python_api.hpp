@@ -4,7 +4,8 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include "graphics\debug.hpp"
 
-PyObject* PyInit_emb(void);
+PyObject* PyInit_PyEngine(void);
 
 #endif

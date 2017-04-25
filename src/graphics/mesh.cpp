@@ -82,7 +82,7 @@ void Mesh::Draw(GLuint shader) {
         number = ss.str();
         GLuint tex_loc = glGetUniformLocation(shader, (name + number).c_str());
         if (tex_loc != -1) {
-            glUniform1f(glGetUniformLocation(shader, (name + number).c_str()), (GLfloat)i);
+            glUniform1i(tex_loc, i);
             glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
         }
     }

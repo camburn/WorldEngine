@@ -30,4 +30,5 @@ class Console(code.InteractiveConsole):
             return '... ', ''
         buf = self.stdout_buffer.getvalue()
         self.reset_stdout_buffer()
+        print('Returning',  buf)
         return '>>> ', buf

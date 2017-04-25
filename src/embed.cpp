@@ -20,6 +20,7 @@ Python function calls that can be called from C.
 #include "graphics/buffers.hpp"
 #include "graphics/console.hpp"
 #include "graphics/model.hpp"
+#include "graphics/debug.hpp"
 //#include "graphics/text.hpp"
 
 GLFWwindow* window;
@@ -76,6 +77,60 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 }
 
+void APIENTRY glDebugOutput(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam)
+{
+    // ignore non-significant error/warning codes
+    // Message 131184 displays Buffer memory info,
+    // TODO: Load this data into a debug message window
+    if (id == 131184) return;
+
+    if (id == 131185) return; // This details VBO allocations (and size)
+    if (id == 131204) return; // Texture state usage warning: Texture 0 is base level inconsistent. Check texture size.
+    // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    std::cout << "---------------" << std::endl;
+    std::cout << "Debug message (" << id << "): " << message << std::endl;
+
+    switch (source)
+    {
+    case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
+    case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
+    case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+    } std::cout << std::endl;
+
+    switch (type)
+    {
+    case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
+    case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
+    case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
+    case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
+    case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
+    case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+    } std::cout << std::endl;
+
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
+    case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
+    case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+    } std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "---------------" << std::endl;
+}
+
 int main(int argc, char *argv[]) {
     
     #pragma region "Python Code"
@@ -89,7 +144,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     Py_SetProgramName(program);
-    PyImport_AppendInittab("emb", &PyInit_emb);
+    PyImport_AppendInittab("pyengine", &PyInit_PyEngine);
     Py_Initialize();
     PyRun_SimpleString(
         "import sys\n"
@@ -141,6 +196,10 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Disable legacy OpenGL
+   
+    //Debugging 
+    printf("DEBUGGING ON");
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
     //Create window
     window = glfwCreateWindow(width, height, "Embedded Python", NULL, NULL);
@@ -162,10 +221,21 @@ int main(int argc, char *argv[]) {
     //
 	
 	// ------------ Graphics Engine ---------------
+    // Turn on Debug callbacks, this should be disabled for RELEASE
+    GLint flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+    {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(glDebugOutput, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
 	GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
 										   "./src/shaders/simple_fragment_shader.glsl");
+    DebugInit();
     glUseProgram(programID);
 	//glEnable(GL_CULL_FACE); // FIX YA NORMALS!
     glEnable(GL_DEPTH_TEST);
@@ -207,9 +277,9 @@ int main(int argc, char *argv[]) {
 
 	// Create our Objects
 	DrawObject drawObjects[] = {
-		{ CubeMesh, texture, glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
-		{ CubeMesh, texture, glm::vec3(2, 1, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
-		{ CubeMesh, texture, glm::vec3(1, 2, 2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
+		{ CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
+		{ CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
+		{ CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
 		{ LightMesh, NULL, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
 	};
 
@@ -239,7 +309,7 @@ int main(int argc, char *argv[]) {
 
     // Register Key callbacks
     // FIXME: this appears to break my console
-    glfwSetKeyCallback(window, key_callback);
+    //glfwSetKeyCallback(window, key_callback);
 
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
@@ -247,15 +317,14 @@ int main(int argc, char *argv[]) {
 
 		glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
+        glUseProgram(programID);
         glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"), 
             debug_draw_normals);
         glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
             debug_draw_texcoords);
         glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
             debug_disable_lighting);
-		
-        glUseProgram(programID);
         glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &tester_mvp[0][0]);
         glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &tester_model[0][0]);
         glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &tester_normalMat[0][0]);
@@ -266,7 +335,7 @@ int main(int argc, char *argv[]) {
         tester.Draw(programID);
 
 		for (int i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
-			if (drawObjects[i].name == "Light1") {
+			if (strcmp("Light1", drawObjects[i].name) == 0) {
 				float x = (float)glm::sin(glfwGetTime()) * 3;
 				lightPos.x = x;
 				drawObjects[i].pos.x = x;
@@ -281,10 +350,10 @@ int main(int argc, char *argv[]) {
 			glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
 			// Load camera to OpenGL
 			glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
-			glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
-			glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
-            
+           
 			if (drawObjects[i].program == programID) {
+                glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
+                glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
                 glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
                     debug_draw_normals);
                 glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
@@ -299,10 +368,17 @@ int main(int argc, char *argv[]) {
 			if (drawObjects[i].tex_id != NULL) {
 				glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
 			}
+            if (drawObjects[i].program == simple_program) {
+                glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), true);
+                glUniform3f(glGetUniformLocation(simple_program, "uniform_color"),
+                    1.0f, 1.0f, 1.0f);
+            }
 			glBindVertexArray(drawObjects[i].mesh_id);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 			glBindVertexArray(0);
 		}
+
+        DebugDraw(Projection, View);
 
 		ImGui_ImplGlfwGL3_NewFrame();
 		/*
