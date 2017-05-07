@@ -42,6 +42,7 @@ void BufferData() {
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
 }
 

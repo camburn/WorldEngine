@@ -131,6 +131,35 @@ void APIENTRY glDebugOutput(GLenum source,
     std::cout << "---------------" << std::endl;
 }
 
+// Test mouse controls
+int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
+int arcball_on = false;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if ()
+}
+
+glm::vec3 get_arcball_vector(int x, int y) {
+    /* Get a normalized vector form the center of the virtual ball 0 to a 
+    point P on the virtual ball surface, such that P is aligned on 
+    screen's (X, Y) coordinates. If (X, Y) is too far from the 
+    sphere, return the neareset point on the virtual ball surface.*/
+    glm::vec3 P = glm::vec3(
+        1.0 * x / width * 2 - 1.0,
+        1.0 * y / height * 2 - 1.0, 
+        0
+    );
+    P.y = -P.y;
+    float OP_squared = P.x * P.y + P.y * P.y;
+    if (OP_squared <= 1) {
+        P.z = sqrt(1 - OP_squared);
+    }
+    else {
+        P = glm::normalize(P);
+    }
+    return P;
+}
+
 int main(int argc, char *argv[]) {
     
     #pragma region "Python Code"
@@ -282,14 +311,42 @@ int main(int argc, char *argv[]) {
 		{ CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
 		{ LightMesh, NULL, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
 	};
+    // What information do we need for the model?
+    // FilePath
+    // FileName
+    // Translation
+    // Rotation
+    // Scale
+    
+    struct ModelObject {
+        glm::vec3 translation;
+        GLfloat rotationX;
+        GLfloat rotationY;
+        GLfloat rotationZ;
+        glm::vec3 scale;
+        Model model;
+    };
 
-    Model tester = Model("./assets/meshes/", "nanosuit.obj");
-    glm::mat4 tester_model = glm::mat4(1.0f);
-    tester_model = glm::translate(tester_model, glm::vec3(2, 0, -4));
-    //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
-    tester_model = glm::scale(tester_model, glm::vec3(0.2, 0.2, 0.2));
-    glm::mat4 tester_mvp = Projection * View * tester_model;
-    glm::mat3 tester_normalMat = (glm::mat3)glm::transpose(glm::inverse(tester_model));
+    // NOTE: I now need to seperate the Models from the drawing instances ( or not reload a loaded model )
+    vector<ModelObject> modelObjects;
+
+    modelObjects.push_back({
+        glm::vec3(2, 0, -4),
+        0.0f,
+        0.0f,
+        0.0f,
+        glm::vec3(0.2, 0.2, 0.2),
+        Model("./assets/meshes/", "nanosuit.obj")
+    });
+
+    modelObjects.push_back({
+        glm::vec3(0, 0, 0),
+        -90.0f,
+        0.0f,
+        0.0f,
+        glm::vec3(0.05, 0.05, 0.05),
+        Model("./assets/meshes/", "rook.obj")
+    });
 
 	GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
 	GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
@@ -310,7 +367,7 @@ int main(int argc, char *argv[]) {
     // Register Key callbacks
     // FIXME: this appears to break my console
     //glfwSetKeyCallback(window, key_callback);
-
+    glfwSetMouseButtonCallback(window, mouse_callback);
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
@@ -319,20 +376,41 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(programID);
-        glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"), 
-            debug_draw_normals);
-        glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
-            debug_draw_texcoords);
-        glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
-            debug_disable_lighting);
-        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &tester_mvp[0][0]);
-        glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &tester_model[0][0]);
-        glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &tester_normalMat[0][0]);
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
-        glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
-        tester.Draw(programID);
+        for (uint i = 0; i < modelObjects.size(); i++) {
+            // Calculate the matrices
+            // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
+            glm::mat4 model = glm::mat4(1.0f);  // Get eye Model matrix
+            model = glm::translate(model, modelObjects[i].translation);
+            if (modelObjects[i].rotationX != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationX), glm::vec3(1, 0, 0));
+            }
+            if (modelObjects[i].rotationY != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationY), glm::vec3(0, 1, 0));
+            }
+            if (modelObjects[i].rotationZ != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationZ), glm::vec3(0, 0, 1));
+            }
+            model = glm::scale(model, modelObjects[i].scale);
+            // Done! 
+            glm::mat4 model_mvp = Projection * View * model;
+            glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
+
+            MVPMatID = glGetUniformLocation(programID, "MVP");
+            glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
+            glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
+            glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
+            glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
+                debug_draw_normals);
+            glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
+                debug_draw_texcoords);
+            glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
+                debug_disable_lighting);
+            glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+            glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
+            glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+            glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
+            modelObjects[i].model.Draw(programID);
+        }
 
 		for (int i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
 			if (strcmp("Light1", drawObjects[i].name) == 0) {
@@ -349,6 +427,7 @@ int main(int argc, char *argv[]) {
 			glm::mat4 mvp = Projection * View * model;
 			glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
 			// Load camera to OpenGL
+            MVPMatID = glGetUniformLocation(drawObjects[i].program, "MVP");
 			glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
            
 			if (drawObjects[i].program == programID) {

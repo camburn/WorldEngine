@@ -16,7 +16,7 @@ void Model::Draw(GLuint shader) {
 
 int Model::loadModel(string path, string filename) {
     Assimp::Importer import;
-    const aiScene* scene = import.ReadFile(path + filename, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = import.ReadFile(path + filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     // NOTE: Consider adding aiProcess_GenNormals on models without normals
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         char* error_msg = "ERROR:ASSIMP:: In load model\n";
@@ -56,6 +56,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         vector.z = mesh->mVertices[i].z;
         vertex.Position = vector;
         // Normals
+        // Do we handle no normals?
         vector.x = mesh->mNormals[i].x;
         vector.y = mesh->mNormals[i].y;
         vector.z = mesh->mNormals[i].z;
