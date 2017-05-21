@@ -15,6 +15,7 @@ Python function calls that can be called from C.
 #include "graphics/imgui_impl_glfw_gl3.h"
 
 #include "python_api.hpp"
+#include "graphics/arcball.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/cube.hpp"
 #include "graphics/buffers.hpp"
@@ -35,6 +36,9 @@ void disable_debugs() {
     debug_draw_texcoords = false;
     debug_disable_lighting = false;
 }
+
+static Arcball arcball(width, height, 0.5f, true, true);
+glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
@@ -135,29 +139,22 @@ void APIENTRY glDebugOutput(GLenum source,
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
 int arcball_on = false;
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if ()
+// glfwSetMouseButtonCallback(window, mouse_button_callback);
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    arcball.mouseButtonCallback(window, button, action, mods);
 }
 
-glm::vec3 get_arcball_vector(int x, int y) {
-    /* Get a normalized vector form the center of the virtual ball 0 to a 
-    point P on the virtual ball surface, such that P is aligned on 
-    screen's (X, Y) coordinates. If (X, Y) is too far from the 
-    sphere, return the neareset point on the virtual ball surface.*/
-    glm::vec3 P = glm::vec3(
-        1.0 * x / width * 2 - 1.0,
-        1.0 * y / height * 2 - 1.0, 
-        0
-    );
-    P.y = -P.y;
-    float OP_squared = P.x * P.y + P.y * P.y;
-    if (OP_squared <= 1) {
-        P.z = sqrt(1 - OP_squared);
-    }
-    else {
-        P = glm::normalize(P);
-    }
-    return P;
+// glfwSetCursorPosCallback(window, cursor_pos_callback);
+void mouseCursorCallback(GLFWwindow* window, double xpos, double ypos) {
+    arcball.cursorCallback(window, xpos, ypos);
+}
+
+void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
+    width = newWidth;
+    height = newHeight;
+    printf("Width: %i, Height: %i", width, height);
+    glViewport(0, 0, width, height);
+    Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 }
 
 int main(int argc, char *argv[]) {
@@ -294,7 +291,7 @@ int main(int argc, char *argv[]) {
 	glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
 	// Set up Cameras
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+	Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 	glm::mat4 View = glm::lookAt(
 		viewPos, // Light Pos
 		glm::vec3(0, 0, 0), // Look At
@@ -302,6 +299,30 @@ int main(int argc, char *argv[]) {
 	);
 	glm::mat4 model_mat = glm::mat4(1.0f);
 	glm::mat4 mvp = Projection * View * model_mat;
+
+    // Light Objects
+    /*
+    Light Types
+    - Point light (perspective light with falloff)
+        - vec3 position
+        - float constant
+        - float linear
+        - float quadratic
+        - vec3 ambient
+        - vec3 diffuse
+        - vec3 specular
+
+    - Directional Light (orthographic light)
+        - vec3 position
+        - vec3 direction
+        - vec3 ambient
+        - vec3 diffuse
+        - vec3 specular
+    - Spot Light (orthographic with falloff and radius) 
+    */
+    struct LightObject {
+
+    };
 
 
 	// Create our Objects
@@ -367,13 +388,20 @@ int main(int argc, char *argv[]) {
     // Register Key callbacks
     // FIXME: this appears to break my console
     //glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_callback);
+    //glfwSetMouseButtonCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetCursorPosCallback(window, mouseCursorCallback);
+    glfwSetWindowSizeCallback(window, resizeCallback);
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
 
 		glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Do camera changes here before we start drawing
+        glm::mat4 rotated_view = View * arcball.createViewRotationMatrix();
+
 
         glUseProgram(programID);
         for (uint i = 0; i < modelObjects.size(); i++) {
@@ -392,7 +420,7 @@ int main(int argc, char *argv[]) {
             }
             model = glm::scale(model, modelObjects[i].scale);
             // Done! 
-            glm::mat4 model_mvp = Projection * View * model;
+            glm::mat4 model_mvp = Projection * rotated_view * model;
             glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
 
             MVPMatID = glGetUniformLocation(programID, "MVP");
@@ -424,7 +452,7 @@ int main(int argc, char *argv[]) {
 			model = glm::translate(model, drawObjects[i].pos);
 			//model = glm::rotate(model, 45.0f, drawObjects[i].rot);
 			model = glm::scale(model, drawObjects[i].scale);
-			glm::mat4 mvp = Projection * View * model;
+			glm::mat4 mvp = Projection * rotated_view * model;
 			glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
 			// Load camera to OpenGL
             MVPMatID = glGetUniformLocation(drawObjects[i].program, "MVP");
@@ -457,7 +485,7 @@ int main(int argc, char *argv[]) {
 			glBindVertexArray(0);
 		}
 
-        DebugDraw(Projection, View);
+        DebugDraw(Projection, rotated_view);
 
 		ImGui_ImplGlfwGL3_NewFrame();
 		/*
