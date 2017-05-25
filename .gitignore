@@ -8,5 +8,4 @@ __pycache__
 assets
 Debug
 Release
-*.sln
-*.vcxproj*
+imgui.ini

@@ -19,7 +19,7 @@ Arcball::Arcball( int window_width, int window_height, GLfloat roll_speed, bool 
     this->mouseEvent = 0;
     this->rollSpeed  = roll_speed;
     this->angle      = 0.0f;
-    this->camAxis    = glm::vec3(0.0f, 1.0f, 0.0f);
+    this->camAxis    = glm::vec3(0.0f, 0.0f, 1.0f);
     
     this->xAxis = x_axis;
     this->yAxis = y_axis;

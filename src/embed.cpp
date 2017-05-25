@@ -37,7 +37,7 @@ void disable_debugs() {
     debug_disable_lighting = false;
 }
 
-static Arcball arcball(width, height, 0.5f, true, true);
+static Arcball arcball(width, height, 0.1f, true, true);
 glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -138,10 +138,17 @@ void APIENTRY glDebugOutput(GLenum source,
 // Test mouse controls
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
 int arcball_on = false;
+int zoom = 0;
 
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     arcball.mouseButtonCallback(window, button, action, mods);
+}
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    // Scroll backwards = -1.0
+    // Scroll forwards = 1.0
+    zoom += yoffset;
 }
 
 // glfwSetCursorPosCallback(window, cursor_pos_callback);
@@ -158,7 +165,7 @@ void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
 }
 
 int main(int argc, char *argv[]) {
-    
+
     #pragma region "Python Code"
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
@@ -392,6 +399,7 @@ int main(int argc, char *argv[]) {
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
     glfwSetWindowSizeCallback(window, resizeCallback);
+    glfwSetScrollCallback(window, scrollCallback);
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
@@ -400,8 +408,8 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
+        glm::mat4 View = glm::lookAt(viewPos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         glm::mat4 rotated_view = View * arcball.createViewRotationMatrix();
-
 
         glUseProgram(programID);
         for (uint i = 0; i < modelObjects.size(); i++) {
