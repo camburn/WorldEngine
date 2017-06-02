@@ -22,6 +22,7 @@ Python function calls that can be called from C.
 #include "graphics/console.hpp"
 #include "graphics/model.hpp"
 #include "graphics/debug.hpp"
+#include "graphics/shapefile_loader.hpp"
 //#include "graphics/text.hpp"
 
 GLFWwindow* window;
@@ -165,6 +166,8 @@ void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
 }
 
 int main(int argc, char *argv[]) {
+
+    LoadShapefile();
 
     #pragma region "Python Code"
     // Python stuff below
