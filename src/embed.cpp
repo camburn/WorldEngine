@@ -23,7 +23,8 @@ Python function calls that can be called from C.
 #include "graphics/model.hpp"
 #include "graphics/debug.hpp"
 #include "graphics/shapefile_loader.hpp"
-//#include "graphics/text.hpp"
+
+#define NULL_TEXTURE 0
 
 GLFWwindow* window;
 int width = 1024;
@@ -169,7 +170,6 @@ int main(int argc, char *argv[]) {
 
     LoadShapefile();
 
-    #pragma region "Python Code"
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
@@ -219,7 +219,6 @@ int main(int argc, char *argv[]) {
         "emb.stringfunc('A test c print')\n"
     );
     */
-    #pragma endregion
     
     // OPENGL STUFF
     if (!glfwInit()) {
@@ -255,8 +254,8 @@ int main(int argc, char *argv[]) {
 
     // ==== OPENGL START ====
     //
-	
-	// ------------ Graphics Engine ---------------
+    
+    // ------------ Graphics Engine ---------------
     // Turn on Debug callbacks, this should be disabled for RELEASE
     GLint flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
@@ -269,47 +268,47 @@ int main(int argc, char *argv[]) {
 
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
-	GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
-										   "./src/shaders/simple_fragment_shader.glsl");
+    GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
+                                           "./src/shaders/simple_fragment_shader.glsl");
     DebugInit();
     glUseProgram(programID);
-	//glEnable(GL_CULL_FACE); // FIX YA NORMALS!
+    //glEnable(GL_CULL_FACE); // FIX YA NORMALS!
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-	glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
 
-	// Mesh Objects
-	GLuint CubeMesh = BufferMeshDataVNT(cube_data_normal, sizeof(cube_data_normal));
-	GLuint LightMesh = BufferMeshDataVT(cube_data, sizeof(cube_data));
+    // Mesh Objects
+    GLuint CubeMesh = BufferMeshDataVNT(cube_data_normal, sizeof(cube_data_normal));
+    GLuint LightMesh = BufferMeshDataVT(cube_data, sizeof(cube_data));
 
     // Load Textures
     GLuint texture = BufferTextureDataFromFile("container.jpg");
 
-	struct DrawObject {
-		GLuint mesh_id;
-		GLuint tex_id;
-		glm::vec3 pos;
-		glm::vec3 rot;
-		glm::vec3 scale;
-		GLuint program;
-		char *name;
-	};
+    struct DrawObject {
+        GLuint mesh_id;
+        GLuint tex_id;
+        glm::vec3 pos;
+        glm::vec3 rot;
+        glm::vec3 scale;
+        GLuint program;
+        const char *name;
+    };
 
-	glm::mat4 cube1_model = glm::mat4(1.0f);
-	glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
-	glm::vec3 viewPos = glm::vec3(7, 3, 6);
+    glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
+    glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
-	// Set up Cameras
-	Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
-	glm::mat4 View = glm::lookAt(
-		viewPos, // Light Pos
-		glm::vec3(0, 0, 0), // Look At
-		glm::vec3(0, 1, 0)  // Up
-	);
-	glm::mat4 model_mat = glm::mat4(1.0f);
-	glm::mat4 mvp = Projection * View * model_mat;
-
+    // Set up Cameras
+    Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    /*
+    glm::mat4 View = glm::lookAt(
+        viewPos, // Light Pos
+        glm::vec3(0, 0, 0), // Look At
+        glm::vec3(0, 1, 0)  // Up
+    );
+    glm::mat4 model_mat = glm::mat4(1.0f);
+    glm::mat4 mvp = Projection * View * model_mat;
+    */
     // Light Objects
     /*
     Light Types
@@ -335,13 +334,13 @@ int main(int argc, char *argv[]) {
     };
 
 
-	// Create our Objects
-	DrawObject drawObjects[] = {
-		{ CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
-		{ CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
-		{ CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
-		{ LightMesh, NULL, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
-	};
+    // Create our Objects
+    DrawObject drawObjects[] = {
+        { CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
+        { CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
+        { CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
+        { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
+    };
     // What information do we need for the model?
     // FilePath
     // FileName
@@ -369,31 +368,28 @@ int main(int argc, char *argv[]) {
         glm::vec3(0.2, 0.2, 0.2),
         Model("./assets/meshes/", "nanosuit.obj")
     });
-
+    
     modelObjects.push_back({
         glm::vec3(0, 0, 0),
         -90.0f,
         0.0f,
         0.0f,
-        glm::vec3(0.05, 0.05, 0.05),
-        Model("./assets/meshes/", "rook.obj")
+        glm::vec3(1.0, 1.0, 1.0),
+        Model("./assets/meshes/", "warrior.fbx")
     });
+    
+    GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
+    GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
+    GLuint modelMatId = glGetUniformLocation(programID, "Model");
+    GLint objectColorLoc = glGetUniformLocation(programID, "objectColor");
+    GLint lightColorLoc = glGetUniformLocation(programID, "lightColor");
+    GLint lightPosLoc = glGetUniformLocation(programID, "lightPos");
+    GLint viewPosLoc = glGetUniformLocation(programID, "viewPos");
 
-	GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
-	GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
-	GLuint modelMatId = glGetUniformLocation(programID, "Model");
-	GLint objectColorLoc = glGetUniformLocation(programID, "objectColor");
-	GLint lightColorLoc = glGetUniformLocation(programID, "lightColor");
-	GLint lightPosLoc = glGetUniformLocation(programID, "lightPos");
-	GLint viewPosLoc = glGetUniformLocation(programID, "viewPos");
-
-	ImGui_ImplGlfwGL3_Init(window, true);
-	ImGuiIO& io = ImGui::GetIO();
-	//io.Fonts->AddFontDefault();
-	io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
-	bool show_test_window = true;
-	bool show_another_window = false;
-	ImVec4 clear_color = ImColor(114, 144, 154);
+    ImGui_ImplGlfwGL3_Init(window, true);
+    ImGuiIO& io = ImGui::GetIO();
+    //io.Fonts->AddFontDefault();
+    io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
 
     // Register Key callbacks
     // FIXME: this appears to break my console
@@ -407,7 +403,7 @@ int main(int argc, char *argv[]) {
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
 
-		glfwPollEvents();
+        glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
@@ -451,25 +447,25 @@ int main(int argc, char *argv[]) {
             modelObjects[i].model.Draw(programID);
         }
 
-		for (int i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
-			if (strcmp("Light1", drawObjects[i].name) == 0) {
-				float x = (float)glm::sin(glfwGetTime()) * 3;
-				lightPos.x = x;
-				drawObjects[i].pos.x = x;
-			}
-			glUseProgram(drawObjects[i].program);
-			//recalculate the mvp
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, drawObjects[i].pos);
-			//model = glm::rotate(model, 45.0f, drawObjects[i].rot);
-			model = glm::scale(model, drawObjects[i].scale);
-			glm::mat4 mvp = Projection * rotated_view * model;
-			glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-			// Load camera to OpenGL
+        for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
+            if (strcmp("Light1", drawObjects[i].name) == 0) {
+                float x = (float)glm::sin(glfwGetTime()) * 3;
+                lightPos.x = x;
+                drawObjects[i].pos.x = x;
+            }
+            glUseProgram(drawObjects[i].program);
+            //recalculate the mvp
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, drawObjects[i].pos);
+            //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
+            model = glm::scale(model, drawObjects[i].scale);
+            glm::mat4 mvp = Projection * rotated_view * model;
+            glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
+            // Load camera to OpenGL
             MVPMatID = glGetUniformLocation(drawObjects[i].program, "MVP");
-			glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+            glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
            
-			if (drawObjects[i].program == programID) {
+            if (drawObjects[i].program == programID) {
                 glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
                 glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
                 glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
@@ -478,69 +474,69 @@ int main(int argc, char *argv[]) {
                     debug_draw_texcoords);
                 glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
                     debug_disable_lighting);
-				glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
-				glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
-				glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-				glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
-			}
-			if (drawObjects[i].tex_id != NULL) {
-				glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
-			}
+                glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+                glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
+                glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+                glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
+            }
+            if (drawObjects[i].tex_id != NULL_TEXTURE) {
+                glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
+            }
             if (drawObjects[i].program == simple_program) {
                 glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), true);
                 glUniform3f(glGetUniformLocation(simple_program, "uniform_color"),
                     1.0f, 1.0f, 1.0f);
             }
-			glBindVertexArray(drawObjects[i].mesh_id);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-		}
+            glBindVertexArray(drawObjects[i].mesh_id);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
+        }
 
         DebugDraw(Projection, rotated_view);
 
-		ImGui_ImplGlfwGL3_NewFrame();
-		/*
-		// 1. Show a simple window
-		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-		{
-			static float f = 0.0f;
-			ImGui::Text("Hello, world!");
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);
-			if (ImGui::Button("Test Window")) show_test_window ^= 1;
-			if (ImGui::Button("Another Window")) show_another_window ^= 1;
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		}
+        ImGui_ImplGlfwGL3_NewFrame();
+        /*
+        // 1. Show a simple window
+        // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+        {
+            static float f = 0.0f;
+            ImGui::Text("Hello, world!");
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+            ImGui::ColorEdit3("clear color", (float*)&clear_color);
+            if (ImGui::Button("Test Window")) show_test_window ^= 1;
+            if (ImGui::Button("Another Window")) show_another_window ^= 1;
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        }
 
-		// 2. Show another simple window, this time using an explicit Begin/End pair
-		if (show_another_window)
-		{
-			ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-			ImGui::Begin("Another Window", &show_another_window);
-			ImGui::Text("Hello");
-			ImGui::End();
-		}
+        // 2. Show another simple window, this time using an explicit Begin/End pair
+        if (show_another_window)
+        {
+            ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+            ImGui::Begin("Another Window", &show_another_window);
+            ImGui::Text("Hello");
+            ImGui::End();
+        }
 
-		// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-		if (show_test_window)
-		{
-			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-			ImGui::ShowTestWindow(&show_test_window);
-		}
-		*/
-		static bool p_open = true;
-		ShowExampleAppConsole(&p_open);
-		//static ExampleAppConsole console;
-		//console.Draw("Example: Console", p_open);
+        // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+        if (show_test_window)
+        {
+            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+            ImGui::ShowTestWindow(&show_test_window);
+        }
+        */
+        static bool p_open = true;
+        ShowExampleAppConsole(&p_open);
+        //static ExampleAppConsole console;
+        //console.Draw("Example: Console", p_open);
 
-		ImGui::Render();
+        ImGui::Render();
         glfwSwapBuffers(window);
         
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);
 
-	ImGui_ImplGlfwGL3_Shutdown();
+    ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
     // END OPENGL STUFF
 

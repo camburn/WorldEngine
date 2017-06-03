@@ -5,6 +5,7 @@ It manages data into OpenGL buffers and prepares it for drawing.
 #ifndef BUFFERS_INCLUDED
 #define BUFFERS_INCLUDED
 #define GLEW_STATIC
+#include <algorithm>
 #include <string>
 using namespace std;
 #include <stdio.h>

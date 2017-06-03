@@ -55,8 +55,9 @@ GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
 }
 
 GLuint BufferTextureDataFromFile(string path, string directory) {
-    string filename = directory + '/' + path;
-
+    string filename = directory + path;
+    replace(filename.begin(), filename.end(), '\\', '/');
+    printf("IMAGES:: Attempting to load %s\n:", filename.c_str());
     // Load Textures
     int tex_w, tex_h;
     unsigned char* image = SOIL_load_image(filename.c_str(), &tex_w, &tex_h, 0, SOIL_LOAD_RGB);

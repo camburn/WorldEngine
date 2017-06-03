@@ -80,7 +80,7 @@ void Mesh::Draw(GLuint shader) {
             ss << specularNr++;
         }
         number = ss.str();
-        GLuint tex_loc = glGetUniformLocation(shader, (name + number).c_str());
+        GLint tex_loc = glGetUniformLocation(shader, (name + number).c_str());
         if (tex_loc != -1) {
             glUniform1i(tex_loc, i);
             glBindTexture(GL_TEXTURE_2D, this->textures[i].id);

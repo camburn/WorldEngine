@@ -21,14 +21,14 @@ using namespace std;
 
 class Model {
 public:
-    Model(GLchar* path, GLchar* filename);
+    Model(const char* path, const char* filename);
     void Draw(GLuint shader);
 private:
     vector<Mesh> meshes;
     string directory;
     vector<Texture> textures_loaded;
 
-    int loadModel(string directory, string path);
+    int loadModel(const char* directory, const char* path);
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);

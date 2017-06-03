@@ -20,7 +20,7 @@ line requires two indices
 void LoadShapefile() {
     // Testing ShapeFile loading
     SHPHandle test_shape = SHPOpen("./assets/shapefiles/polygons", "rb");
-    int ipart;
+    // int ipart;
     int num_entities;
     int shapetype; // 1 - Points; 3 - Arcs (Lines); 5 - Polygons; 8 - MultiPoint (related points)
     double min_bounds[4], max_bounds[4];
@@ -73,7 +73,7 @@ void LoadShapefile() {
                 else {
                     ++last_index;
                 }
-                double x, y, z;
+                // double x, y, z;
                 printf("   %s (x: %f, y: %f, z: %f) %s \n",
                     pszPlus,
                     test_shape_data->padfX[j],

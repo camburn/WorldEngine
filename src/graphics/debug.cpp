@@ -139,7 +139,7 @@ void DrawLines(mat4 Projection, mat4 View) {
     glUseProgram(debug_program);
     mat4 model = mat4(1.0f);
     mat4 mvp = Projection * View * model;
-    mat3 normalMat = (mat3)transpose(inverse(model));
+    // mat3 normalMat = (mat3)transpose(inverse(model));
     glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
     glBindVertexArray(DebugLinesVAOID);
     glDrawArrays(GL_LINES, 0, totalLines);

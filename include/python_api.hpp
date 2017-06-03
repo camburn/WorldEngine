@@ -4,7 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
-#include "graphics\debug.hpp"
+#include "graphics/debug.hpp"
 
 PyObject* PyInit_PyEngine(void);
 
