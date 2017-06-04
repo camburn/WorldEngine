@@ -54,8 +54,8 @@ GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
 	return VertexArrayID;
 }
 
-GLuint BufferTextureDataFromFile(string path, string directory) {
-    string filename = directory + path;
+GLuint BufferTextureDataFromFile(string file, string directory) {
+    string filename = directory + file;
     replace(filename.begin(), filename.end(), '\\', '/');
     printf("IMAGES:: Attempting to load %s\n:", filename.c_str());
     // Load Textures

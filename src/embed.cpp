@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
                                            "./src/shaders/simple_fragment_shader.glsl");
     DebugInit();
     glUseProgram(programID);
-    //glEnable(GL_CULL_FACE); // FIX YA NORMALS!
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
     GLuint LightMesh = BufferMeshDataVT(cube_data, sizeof(cube_data));
 
     // Load Textures
-    GLuint texture = BufferTextureDataFromFile("container.jpg");
+    GLuint texture = BufferTextureDataFromFile("container.jpg", "./assets/textures/");
 
     struct DrawObject {
         GLuint mesh_id;
@@ -393,7 +393,7 @@ int main(int argc, char *argv[]) {
 
     // Register Key callbacks
     // FIXME: this appears to break my console
-    //glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window, key_callback);
     //glfwSetMouseButtonCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
@@ -480,6 +480,8 @@ int main(int argc, char *argv[]) {
                 glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
             }
             if (drawObjects[i].tex_id != NULL_TEXTURE) {
+                GLint tex_loc = glGetUniformLocation(drawObjects[i].program, "texture_diffuse1");
+                glUniform1i(tex_loc, 0);
                 glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
             }
             if (drawObjects[i].program == simple_program) {
