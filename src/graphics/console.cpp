@@ -220,18 +220,22 @@ struct ExampleAppConsole
 				word_start--;
 			}
 
-			// Build a list of candidates
-			ImVector<const char*> candidates;
+			// Get our completion options from python
+			const char* word = data->Buf;
+			std::vector<const char*> candidates = CompleteCommand(word);
+			fprintf(stdout, "Here we go!");
+
+			// Add builtin commands 
 			for (int i = 0; i < Commands.Size; i++)
 				if (Strnicmp(Commands[i], word_start, (int)(word_end - word_start)) == 0)
 					candidates.push_back(Commands[i]);
 
-			if (candidates.Size == 0)
+			if (candidates.size() == 0)
 			{
 				// No match
 				AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
 			}
-			else if (candidates.Size == 1)
+			else if (candidates.size() == 1)
 			{
 				// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
 				data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
@@ -246,7 +250,7 @@ struct ExampleAppConsole
 				{
 					int c = 0;
 					bool all_candidates_matches = true;
-					for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
+					for (uint i = 0; i < candidates.size() && all_candidates_matches; i++)
 						if (i == 0)
 							c = toupper(candidates[i][match_len]);
 						else if (c != toupper(candidates[i][match_len]))
@@ -264,7 +268,7 @@ struct ExampleAppConsole
 
 				// List matches
 				AddLog("Possible matches:\n");
-				for (int i = 0; i < candidates.Size; i++)
+				for (uint i = 0; i < candidates.size(); i++)
 					AddLog("- %s\n", candidates[i]);
 			}
 

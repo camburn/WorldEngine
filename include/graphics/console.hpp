@@ -7,6 +7,7 @@
 #include <stdio.h>          // vsnprintf, sscanf, printf
 #include <stdlib.h>         // NULL, malloc, free, qsort, atoi
 #include <stdint.h>         // intptr_t
+#include <vector>
 
 #include "pyconsole.hpp"
 

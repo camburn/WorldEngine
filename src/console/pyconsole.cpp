@@ -35,3 +35,18 @@ const char *SendCommand(const char *command) {
     Py_DecRef(result);
     return "Failed to run command";
 }
+
+std::vector<const char*> CompleteCommand(const char *partial_command) {
+    std::vector<const char*> options;
+    PyObject *result = PyObject_CallMethod(console_instance, "complete_command", "(s)", partial_command);
+    if (result != NULL && PyTuple_Check(result)) {
+        int result_len = PyTuple_Size(result);
+        for (int x = 0; x < result_len; x++) {
+            char *res = PyUnicode_AsUTF8(PyTuple_GetItem(result, x));
+            //std::string eval(res);
+            options.push_back(res);
+        }
+    }
+    Py_DecRef(result);
+    return options;
+}
