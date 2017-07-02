@@ -6,7 +6,6 @@ settings.json
 __pycache__
 .vscode
 .vs
-assets
 Debug
 Release
 imgui.ini
