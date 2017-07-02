@@ -23,6 +23,7 @@ void ConsoleInit() {
 
 const char *SendCommand(const char *command) {
     // TODO: Handle when someone exits the interpreter with `exit()`
+    
     PyObject *result = PyObject_CallMethod(console_instance, "run_command", "(s)", command);
     if (result != NULL && PyTuple_Check(result)) {
         sp = PyUnicode_AsUTF8(PyTuple_GetItem(result, 0));

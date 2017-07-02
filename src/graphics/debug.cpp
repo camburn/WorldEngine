@@ -24,6 +24,12 @@ GLuint totalLines = 0;
 
 std::vector<vec3> line_data;
 
+std::map<std::string, bool> flags = {
+    { "render:draw_normals", false },
+    { "render:draw_texcoords", false },
+    { "render:disable_lighting", false }
+};
+
 void BufferData() {
     // This creates the buffers and sends the debug data to the GPU
     // Create our VAO
@@ -148,4 +154,40 @@ void DrawLines(mat4 Projection, mat4 View) {
 
 void DebugDraw(mat4 Projection, mat4 View) {
     DrawLines(Projection, View);
+}
+
+std::string DebugFlagToggle(const char* flag) {
+    std::string result = flag;
+    if (flags.count(flag)) {
+        if (flags[flag]) {
+            flags[flag] = false;
+            result += ": Disabled";
+            return result;
+        }
+        else {
+            flags[flag] = true;
+            result += ": Enabled";
+            return result;
+        }
+    }
+    result += ": Flag does not exist";
+    return result;
+}
+
+std::string DebugFlagList() {
+    std::string result = "";
+    for (auto const& x : flags) {
+        result += x.first;
+        result += ": ";
+        result += x.second ? "true" : "false";
+        result += "\n";
+    }
+    return result;
+}
+
+bool DebugGetFlag(std::string flag) {
+    if (flags.count(flag)) {
+        return flags[flag];
+    }
+    return false;
 }

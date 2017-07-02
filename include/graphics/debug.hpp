@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <map>
 #include <vector>
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -18,3 +20,6 @@ void DebugCreateCube(float x, float y, float z, float width, float height, float
 void DebugCreateCube(vec3 point1, float width, float height, float depth, vec3 color);
 void DebugDraw(mat4 Projection, mat4 View);
 void DebugClear();
+std::string DebugFlagToggle(const char* flag);
+std::string DebugFlagList();
+bool DebugGetFlag(std::string flag);

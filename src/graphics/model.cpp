@@ -118,7 +118,6 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
             texture.id = BufferTextureDataFromFile(str.C_Str(), this->directory);
             texture.type = typeName;
             texture.path = str;
-            printf("Loading Texture: %s\n", texture.path.C_Str());
             textures.push_back(texture);
             textures_loaded.push_back(texture);
         }

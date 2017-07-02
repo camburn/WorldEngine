@@ -95,10 +95,13 @@ void APIENTRY glDebugOutput(GLenum source,
     // Message 131184 displays Buffer memory info,
     // TODO: Load this data into a debug message window
     if (id == 131184) return;
-
     if (id == 131185) return; // This details VBO allocations (and size)
     if (id == 131204) return; // Texture state usage warning: Texture 0 is base level inconsistent. Check texture size.
     // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    // MESA Specific debug message, does not have a fixed id number
+    if (source == GL_DEBUG_SOURCE_SHADER_COMPILER && severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+        return;
 
     std::cout << "---------------" << std::endl;
     std::cout << "Debug message (" << id << "): " << message << std::endl;
@@ -161,7 +164,7 @@ void mouseCursorCallback(GLFWwindow* window, double xpos, double ypos) {
 void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
     width = newWidth;
     height = newHeight;
-    printf("Width: %i, Height: %i", width, height);
+    printf("Width: %i, Height: %i\n", width, height);
     glViewport(0, 0, width, height);
     Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 }
@@ -233,7 +236,7 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Disable legacy OpenGL
    
     //Debugging 
-    printf("DEBUGGING ON");
+    printf("DEBUGGING ON\n");
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
     //Create window
@@ -275,6 +278,7 @@ int main(int argc, char *argv[]) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    glEnable(GL_MULTISAMPLE);
 
     glViewport(0, 0, width, height);
 
@@ -393,13 +397,14 @@ int main(int argc, char *argv[]) {
 
     // Register Key callbacks
     // FIXME: this appears to break my console
-    glfwSetKeyCallback(window, key_callback);
+    //glfwSetKeyCallback(window, key_callback);
     //glfwSetMouseButtonCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
     // Main Loop
+    printf("%s\n", DebugFlagList().c_str());
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     do {    
 
@@ -435,11 +440,11 @@ int main(int argc, char *argv[]) {
             glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
             glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
             glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
-                debug_draw_normals);
+                DebugGetFlag("render:draw_normals"));
             glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
-                debug_draw_texcoords);
+                DebugGetFlag("render:draw_texcoords"));
             glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
-                debug_disable_lighting);
+                DebugGetFlag("render:disable_lighting"));
             glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
             glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
             glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
@@ -469,11 +474,11 @@ int main(int argc, char *argv[]) {
                 glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
                 glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
                 glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
-                    debug_draw_normals);
+                    DebugGetFlag("render:draw_normals"));
                 glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
-                    debug_draw_texcoords);
+                    DebugGetFlag("render:draw_texcoords"));
                 glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
-                    debug_disable_lighting);
+                    DebugGetFlag("render:disable_lighting"));
                 glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
                 glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
                 glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);

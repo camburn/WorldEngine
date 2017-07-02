@@ -30,6 +30,24 @@ pyengine_debug_clear(PyObject *self, PyObject *args) {
     return Py_BuildValue("");
 }
 
+// std::string DebugFlagSet(const char* flag);
+// std::string DebugFlagList();
+static PyObject*
+pyengine_debug_flatset(PyObject *self, PyObject *args) {
+    char* str_data;
+    if (!PyArg_ParseTuple(args, "s", &str_data)) {
+        return NULL;
+    }
+    std::string flagList = DebugFlagToggle(str_data);
+    return Py_BuildValue("s", flagList.c_str());
+}
+
+static PyObject*
+pyengine_debug_flatlist(PyObject *self, PyObject *args) {
+    std::string flagList = DebugFlagList();
+    return Py_BuildValue("s", flagList.c_str());
+}
+
 /* Example Items */
 static PyObject*
 pyengine_testfunction(PyObject *self, PyObject *args) {
@@ -55,6 +73,8 @@ static PyMethodDef PyEngineMethods[] = {
     { "debug_drawline", pyengine_debug_drawline, METH_VARARGS, "Draw a debug line." },
     { "debug_drawcube", pyengine_debug_drawcube, METH_VARARGS, "Draw a debug cube." },
     { "debug_clear", pyengine_debug_clear, METH_VARARGS, "Clear the debug layers." },
+    { "debug_flag_list", pyengine_debug_flatlist, METH_VARARGS, "List all engine debug flags." },
+    { "debug_flag_set", pyengine_debug_flatset, METH_VARARGS, "Set an engine debug flag." },
     { "testfunction", pyengine_testfunction, METH_VARARGS, "Multiply args."},
     { "stringfunc", pyengine_stringfunc, METH_VARARGS, "C print a python str."},
     {NULL, NULL, 0, NULL}

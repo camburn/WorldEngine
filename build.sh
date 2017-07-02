@@ -1,4 +1,5 @@
 #!/bin/sh
+echo "Building PyEngine"
 g++ -g -Wall ./src/*.cpp ./src/**/*.cpp \
 	-I/usr/include/python3.6/ \
 	-I/usr/include/GL/ \
@@ -14,3 +15,8 @@ g++ -g -Wall ./src/*.cpp ./src/**/*.cpp \
 	-l shp \
 	-l assimp \
 	-o ./build/PyEngine
+if [ $? -ne 0 ]; then
+    echo "Build Failed"
+else
+	echo "Build Completed"
+fi

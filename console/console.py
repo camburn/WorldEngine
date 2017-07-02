@@ -23,7 +23,10 @@ class Console(code.InteractiveConsole):
         print('Running Command')
         # redirect stdout
         sys.stdout = self.stdout_buffer
-        result = self.push(command)
+        try:
+            result = self.push(command)
+        except Exception as err:
+            print(f'This should never happen: {err}')
         self.last_result = result
         sys.stdout = sys.__stdout__
         if self.last_result:

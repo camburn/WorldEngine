@@ -93,5 +93,5 @@ void LoadShapefile() {
     }
     SHPDestroyObject(test_shape_data);
 
-    printf("Shape Loaded");
+    printf("Shape Loaded\n");
 }
