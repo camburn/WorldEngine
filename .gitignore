@@ -2,11 +2,11 @@ env
 build
 settings.json
 *.pyc
+*.swp
 __pycache__
 .vscode
 .vs
 assets
 Debug
 Release
-*.sln
-*.vcxproj*
+imgui.ini

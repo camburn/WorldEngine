@@ -54,15 +54,16 @@ GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
 	return VertexArrayID;
 }
 
-GLuint BufferTextureDataFromFile(string path, string directory) {
-    string filename = directory + '/' + path;
-
+GLuint BufferTextureDataFromFile(string file, string directory) {
+    string filename = directory + file;
+    replace(filename.begin(), filename.end(), '\\', '/');
+    printf("INFO::IMAGES:: Loading texture: %s\n:", filename.c_str());
     // Load Textures
     int tex_w, tex_h;
     unsigned char* image = SOIL_load_image(filename.c_str(), &tex_w, &tex_h, 0, SOIL_LOAD_RGB);
 
     if (!image) {
-        printf("ERROR::IMAGES:: Failed to load image %s\n", filename.c_str());
+        printf("ERROR::IMAGES:: Failed to load texture %s\n", filename.c_str());
     }
 
     GLuint textureID;
@@ -79,4 +80,29 @@ GLuint BufferTextureDataFromFile(string path, string directory) {
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
     return textureID;
+}
+
+GLuint ShadowMapBuffer() {
+    GLuint depthMapFBO;
+
+    glGenFramebuffers(1, &depthMapFBO);
+
+    const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    GLuint depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+        depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return depthMap;
 }

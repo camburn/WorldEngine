@@ -4,7 +4,7 @@
 // Also note that meshes can expressed as a parent child relationship
 // Child meshes may use offsets from parent as a matrix
 
-Model::Model(GLchar* path, GLchar* filename) {
+Model::Model(const char* path, const char* filename) {
     this->loadModel(path, filename);
 }
 
@@ -14,17 +14,19 @@ void Model::Draw(GLuint shader) {
     }
 }
 
-int Model::loadModel(string path, string filename) {
+int Model::loadModel(const char* path, const char* filename) {
+    string _path = string(path);
+    string _filename = string(filename); 
     Assimp::Importer import;
-    const aiScene* scene = import.ReadFile(path + filename, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = import.ReadFile(_path + _filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     // NOTE: Consider adding aiProcess_GenNormals on models without normals
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        char* error_msg = "ERROR:ASSIMP:: In load model\n";
-        fprintf(stderr, error_msg);
-        fprintf(stderr, import.GetErrorString());
+        const char* error_msg = "ERROR:ASSIMP:: In load model\n";
+        fprintf(stderr, "%s", error_msg);
+        fprintf(stderr, "%s", import.GetErrorString());
         return -1;
     }
-    this->directory = path;
+    this->directory = _path;
     this->processNode(scene->mRootNode, scene);
     return 0;
 }
@@ -56,6 +58,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         vector.z = mesh->mVertices[i].z;
         vertex.Position = vector;
         // Normals
+        // Do we handle no normals?
         vector.x = mesh->mNormals[i].x;
         vector.y = mesh->mNormals[i].y;
         vector.z = mesh->mNormals[i].z;
@@ -115,7 +118,6 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
             texture.id = BufferTextureDataFromFile(str.C_Str(), this->directory);
             texture.type = typeName;
             texture.path = str;
-            printf("Loading Texture: %s\n", texture.path.C_Str());
             textures.push_back(texture);
             textures_loaded.push_back(texture);
         }

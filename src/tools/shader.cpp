@@ -50,7 +50,6 @@ GLuint LoadShader(const char* file_path, GLuint ShaderID) {
     int InfoLogLength;
 
     char* vertex_src = loadFile(file_path);
-    fprintf(stdout, "Got Shader Source\n\n%s\n\n", vertex_src);
     // Compile the Shader
     fprintf(stdout, "Compiling Shader: %s\n", file_path);
     glShaderSource(ShaderID, 1, &vertex_src, NULL);
@@ -61,6 +60,7 @@ GLuint LoadShader(const char* file_path, GLuint ShaderID) {
     if (InfoLogLength > 0) {
         char* ShaderErrorMessage = (char *)malloc(InfoLogLength);
         glGetShaderInfoLog(ShaderID, InfoLogLength, NULL, ShaderErrorMessage);
+        fprintf(stdout, "Shader Source\n\n%s\n\n", vertex_src);
         fprintf(stderr, "Shader Compile Failed:\n %s\n", ShaderErrorMessage);
         free(ShaderErrorMessage);
     }

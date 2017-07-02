@@ -1,7 +1,7 @@
 #include "pyconsole.hpp"
 
 PyObject *console_instance;
-char *sp = ">>> ";
+const char *sp = ">>> ";
 // TODO: There must be a nicer way to do this
 char command_result[1000];
 
@@ -23,9 +23,9 @@ void ConsoleInit() {
 
 const char *SendCommand(const char *command) {
     // TODO: Handle when someone exits the interpreter with `exit()`
+    
     PyObject *result = PyObject_CallMethod(console_instance, "run_command", "(s)", command);
     if (result != NULL && PyTuple_Check(result)) {
-        Py_ssize_t result_length;
         sp = PyUnicode_AsUTF8(PyTuple_GetItem(result, 0));
         char *eval = PyUnicode_AsUTF8(PyTuple_GetItem(result, 1));
         strcpy(command_result, eval);
