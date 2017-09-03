@@ -23,6 +23,7 @@ Python function calls that can be called from C.
 #include "graphics/model.hpp"
 #include "graphics/debug.hpp"
 #include "graphics/shapefile_loader.hpp"
+#include "graphics/planes.hpp"
 
 #define NULL_TEXTURE 0
 
@@ -337,6 +338,9 @@ int main(int argc, char *argv[]) {
 
     };
 
+    // Planes
+    CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
+    int result = UpdatePlaneBuffers();
 
     // Create our Objects
     DrawObject drawObjects[] = {
