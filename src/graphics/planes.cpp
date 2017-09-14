@@ -28,18 +28,17 @@ Textures should be able to use a alpha component for transparency
 
 float Z = 1.0;
 
-struct Vertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoord;
-};
-vector<Vertex> vertex_dat;
+//struct Vertex {
+//    glm::vec3 Position;
+//    glm::vec3 Normal;
+//    glm::vec2 TexCoord;
+//};
 
-vector<vec3> vertices;
-vector<vec3> normals;
-vector<vec2> tex_coords;
+//vector<vec3> vertices;
+//vector<vec3> normals;
+//vector<vec2> tex_coords;
 
-vector<uint> indices;
+
 
 /*
 How should I do positions and updates?
@@ -48,65 +47,75 @@ Could supply another buffer of model matrices (4x4 - 64bytes)
 (model matrices represent pos rotation and scale)
 Or a buffer of worldspace positions (then I would have to transform on the GPU)
 */
-
-void DrawPlanes() {
-    // Draw all planes currently in the array
+Mesh InitPlanes() {
+    return Mesh(256);
 }
-
-int UpdatePlaneBuffers() {
+/*
+void DrawPlanes(GLuint shader) {
+    // Draw all planes currently in the array
+    plane_mesh.Draw(shader);
+}
+*/
+int UpdatePlaneBuffers(Mesh plane_mesh) {
     // This should be called when we have new planes that need to be packed 
     // into our array
     // Update whole thing or just the difference.
 
-    if (vertices.size() != normals.size() || 
-        vertices.size() != tex_coords.size()) {
-        printf("Warning plane buffers are misaligned\n");
-        return 0;
-    }
-    int plane_length = vertices.size() * 3 + normals.size() * 3 + tex_coords.size() * 2;
-    float plane_data[plane_length];
+    vector<Vertex> vertex_data;
+    vector<GLuint> index_data;
+    CreatePlane(vec2(0, 0), 50, 50, vertex_data, index_data);
+    plane_mesh.AppendData(vertex_data, index_data);
 
-    for (int i = 0; i < vertices.size(); i++;) {
-        plane_data
-    }
-    //BufferMeshDataVNT()
-    return 1;
+    return 0;
 }
 
-void CreatePlane(vec2 pos, float width, float height) {
+void CreatePlane(vec2 pos, float width, float height, 
+    vector<Vertex>& vertex_data, vector<GLuint>& index_data) {
+
+    Vertex v1, v2, v3, v4 = Vertex();
+
     vec3 p1 = vec3(pos, Z);
     vec3 p2 = vec3(pos + vec2(0, height), Z);
     vec3 p3 = vec3(pos + vec2(width, 0), Z);
     vec3 p4 = vec3(pos + vec2(width, height), Z);
 
-    uint index1 = vertices.size();
-    vertices.push_back(p1);
-    uint index2 = vertices.size();
-    vertices.push_back(p2);
-    uint index3 = vertices.size();
-    vertices.push_back(p3);
-    uint index4 = vertices.size();
-    vertices.push_back(p4);
+    v1.Position = p1;
+    v2.Position = p2;
+    v3.Position = p3;
+    v4.Position = p4;
+
+    GLuint index1 = vertex_data.size();
+    vertex_data.push_back(v1);
+    GLuint index2 = vertex_data.size();
+    vertex_data.push_back(v2);
+    GLuint index3 = vertex_data.size();
+    vertex_data.push_back(v3);
+    GLuint index4 = vertex_data.size();
+    vertex_data.push_back(v4);
 
     // Triangle 1
-    indices.push_back(index1);
-    indices.push_back(index2);
-    indices.push_back(index3);
-    vec3 normalA = glm::triangleNormal(p1, p2, p3);
+    index_data.push_back(index3);
+    index_data.push_back(index2);
+    index_data.push_back(index1);
+    vec3 normalA = glm::triangleNormal(p3, p2, p1);
 
     // Triangle 2
-    indices.push_back(index2);
-    indices.push_back(index4);
-    indices.push_back(index3);
+    index_data.push_back(index3);
+    index_data.push_back(index4);
+    index_data.push_back(index2);
     vec3 normalB = glm::triangleNormal(p2, p4, p3);
     
-    normals.push_back(normalA);
-    normals.push_back(normalB);
+    // Should average normal A and B
+    v1.Normal = normalA;
+    v2.Normal = normalA;
+    v3.Normal = normalA;
+    v4.Normal = normalA;
 
-    tex_coords.push_back(vec2(0.0, 0.0));
-    tex_coords.push_back(vec2(0.0, 1.0));
-    tex_coords.push_back(vec2(1.0, 1.0));
-    tex_coords.push_back(vec2(1.0, 0.0));
+    v1.TexCoord = vec2(0.0, 0.0);
+    v2.TexCoord = vec2(0.0, 1.0);
+    v3.TexCoord = vec2(1.0, 1.0);
+    v4.TexCoord = vec2(1.0, 0.0);
+
 }
 
 void createTexturedPlane() {

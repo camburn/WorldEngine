@@ -81,7 +81,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             debug_disable_lighting = true;
         }
     }
-
 }
 
 void APIENTRY glDebugOutput(GLenum source,
@@ -339,8 +338,9 @@ int main(int argc, char *argv[]) {
     };
 
     // Planes
-    CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
-    int result = UpdatePlaneBuffers();
+    //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
+    Mesh planes = InitPlanes();
+    int result = UpdatePlaneBuffers(planes);
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -454,6 +454,8 @@ int main(int argc, char *argv[]) {
             glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
             glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
             modelObjects[i].model.Draw(programID);
+            //DrawPlanes(programID);
+            planes.Draw(programID);
         }
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {

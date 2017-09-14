@@ -8,7 +8,10 @@ using glm::vec2;
 using glm::vec3;
 
 #include "graphics/buffers.hpp"
+#include "graphics/mesh.hpp"
 
-void DrawPlanes();
-int UpdatePlaneBuffers();
-void CreatePlane(vec2 pos, float width, float height);
+Mesh InitPlanes();
+void DrawPlanes(GLuint shader);
+int UpdatePlaneBuffers(Mesh plane_mesh);
+void CreatePlane(vec2 pos, float width, float height, 
+    vector<Vertex>& vertex_data, vector<GLuint>& index_data);

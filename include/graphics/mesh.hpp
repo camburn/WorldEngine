@@ -33,9 +33,19 @@ public:
     vector<GLuint> indices;
     vector<Texture> textures;
 
-    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures);
+    Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
+         vector<Texture> textures);
+    Mesh(int max_vertices);
+    int AppendData(vector<Vertex> vertices, vector<GLuint> indices);
     void Draw(GLuint shader);
 private:
     GLuint VAO, VBO, EBO;
-    void setupMesh();
+    bool fixed = false;
+    int max_vertices;
+    int v_offset = 0;
+    int i_offset = 0;
+    int i_size = 0;
+    void SetupMesh();
+    void BufferData();
+    void SetBuffer();
 };

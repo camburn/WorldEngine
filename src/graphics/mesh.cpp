@@ -28,22 +28,28 @@ Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> text
     this->vertices = vertices;
     this->indices = indices;
     this->textures = textures;
-    this->setupMesh();
+    this->SetupMesh();
+    this->BufferData();
+    this->fixed = true;
 }
 
-void Mesh::setupMesh() {
+Mesh::Mesh(int max_vertices) {
+    this->vertices.reserve(max_vertices);
+    this->indices.reserve(max_vertices);
+    this->textures.reserve(max_vertices);
+    this->max_vertices = max_vertices;
+    this->SetupMesh();
+    this->SetBuffer();
+}
+
+void Mesh::SetupMesh() {
     glGenVertexArrays(1, &this->VAO);
     glGenBuffers(1, &this->VBO);
     glGenBuffers(1, &this->EBO);
 
     glBindVertexArray(this->VAO);
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex),
-        &this->vertices[0], GL_STATIC_DRAW);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint),
-        &this->indices[0], GL_STATIC_DRAW);
 
     //Define our data for OpenGL
     glEnableVertexAttribArray(0);
@@ -61,6 +67,55 @@ void Mesh::setupMesh() {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Mesh::BufferData() {
+    // Buffer a fixed data source to the GPU
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex),
+        &this->vertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint),
+        &this->indices[0], GL_STATIC_DRAW);
+        
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Mesh::SetBuffer() {
+    // Set a buffer amount for update at a later point in time
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, this->max_vertices * sizeof(Vertex),
+        NULL, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->max_vertices * sizeof(GLuint),
+        NULL, GL_STATIC_DRAW);
+        
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+int Mesh::AppendData(vector<Vertex> vertices, vector<GLuint> indices) {
+    // Append data to this meshes buffer
+    if (this->fixed) {
+        return 1;
+    }
+    int data_size = vertices.size() * sizeof(Vertex);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, this->v_offset, data_size, &vertices[0]);
+    this->v_offset += data_size;
+
+    data_size = indices.size() * sizeof(GLuint);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, this->i_offset, data_size, &indices[0]);
+    this->i_offset += data_size;
+    this->i_size += indices.size();
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    return 0;
 }
 
 void Mesh::Draw(GLuint shader) {
@@ -89,6 +144,11 @@ void Mesh::Draw(GLuint shader) {
     glActiveTexture(GL_TEXTURE0);
     //Draw the mesh
     glBindVertexArray(this->VAO);
-    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+    if (this->fixed) {
+        glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+    } else {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+
     glBindVertexArray(0);
 }

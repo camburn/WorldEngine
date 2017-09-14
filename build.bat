@@ -1,11 +1,10 @@
-REM CALL "C:/Program Files (x86)/Microsoft Visual Studio/Preview/Community/VC/Auxiliary/Build/vcvars32.bat"
-CALL "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-REM del /Q "C:/Users/campbell/Documents/Projects/embed_python/build/*"
-REM cd /d "C:/Users/campbell/Documents/Projects/embed_python/build"
+if not defined DevEnvDir (
+    CALL "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+)
 del /Q D:\projects\PyEngine\build\*
 cd /d D:\projects\PyEngine\build
-REM Build x86
-cl /Zl /MD /EHsc ^
+ECHO "Bulding PyEngine"
+cl /Zl /MD /EHsc /Z7^
     ../src/*.cpp^
     ../src/graphics/*.cpp^
     ../src/imgui/*.cpp^
@@ -24,7 +23,7 @@ cl /Zl /MD /EHsc ^
     /I"D:/libraries/shapelib-1.4.0"^
     /I"D:/libraries/soil/include"^
     /link^
-    /NODEFAULTLIB:library^
+    /NODEFAULTLIB:libcmt.lib^
     /LIBPATH:"D:/python36/libs/"^
     python36.lib^
     python36_d.lib^
@@ -39,6 +38,7 @@ cl /Zl /MD /EHsc ^
     /LIBPATH:"D:/libraries/glew-2.0.0/lib/Release/Win32/"^
     glew32s.lib^
     /LIBPATH:"D:/libraries/soil/lib/"^
+    /LTCG^
     SOIL.lib^
     /LIBPATH:"D:/libraries/freetype/lib/"^
     freetype.lib^
