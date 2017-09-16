@@ -455,8 +455,17 @@ int main(int argc, char *argv[]) {
             glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
             modelObjects[i].model.Draw(programID);
             //DrawPlanes(programID);
-            planes.Draw(programID);
         }
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 model_mvp = Projection * rotated_view * model;
+        glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
+        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
+        glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
+        glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
+        GLint tex_loc = glGetUniformLocation(drawObjects[0].program, "texture_diffuse1");
+        glUniform1i(tex_loc, 0);
+        glBindTexture(GL_TEXTURE_2D, drawObjects[0].tex_id);
+        planes.Draw(programID);
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {

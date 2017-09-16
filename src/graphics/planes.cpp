@@ -26,7 +26,7 @@ Textures should be able to use a alpha component for transparency
 // to smaller planes, larger planes still require a high resolution image and 
 // will leave no room for smaller textures
 
-float Z = 1.0;
+float Z = -2.0;
 
 //struct Vertex {
 //    glm::vec3 Position;
@@ -63,7 +63,7 @@ int UpdatePlaneBuffers(Mesh plane_mesh) {
 
     vector<Vertex> vertex_data;
     vector<GLuint> index_data;
-    CreatePlane(vec2(0, 0), 50, 50, vertex_data, index_data);
+    CreatePlane(vec2(0, 0), 1, 1, vertex_data, index_data);
     plane_mesh.AppendData(vertex_data, index_data);
 
     return 0;
@@ -85,13 +85,13 @@ void CreatePlane(vec2 pos, float width, float height,
     v4.Position = p4;
 
     GLuint index1 = vertex_data.size();
-    vertex_data.push_back(v1);
-    GLuint index2 = vertex_data.size();
-    vertex_data.push_back(v2);
-    GLuint index3 = vertex_data.size();
-    vertex_data.push_back(v3);
-    GLuint index4 = vertex_data.size();
-    vertex_data.push_back(v4);
+    //vertex_data.push_back(v1);
+    GLuint index2 = vertex_data.size() + 1;
+    //vertex_data.push_back(v2);
+    GLuint index3 = vertex_data.size() + 2;
+    //vertex_data.push_back(v3);
+    GLuint index4 = vertex_data.size() + 3;
+    //vertex_data.push_back(v4);
 
     // Triangle 1
     index_data.push_back(index3);
@@ -113,9 +113,13 @@ void CreatePlane(vec2 pos, float width, float height,
 
     v1.TexCoord = vec2(0.0, 0.0);
     v2.TexCoord = vec2(0.0, 1.0);
-    v3.TexCoord = vec2(1.0, 1.0);
-    v4.TexCoord = vec2(1.0, 0.0);
+    v3.TexCoord = vec2(1.0, 0.0);
+    v4.TexCoord = vec2(1.0, 1.0);
 
+    vertex_data.push_back(v1);
+    vertex_data.push_back(v2);
+    vertex_data.push_back(v3);
+    vertex_data.push_back(v4);
 }
 
 void createTexturedPlane() {
