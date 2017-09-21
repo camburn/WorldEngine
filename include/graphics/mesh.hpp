@@ -36,15 +36,18 @@ public:
     Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
          vector<Texture> textures);
     Mesh(int max_vertices);
+    int IndexCount();
+    int VertexCount();
     int AppendData(vector<Vertex> vertices, vector<GLuint> indices);
     void Draw(GLuint shader);
 private:
     GLuint VAO, VBO, EBO;
     bool fixed = false;
     int max_vertices;
-    int v_offset = 0;
-    int i_offset = 0;
-    int i_size = 0;
+    int v_offset;
+    int i_offset;
+    int i_size;
+    int v_size;
     void SetupMesh();
     void BufferData();
     void SetBuffer();

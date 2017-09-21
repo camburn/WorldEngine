@@ -339,8 +339,11 @@ int main(int argc, char *argv[]) {
 
     // Planes
     //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
-    Mesh planes = InitPlanes();
-    int result = UpdatePlaneBuffers(planes);
+    Mesh planes(256);
+    int result = UpdatePlaneBuffers(planes, glm::vec2(1, 1), 1, 1);
+    result = UpdatePlaneBuffers(planes, glm::vec2(4, 4), 4, 4);
+    result = UpdatePlaneBuffers(planes, glm::vec2(2, 2), 2, 2);
+    result = UpdatePlaneBuffers(planes, glm::vec2(0.5, 0.5), 0.5, 0.5);
 
     // Create our Objects
     DrawObject drawObjects[] = {

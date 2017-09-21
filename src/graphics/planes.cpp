@@ -47,30 +47,27 @@ Could supply another buffer of model matrices (4x4 - 64bytes)
 (model matrices represent pos rotation and scale)
 Or a buffer of worldspace positions (then I would have to transform on the GPU)
 */
-Mesh InitPlanes() {
-    return Mesh(256);
-}
 /*
 void DrawPlanes(GLuint shader) {
     // Draw all planes currently in the array
     plane_mesh.Draw(shader);
 }
 */
-int UpdatePlaneBuffers(Mesh plane_mesh) {
+int UpdatePlaneBuffers(Mesh &plane_mesh, vec2 pos, float width, float height) {
     // This should be called when we have new planes that need to be packed 
     // into our array
     // Update whole thing or just the difference.
 
     vector<Vertex> vertex_data;
     vector<GLuint> index_data;
-    CreatePlane(vec2(0, 0), 1, 1, vertex_data, index_data);
+    CreatePlane(pos, width, height, vertex_data, index_data, plane_mesh.VertexCount());
     plane_mesh.AppendData(vertex_data, index_data);
 
     return 0;
 }
 
 void CreatePlane(vec2 pos, float width, float height, 
-    vector<Vertex>& vertex_data, vector<GLuint>& index_data) {
+    vector<Vertex>& vertex_data, vector<GLuint>& index_data, int start_index) {
 
     Vertex v1, v2, v3, v4 = Vertex();
 
@@ -84,14 +81,10 @@ void CreatePlane(vec2 pos, float width, float height,
     v3.Position = p3;
     v4.Position = p4;
 
-    GLuint index1 = vertex_data.size();
-    //vertex_data.push_back(v1);
-    GLuint index2 = vertex_data.size() + 1;
-    //vertex_data.push_back(v2);
-    GLuint index3 = vertex_data.size() + 2;
-    //vertex_data.push_back(v3);
-    GLuint index4 = vertex_data.size() + 3;
-    //vertex_data.push_back(v4);
+    GLuint index1 = start_index;
+    GLuint index2 = 1 + start_index;
+    GLuint index3 = 2 + start_index;
+    GLuint index4 = 3 + start_index;
 
     // Triangle 1
     index_data.push_back(index3);

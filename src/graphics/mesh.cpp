@@ -34,12 +34,25 @@ Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> text
 }
 
 Mesh::Mesh(int max_vertices) {
-    this->vertices.reserve(max_vertices);
-    this->indices.reserve(max_vertices);
-    this->textures.reserve(max_vertices);
+    vertices.reserve(max_vertices);
+    indices.reserve(max_vertices);
+    textures.reserve(max_vertices);
     this->max_vertices = max_vertices;
+    this->v_offset = 0;
+    this->i_offset = 0;
+    this->i_size = 0;
+    this->v_size = 0;
+
     this->SetupMesh();
     this->SetBuffer();
+}
+
+int Mesh::IndexCount() {
+    return this->i_size;
+}
+
+int Mesh::VertexCount() {
+    return this->v_size;
 }
 
 void Mesh::SetupMesh() {
@@ -112,6 +125,7 @@ int Mesh::AppendData(vector<Vertex> vertices, vector<GLuint> indices) {
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, this->i_offset, data_size, &indices[0]);
     this->i_offset += data_size;
     this->i_size += indices.size();
+    this->v_size += vertices.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -147,7 +161,7 @@ void Mesh::Draw(GLuint shader) {
     if (this->fixed) {
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
     } else {
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, this->i_size, GL_UNSIGNED_INT, 0);
     }
 
     glBindVertexArray(0);
