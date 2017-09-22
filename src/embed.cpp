@@ -335,10 +335,10 @@ int main(int argc, char *argv[]) {
     //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
     //Mesh planes(256);
     InitPlanes();
-    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1);
-    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4);
-    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2);
-    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5);
+    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1, "grass");
+    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4, "rock");
+    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2, "sand");
+    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5, "dirt");
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -462,7 +462,6 @@ int main(int argc, char *argv[]) {
         glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
         GLint tex_loc = glGetUniformLocation(drawObjects[0].program, "texture_diffuse1");
         glUniform1i(tex_loc, 0);
-        glBindTexture(GL_TEXTURE_2D, drawObjects[0].tex_id);
         DrawPlanes(programID);
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {

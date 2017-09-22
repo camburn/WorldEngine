@@ -97,7 +97,7 @@ pyengine_drawplane(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ffff", &x, &y, &w, &h)) {
         return NULL;
     }
-    UpdatePlaneBuffers(vec2(x, y), w, h);
+    UpdatePlaneBuffers(vec2(x, y), w, h, "grass");
     return Py_BuildValue("");
 }
 

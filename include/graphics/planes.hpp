@@ -1,4 +1,6 @@
 #include <vector>
+#include <map>
+#include <string>
 using namespace std;
 
 #include <glm/glm.hpp>
@@ -10,8 +12,13 @@ using glm::vec3;
 #include "graphics/buffers.hpp"
 #include "graphics/mesh.hpp"
 
+struct TexRect;
+
 void InitPlanes();
 void DrawPlanes(GLuint shader);
-int UpdatePlaneBuffers(vec2 pos, float width, float height);
+int UpdatePlaneBuffers(vec2 pos, float width, float height, string texture);
+void SetTextures(string texture_name);
+void SetTextureMap(string texture_name);
 void CreatePlane(vec2 pos, float width, float height, 
-    vector<Vertex>& vertex_data, vector<GLuint>& index_data, int start_index);
+    vector<Vertex>& vertex_data, vector<GLuint>& index_data, 
+    int start_index, TexRect texture);
