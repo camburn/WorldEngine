@@ -27,7 +27,7 @@ Textures should be able to use a alpha component for transparency
 // will leave no room for smaller textures
 
 float Z = -2.0;
-
+Mesh plane_mesh(256);
 //struct Vertex {
 //    glm::vec3 Position;
 //    glm::vec3 Normal;
@@ -47,13 +47,17 @@ Could supply another buffer of model matrices (4x4 - 64bytes)
 (model matrices represent pos rotation and scale)
 Or a buffer of worldspace positions (then I would have to transform on the GPU)
 */
-/*
+
+void InitPlanes() {
+    plane_mesh.Init();
+}
+
 void DrawPlanes(GLuint shader) {
     // Draw all planes currently in the array
     plane_mesh.Draw(shader);
 }
-*/
-int UpdatePlaneBuffers(Mesh &plane_mesh, vec2 pos, float width, float height) {
+
+int UpdatePlaneBuffers(vec2 pos, float width, float height) {
     // This should be called when we have new planes that need to be packed 
     // into our array
     // Update whole thing or just the difference.

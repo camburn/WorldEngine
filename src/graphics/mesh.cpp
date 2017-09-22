@@ -41,8 +41,10 @@ Mesh::Mesh(int max_vertices) {
     this->v_offset = 0;
     this->i_offset = 0;
     this->i_size = 0;
-    this->v_size = 0;
+    this->v_size = 0;  
+}
 
+void Mesh::Init() {
     this->SetupMesh();
     this->SetBuffer();
 }

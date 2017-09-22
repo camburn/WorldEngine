@@ -10,7 +10,8 @@ using glm::vec3;
 #include "graphics/buffers.hpp"
 #include "graphics/mesh.hpp"
 
+void InitPlanes();
 void DrawPlanes(GLuint shader);
-int UpdatePlaneBuffers(Mesh &plane_mesh, vec2 pos, float width, float height);
+int UpdatePlaneBuffers(vec2 pos, float width, float height);
 void CreatePlane(vec2 pos, float width, float height, 
     vector<Vertex>& vertex_data, vector<GLuint>& index_data, int start_index);

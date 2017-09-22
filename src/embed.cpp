@@ -183,7 +183,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     Py_SetProgramName(program);
-    PyImport_AppendInittab("pyengine", &PyInit_PyEngine);
+    PyImport_AppendInittab("debug", &PyInit_Debug);
+    PyImport_AppendInittab("planes", &PyInit_Planes);
     Py_Initialize();
     PyRun_SimpleString(
         "import sys\n"
@@ -215,13 +216,6 @@ int main(int argc, char *argv[]) {
         "the_time = time()\n"
         "print(f'Time is {the_time}')\n"
     );
-    /*
-    PyRun_SimpleString(
-        "import emb\n"
-        "print('Result: {}'.format(emb.testfunction(2, 2, 2)))\n"
-        "emb.stringfunc('A test c print')\n"
-    );
-    */
     
     // OPENGL STUFF
     if (!glfwInit()) {
@@ -339,11 +333,12 @@ int main(int argc, char *argv[]) {
 
     // Planes
     //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
-    Mesh planes(256);
-    int result = UpdatePlaneBuffers(planes, glm::vec2(1, 1), 1, 1);
-    result = UpdatePlaneBuffers(planes, glm::vec2(4, 4), 4, 4);
-    result = UpdatePlaneBuffers(planes, glm::vec2(2, 2), 2, 2);
-    result = UpdatePlaneBuffers(planes, glm::vec2(0.5, 0.5), 0.5, 0.5);
+    //Mesh planes(256);
+    InitPlanes();
+    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1);
+    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4);
+    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2);
+    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5);
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -468,7 +463,7 @@ int main(int argc, char *argv[]) {
         GLint tex_loc = glGetUniformLocation(drawObjects[0].program, "texture_diffuse1");
         glUniform1i(tex_loc, 0);
         glBindTexture(GL_TEXTURE_2D, drawObjects[0].tex_id);
-        planes.Draw(programID);
+        DrawPlanes(programID);
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
