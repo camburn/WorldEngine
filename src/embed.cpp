@@ -16,6 +16,7 @@ Python function calls that can be called from C.
 
 #include "python_api.hpp"
 #include "graphics/arcball.hpp"
+#include "graphics/camera.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/cube.hpp"
 #include "graphics/buffers.hpp"
@@ -40,8 +41,7 @@ void disable_debugs() {
     debug_disable_lighting = false;
 }
 
-static Arcball arcball(width, height, 0.1f, true, true);
-glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+glm::mat4 Projection = glm::mat4(1.0f);
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
@@ -80,6 +80,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             disable_debugs();
             debug_disable_lighting = true;
         }
+    }
+    if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+        printf("Toggling Camera\n");
+        toggleCamera();
+        Projection = getProj();
     }
 }
 
@@ -146,9 +151,6 @@ int arcball_on = false;
 int zoom = 0;
 
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    arcball.mouseButtonCallback(window, button, action, mods);
-}
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     // Scroll backwards = -1.0
@@ -157,16 +159,13 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 // glfwSetCursorPosCallback(window, cursor_pos_callback);
-void mouseCursorCallback(GLFWwindow* window, double xpos, double ypos) {
-    arcball.cursorCallback(window, xpos, ypos);
-}
 
 void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
     width = newWidth;
     height = newHeight;
     printf("Width: %i, Height: %i\n", width, height);
     glViewport(0, 0, width, height);
-    Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    Projection = cameraUpdate(width, height);
 }
 
 int main(int argc, char *argv[]) {
@@ -297,16 +296,7 @@ int main(int argc, char *argv[]) {
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
-    Projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
-    /*
-    glm::mat4 View = glm::lookAt(
-        viewPos, // Light Pos
-        glm::vec3(0, 0, 0), // Look At
-        glm::vec3(0, 1, 0)  // Up
-    );
-    glm::mat4 model_mat = glm::mat4(1.0f);
-    glm::mat4 mvp = Projection * View * model_mat;
-    */
+    Projection = getProj();
     // Light Objects
     /*
     Light Types
@@ -339,6 +329,9 @@ int main(int argc, char *argv[]) {
     result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4, "rock");
     result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2, "sand");
     result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5, "dirt");
+    if (!result) {
+        printf("Error updating plane buffers\n");
+    }
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -399,7 +392,7 @@ int main(int argc, char *argv[]) {
 
     // Register Key callbacks
     // FIXME: this appears to break my console
-    //glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window, key_callback);
     //glfwSetMouseButtonCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
@@ -414,8 +407,7 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
-        glm::mat4 View = glm::lookAt(viewPos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        glm::mat4 rotated_view = View * arcball.createViewRotationMatrix();
+        glm::mat4 rotated_view = getView();
 
         glUseProgram(programID);
         for (uint i = 0; i < modelObjects.size(); i++) {
