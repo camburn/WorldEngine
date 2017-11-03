@@ -36,7 +36,7 @@ public:
     Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
          vector<Texture> textures);
     Mesh(int max_vertices);
-    void Mesh::Init();
+    void Init();
     int IndexCount();
     int VertexCount();
     int AppendData(vector<Vertex> vertices, vector<GLuint> indices);

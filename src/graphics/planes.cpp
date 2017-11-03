@@ -107,7 +107,6 @@ void CreatePlane(vec2 pos, float width, float height,
     index_data.push_back(index3);
     index_data.push_back(index4);
     index_data.push_back(index2);
-    vec3 normalB = glm::triangleNormal(p2, p4, p3);
     
     // Should average normal A and B
     v1.Normal = normalA;
