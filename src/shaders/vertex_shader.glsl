@@ -9,7 +9,6 @@ uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
 uniform mat3 NormalMat;
-uniform bool use_model_buffer = false;
 
 out vec2 TexCoord;
 out vec3 Normal;
