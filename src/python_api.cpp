@@ -93,11 +93,12 @@ PyInit_Debug(void) {
 /* BEGIN 2D LIBRARY - C API */
 static PyObject*
 pyengine_drawplane(PyObject *self, PyObject *args) {
+    char* str_data;
     float x, y, w, h;
-    if (!PyArg_ParseTuple(args, "ffff", &x, &y, &w, &h)) {
+    if (!PyArg_ParseTuple(args, "sffff", &str_data, &x, &y, &w, &h)) {
         return NULL;
     }
-    UpdatePlaneBuffers(vec2(x, y), w, h, "grass");
+    UpdatePlaneBuffers(vec2(x, y), w, h, str_data, 0);
     return Py_BuildValue("");
 }
 

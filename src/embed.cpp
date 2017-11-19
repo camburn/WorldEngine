@@ -88,14 +88,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+ImGuiIO& io = ImGui::GetIO();
+
+void key_handler(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (io.WantCaptureKeyboard) {
+        ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+    } else {
+        key_callback(window, key, scancode, action, mods);
+    }
+}
+
 void APIENTRY glDebugOutput(GLenum source,
     GLenum type,
     GLuint id,
     GLenum severity,
     GLsizei length,
     const GLchar *message,
-    const void *userParam)
-{
+    const void *userParam) {
     // ignore non-significant error/warning codes
     // Message 131184 displays Buffer memory info,
     // TODO: Load this data into a debug message window
@@ -168,15 +177,15 @@ void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
     Projection = cameraUpdate(width, height);
 }
 
-int main(int argc, char *argv[]) {
+wchar_t *program;
 
-    LoadShapefile();
-
+int pythonTesting(int argc, char *argv[]) {
+    
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
 
-    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+    program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
         fprintf(stderr, "Fatal error: cannot decode argv[0] (locale)\n");
         exit(1);
@@ -215,6 +224,13 @@ int main(int argc, char *argv[]) {
         "the_time = time()\n"
         "print(f'Time is {the_time}')\n"
     );
+}
+
+int main(int argc, char *argv[]) {
+
+    LoadShapefile();
+
+    pythonTesting(argc, argv);
     
     // OPENGL STUFF
     if (!glfwInit()) {
@@ -264,6 +280,8 @@ int main(int argc, char *argv[]) {
 
     GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
                                       "./src/shaders/fragment_shader.glsl");
+    GLuint sprite_program = BuildGlProgram("./src/shaders/sprite_vertex_shader.glsl", 
+                                           "./src/shaders/fragment_shader.glsl");
     GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
                                            "./src/shaders/simple_fragment_shader.glsl");
     DebugInit();
@@ -274,6 +292,10 @@ int main(int argc, char *argv[]) {
     glEnable(GL_MULTISAMPLE);
 
     glViewport(0, 0, width, height);
+
+    GLint size;
+    glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &size);
+    std::cout << "GL_MAX_UNIFORM_BLOCK_SIZE is " << size << " bytes." << endl;
 
     // Mesh Objects
     GLuint CubeMesh = BufferMeshDataVNT(cube_data_normal, sizeof(cube_data_normal));
@@ -296,6 +318,7 @@ int main(int argc, char *argv[]) {
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
+    cameraUpdate(width, height);
     Projection = getProj();
     // Light Objects
     /*
@@ -324,14 +347,20 @@ int main(int argc, char *argv[]) {
     // Planes
     //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
     //Mesh planes(256);
-    InitPlanes();
-    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1, "grass");
-    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4, "rock");
-    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2, "sand");
-    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5, "dirt");
-    if (!result) {
+    InitPlanes(sprite_program);
+
+    int player_index = UpdatePlaneMatrix("player", glm::mat4(1.0f));
+    int player_index2 = UpdatePlaneMatrix("player2", glm::mat4(1.0f));
+
+    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1, "grass", player_index);
+    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4, "rock", player_index2);
+    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2, "sand", 0);
+    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5, "dirt", 0);
+    if (result > 0) {
         printf("Error updating plane buffers\n");
     }
+    UpdateMatrixBuffer();
+
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -380,6 +409,8 @@ int main(int argc, char *argv[]) {
     GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
     GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
     GLuint modelMatId = glGetUniformLocation(programID, "Model");
+    GLuint projMatId = glGetUniformLocation(programID, "Projection");
+    GLuint viewMatId = glGetUniformLocation(programID, "View");
     GLint objectColorLoc = glGetUniformLocation(programID, "objectColor");
     GLint lightColorLoc = glGetUniformLocation(programID, "lightColor");
     GLint lightPosLoc = glGetUniformLocation(programID, "lightPos");
@@ -391,9 +422,7 @@ int main(int argc, char *argv[]) {
     io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
 
     // Register Key callbacks
-    // FIXME: this appears to break my console
-    glfwSetKeyCallback(window, key_callback);
-    //glfwSetMouseButtonCallback(window, mouse_callback);
+    glfwSetKeyCallback(window, key_handler);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
     glfwSetWindowSizeCallback(window, resizeCallback);
@@ -401,15 +430,31 @@ int main(int argc, char *argv[]) {
     // Main Loop
     printf("%s\n", DebugFlagList().c_str());
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
-    do {    
+    do {
 
         glfwPollEvents();
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
         glm::mat4 rotated_view = getView();
 
         glUseProgram(programID);
+
+        MVPMatID = glGetUniformLocation(programID, "MVP");
+        normalMatID = glGetUniformLocation(programID, "NormalMat");
+        modelMatId = glGetUniformLocation(programID, "Model");
+        projMatId = glGetUniformLocation(programID, "Projection");
+        viewMatId = glGetUniformLocation(programID, "View");
+        objectColorLoc = glGetUniformLocation(programID, "objectColor");
+        lightColorLoc = glGetUniformLocation(programID, "lightColor");
+        lightPosLoc = glGetUniformLocation(programID, "lightPos");
+        viewPosLoc = glGetUniformLocation(programID, "viewPos");
+
+        glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
+        glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
+
         for (uint i = 0; i < modelObjects.size(); i++) {
             // Calculate the matrices
             // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
@@ -432,6 +477,7 @@ int main(int argc, char *argv[]) {
             MVPMatID = glGetUniformLocation(programID, "MVP");
             glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
             glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
+
             glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
             glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
                 DebugGetFlag("render:draw_normals"));
@@ -446,15 +492,7 @@ int main(int argc, char *argv[]) {
             modelObjects[i].model.Draw(programID);
             //DrawPlanes(programID);
         }
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 model_mvp = Projection * rotated_view * model;
-        glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
-        glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
-        glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
-        GLint tex_loc = glGetUniformLocation(drawObjects[0].program, "texture_diffuse1");
-        glUniform1i(tex_loc, 0);
-        DrawPlanes(programID);
+
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
@@ -472,6 +510,8 @@ int main(int argc, char *argv[]) {
             glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
             // Load camera to OpenGL
             MVPMatID = glGetUniformLocation(drawObjects[i].program, "MVP");
+            normalMatID = glGetUniformLocation(drawObjects[i].program, "NormalMat");
+            modelMatId = glGetUniformLocation(drawObjects[i].program, "Model");
             glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
            
             if (drawObjects[i].program == programID) {
@@ -503,9 +543,61 @@ int main(int argc, char *argv[]) {
             glBindVertexArray(0);
         }
 
+        // ========= SPRITE DRAWING =========
+        
+        glUseProgram(sprite_program);
+
+        //MVPMatID = glGetUniformLocation(sprite_program, "MVP");
+        //normalMatID = glGetUniformLocation(sprite_program, "NormalMat");
+        projMatId = glGetUniformLocation(sprite_program, "Projection");
+        viewMatId = glGetUniformLocation(sprite_program, "View");
+        objectColorLoc = glGetUniformLocation(sprite_program, "objectColor");
+        lightColorLoc = glGetUniformLocation(sprite_program, "lightColor");
+        lightPosLoc = glGetUniformLocation(sprite_program, "lightPos");
+        viewPosLoc = glGetUniformLocation(sprite_program, "viewPos");
+
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
+        glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
+        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
+
+        glUniform1i(glGetUniformLocation(sprite_program, "debug_draw_normals"),
+            DebugGetFlag("render:draw_normals"));
+        glUniform1i(glGetUniformLocation(sprite_program, "debug_draw_texcoords"),
+            DebugGetFlag("render:draw_texcoords"));
+        glUniform1i(glGetUniformLocation(sprite_program, "debug_disable_lighting"),
+            DebugGetFlag("render:disable_lighting"));
+
+        glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
+        glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
+        glm::mat4 model = glm::mat4(1.0f);
+        // Need to get correct 
+
+        //glm::mat4 model_mvp = Projection * rotated_view * model;
+        //glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
+        //glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
+        //glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
+        GLint tex_loc = glGetUniformLocation(sprite_program, "texture_diffuse1");
+        //glUniform1i(tex_loc, 0);
+
+        glm::mat4 player_mat = GetPlaneMatrix("player");
+        float x = (float)glm::sin(glfwGetTime()) * 0.01;
+        player_mat = glm::translate(player_mat, vec3(0, x, 0));
+        UpdatePlaneMatrix("player", player_mat);
+
+        player_mat = GetPlaneMatrix("player2");
+        x = (float)glm::sin(glfwGetTime()) * 0.01;
+        player_mat = glm::translate(player_mat, vec3(x, 0, 0));
+        UpdatePlaneMatrix("player2", player_mat);
+
+        UpdateMatrixBuffer();
+        DrawPlanes(sprite_program);
+        
+        // ========= END SPRITE DRAWING =========
+
         DebugDraw(Projection, rotated_view);
 
-        ImGui_ImplGlfwGL3_NewFrame();
+        //ImGui_ImplGlfwGL3_NewFrame();
         /*
         // 1. Show a simple window
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
