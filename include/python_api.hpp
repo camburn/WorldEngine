@@ -5,7 +5,9 @@
 #include <iostream>
 #include <string>
 #include "graphics/debug.hpp"
+#include "graphics/planes.hpp"
 
-PyObject* PyInit_PyEngine(void);
+PyObject* PyInit_Debug(void);
+PyObject* PyInit_Planes(void);
 
 #endif

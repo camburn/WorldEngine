@@ -30,8 +30,6 @@ pyengine_debug_clear(PyObject *self, PyObject *args) {
     return Py_BuildValue("");
 }
 
-// std::string DebugFlagSet(const char* flag);
-// std::string DebugFlagList();
 static PyObject*
 pyengine_debug_flatset(PyObject *self, PyObject *args) {
     char* str_data;
@@ -69,27 +67,55 @@ pyengine_stringfunc(PyObject *self, PyObject *args) {
 }
 
 // Create a method list to give to our module
-static PyMethodDef PyEngineMethods[] = {
-    { "debug_drawline", pyengine_debug_drawline, METH_VARARGS, "Draw a debug line." },
-    { "debug_drawcube", pyengine_debug_drawcube, METH_VARARGS, "Draw a debug cube." },
-    { "debug_clear", pyengine_debug_clear, METH_VARARGS, "Clear the debug layers." },
-    { "debug_flag_list", pyengine_debug_flatlist, METH_VARARGS, "List all engine debug flags." },
-    { "debug_flag_set", pyengine_debug_flatset, METH_VARARGS, "Set an engine debug flag." },
+static PyMethodDef DebugMethods[] = {
+    { "drawline", pyengine_debug_drawline, METH_VARARGS, "Draw a debug line." },
+    { "drawcube", pyengine_debug_drawcube, METH_VARARGS, "Draw a debug cube." },
+    { "clear", pyengine_debug_clear, METH_VARARGS, "Clear the debug layers." },
+    { "flag_list", pyengine_debug_flatlist, METH_VARARGS, "List all engine debug flags." },
+    { "flag_set", pyengine_debug_flatset, METH_VARARGS, "Set an engine debug flag." },
     { "testfunction", pyengine_testfunction, METH_VARARGS, "Multiply args."},
     { "stringfunc", pyengine_stringfunc, METH_VARARGS, "C print a python str."},
     {NULL, NULL, 0, NULL}
 };
 
 // Create a python module
-static PyModuleDef PyEngineModule = {
-    PyModuleDef_HEAD_INIT, "pyengine", NULL, -1, PyEngineMethods,
+static PyModuleDef DebugModule = {
+    PyModuleDef_HEAD_INIT, "debug", NULL, -1, DebugMethods,
     NULL, NULL, NULL, NULL
 };
 
 PyObject* 
-PyInit_PyEngine(void) {
-    return PyModule_Create(&PyEngineModule);
+PyInit_Debug(void) {
+    return PyModule_Create(&DebugModule);
 }
 /* END - C API */
 
+/* BEGIN 2D LIBRARY - C API */
+static PyObject*
+pyengine_drawplane(PyObject *self, PyObject *args) {
+    char* str_data;
+    float x, y, w, h;
+    if (!PyArg_ParseTuple(args, "sffff", &str_data, &x, &y, &w, &h)) {
+        return NULL;
+    }
+    UpdatePlaneBuffers(vec2(x, y), w, h, str_data, 0);
+    return Py_BuildValue("");
+}
 
+// Create a method list to give to our module
+static PyMethodDef PlanesMethods[] = {
+    { "new",  pyengine_drawplane, METH_VARARGS, "Draw a plane." },
+    {NULL, NULL, 0, NULL}
+};
+
+// Create a python module
+static PyModuleDef PlanesModule = {
+    PyModuleDef_HEAD_INIT, "planes", NULL, -1, PlanesMethods,
+    NULL, NULL, NULL, NULL
+};
+
+PyObject* 
+PyInit_Planes(void) {
+    return PyModule_Create(&PlanesModule);
+}
+/* END 2D LIBRARY - C API */

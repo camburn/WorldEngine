@@ -15,40 +15,33 @@ using namespace std;
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-struct Vertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoord;
-};
 
-struct VertexSprite {
+struct SpriteVertex {
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 TexCoord;
     GLuint ModelLoc;
 };
 
-struct Texture {
+struct SpriteTexture {
     GLuint id;
     string type;
     aiString path;
 };
 
-class Mesh {
+class SpriteMesh {
 public:
-    vector<Vertex> vertices;
+    vector<SpriteVertex> vertices;
     vector<GLuint> indices;
-    vector<Texture> textures;
+    vector<SpriteTexture> textures;
 
-    Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
-         vector<Texture> textures);
-    Mesh(int max_vertices, bool use_model_buffer=false, char* name="Default");
-    void Init();
+    SpriteMesh(int max_vertices, bool use_model_buffer=false, char* name="Default");
+    void Init(GLuint sprite_program);
     int UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix);
     int IndexCount();
     int VertexCount();
     int CreateUniformBlock(GLuint shader_id);
-    int AppendData(vector<Vertex> vertices, vector<GLuint> indices);
+    int AppendData(vector<SpriteVertex> vertices, vector<GLuint> indices);
     void Draw(GLuint shader);
 private:
     GLuint VAO, VBO, EBO, MBO, UBO;

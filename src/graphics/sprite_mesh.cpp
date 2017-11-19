@@ -1,4 +1,4 @@
-#include "graphics/mesh.hpp"
+#include "graphics/sprite_mesh.hpp"
 
 // FIXME: This has gone full c++ we might want to convert this to C
 
@@ -24,16 +24,7 @@ A mesh also has a material (per mesh) that has the following attributes:
  - shininess
 */
 
-Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures) {
-    this->vertices = vertices;
-    this->indices = indices;
-    this->textures = textures;
-    this->SetupMesh();
-    this->BufferData();
-    this->fixed = true;
-}
-
-Mesh::Mesh(int max_vertices, bool use_model_buffer, char* name) {
+SpriteMesh::SpriteMesh(int max_vertices, bool use_model_buffer, char* name) {
     vertices.reserve(max_vertices);
     indices.reserve(max_vertices);
     textures.reserve(max_vertices);
@@ -48,20 +39,21 @@ Mesh::Mesh(int max_vertices, bool use_model_buffer, char* name) {
     this->name = name;
 }
 
-void Mesh::Init() {
+void SpriteMesh::Init(GLuint sprite_program) {
     this->SetupMesh();
     this->SetBuffer();
+    this->CreateUniformBlock(sprite_program);
 }
 
-int Mesh::IndexCount() {
+int SpriteMesh::IndexCount() {
     return this->i_size;
 }
 
-int Mesh::VertexCount() {
+int SpriteMesh::VertexCount() {
     return this->v_size;
 }
 
-void Mesh::SetupMesh() {
+void SpriteMesh::SetupMesh() {
     glGenVertexArrays(1, &this->VAO);
     glGenBuffers(1, &this->VBO);
     glGenBuffers(1, &this->EBO);
@@ -72,30 +64,30 @@ void Mesh::SetupMesh() {
 
     //Define our data for OpenGL
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), 
         (GLvoid*)0);
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
-        (GLvoid*)offsetof(Vertex, Normal));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), 
+        (GLvoid*)offsetof(SpriteVertex, Normal));
 
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 
-        (GLvoid*)offsetof(Vertex, TexCoord));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), 
+        (GLvoid*)offsetof(SpriteVertex, TexCoord));
 
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(GLuint), 
-    (GLvoid*)offsetof(Vertex, TexCoord));
+    glVertexAttribIPointer(3, 1, GL_UNSIGNED_INT, sizeof(SpriteVertex), 
+        (GLvoid*)offsetof(SpriteVertex, ModelLoc));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Mesh::BufferData() {
+void SpriteMesh::BufferData() {
     // Buffer a fixed data source to the GPU
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex),
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(SpriteVertex),
         &this->vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
@@ -106,42 +98,37 @@ void Mesh::BufferData() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Mesh::SetBuffer() {
+void SpriteMesh::SetBuffer() {
     // Set a buffer amount for update at a later point in time
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-    glBufferData(GL_ARRAY_BUFFER, this->max_vertices * sizeof(Vertex),
+    glBufferData(GL_ARRAY_BUFFER, this->max_vertices * sizeof(SpriteVertex),
         NULL, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->max_vertices * sizeof(GLuint),
         NULL, GL_STATIC_DRAW);
 
-    if (this->use_model_buffer) {
-        glBindBuffer(GL_ARRAY_BUFFER, this->MBO);
-        glBufferData(GL_ARRAY_BUFFER, this->max_vertices * sizeof(GLuint),
-            NULL, GL_DYNAMIC_DRAW);
-    }
-        
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-int Mesh::CreateUniformBlock(GLuint shader_id) {
+int SpriteMesh::CreateUniformBlock(GLuint shader_id) {
+    glGenBuffers(1, &this->UBO);
     GLuint bindingPoint = 1;  // This is coded into the shader
     GLuint blockIndex = glGetUniformBlockIndex(shader_id, "ModelMatrices");
     glUniformBlockBinding(shader_id, blockIndex, bindingPoint);
 
-    GLuint MAX_MATRICES = 16;
-    glGenBuffers(1, &this->UBO);
+    GLuint MAX_MATRICES = 256;
+    
     glBindBuffer(GL_UNIFORM_BUFFER, this->UBO);
+    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, this->UBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * sizeof(GLfloat) * MAX_MATRICES,
         NULL, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, this->UBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     return 0;
 }
 
-int Mesh::UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix) {
+int SpriteMesh::UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix) {
     glBindBuffer(GL_ARRAY_BUFFER, this->UBO);
     int s = sizeof(model_matrix);
     glBufferSubData(GL_ARRAY_BUFFER, start_bytes, sizeof(model_matrix), 
@@ -150,12 +137,12 @@ int Mesh::UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix) {
     return 0;
 } 
 
-int Mesh::AppendData(vector<Vertex> vertices, vector<GLuint> indices) {
+int SpriteMesh::AppendData(vector<SpriteVertex> vertices, vector<GLuint> indices) {
     // Append data to this meshes buffer
     if (this->fixed) {
         return 1;
     }
-    int data_size = vertices.size() * sizeof(Vertex);
+    int data_size = vertices.size() * sizeof(SpriteVertex);
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
     glBufferSubData(GL_ARRAY_BUFFER, this->v_offset, data_size, &vertices[0]);
     this->v_offset += data_size;
@@ -167,20 +154,12 @@ int Mesh::AppendData(vector<Vertex> vertices, vector<GLuint> indices) {
     this->i_size += indices.size();
     this->v_size += vertices.size();
 
-    if (this->use_model_buffer) {
-        data_size = sizeof(glm::mat4);
-        glBindBuffer(GL_ARRAY_BUFFER, this->MBO);
-        glBufferSubData(GL_ARRAY_BUFFER, this->m_offset, data_size, &glm::mat4(1.0f)[0]);
-        this->m_offset += data_size;
-        this->m_size++;
-    }
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     return 0;
 }
 
-void Mesh::Draw(GLuint shader) {
+void SpriteMesh::Draw(GLuint shader) {
     GLuint diffuseNr = 1;
     GLuint specularNr = 1;
     for (GLuint i = 0; i < this->textures.size(); i++) {
@@ -205,12 +184,7 @@ void Mesh::Draw(GLuint shader) {
     }
     glActiveTexture(GL_TEXTURE0);
     //Draw the mesh
-    if (this->use_model_buffer) {
-        GLuint n = glGetUniformLocation(shader, "use_model_buffer");
-        glUniform1i(n, true);
-    } else {
-        glUniform1i(glGetUniformLocation(shader, "use_model_buffer"), false);
-    }
+    glBindBuffer(GL_UNIFORM_BUFFER, this->UBO);
     glBindVertexArray(this->VAO);
     if (this->fixed) {
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
