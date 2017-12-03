@@ -1,31 +1,5 @@
 #include "graphics/planes.hpp"
 
-/*
-I want two planes
-
-colored plane
-
-textured plane
-
-Textures should be able to use a alpha component for transparency
-
-1--2
-| /|
-|/ |
-3--4
-
-*/
-
-// A plane is 4 vertices or 2 triangles
-// How should I do my textures?
-// A) Large texture and use coords to pick my textures... means 
-// a single texture bind and single plane bind, can then draw as many sprites 
-// as are required.
-
-// This does make building our texture more complex though and is better suited 
-// to smaller planes, larger planes still require a high resolution image and 
-// will leave no room for smaller textures
-
 float Z = -2.0;
 SpriteMesh static_plane_mesh(256, false, "static");
 GLuint tex_id;
@@ -37,22 +11,103 @@ struct TexRect {
     float h;
 };
 
+struct Plane {
+    float w;
+    float h;
+    glm::vec2 pos;
+    string tex_name;
+    int model_index;
+    int start_bytes;
+};
+
 map<string, TexRect> texture_map;
 map<string, int> plane_positions;
 vector<glm::mat4> model_matrices;
 vector<int> update_list;
+vector<Plane> plane_list;
+
+
+void MatrixWidget(glm::mat4 matrix) {
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+    glm::vec3 eular_rot = glm::eulerAngles(rotation);
+
+    ImGui::Columns(4, "mycolumns"); // 4-ways, with border
+    ImGui::Separator();
+    ImGui::Text("Type"); ImGui::NextColumn();
+    ImGui::Text("X"); ImGui::NextColumn();
+    ImGui::Text("Y"); ImGui::NextColumn();
+    ImGui::Text("Z"); ImGui::NextColumn();
+    ImGui::Separator();
+
+    ImGui::Text("Translation"); ImGui::NextColumn();
+    ImGui::Text(to_string(translation.x).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(translation.y).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(translation.z).c_str()); ImGui::NextColumn();
+
+    ImGui::Text("Scale"); ImGui::NextColumn();
+    ImGui::Text(to_string(scale.x).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(scale.y).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(scale.z).c_str()); ImGui::NextColumn();
+
+    ImGui::Text("Rotation"); ImGui::NextColumn();
+    ImGui::Text(to_string(eular_rot.x).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(eular_rot.y).c_str()); ImGui::NextColumn();
+    ImGui::Text(to_string(eular_rot.z).c_str()); ImGui::NextColumn();
+
+    ImGui::Columns(1);
+    ImGui::Separator();
+}
+
+void DisplayPlaneData(bool* p_open) {
+    //ImGui::SetNextWindowPos(ImVec2(50,50));
+    //ImGui::SetNextWindowSize(ImVec2(430,450), ImGuiSetCond_FirstUseEver);
+    if (!ImGui::Begin("Planes", p_open))
+	{
+		ImGui::End();
+		return;
+	}
+    ImGui::Text("Plane Data");
+    if (ImGui::TreeNode("Planes")) {
+        for (auto const &data: plane_list) {
+            ImGui::Text("Texture %s; ", data.tex_name.c_str());
+            ImGui::SameLine();
+            ImGui::Text("w: %f, h: %f, x: %f, y: %f, m_loc: %i start_bytes: %ib", 
+                data.w, data.h, data.pos.x, data.pos.y, data.model_index, data.start_bytes);
+        }
+        ImGui::Text("Planes");
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Textures")) {
+        for (auto const &data: texture_map) {
+            ImGui::Text("Name %s; ", data.first.c_str());
+            ImGui::SameLine();
+            ImGui::Text("u: %f, v: %f, w: %f, h: %f", 
+                data.second.u, data.second.v, data.second.w, data.second.h);
+        }
+        ImGui::TreePop();
+
+    }
+    if (ImGui::TreeNode("Positions")) {
+        for (auto const &data: plane_positions) {
+            ImGui::Text("Name: %s, Index: %i", data.first.c_str(), data.second);
+            MatrixWidget(model_matrices[data.second]);
+
+        }
+        ImGui::TreePop();
+    }
+    ImGui::End();
+}
 
 void InitPlanes(GLuint sprite_program) {
     static_plane_mesh.Init(sprite_program);
     SetTextureMap("quad_texture.png");
     glm::mat4 m = mat4(1.0f);
     UpdatePlaneMatrix("default", m);
-
-    //plane_positions["player"] = 0;
-    //plane_positions["player2"] = 1;
-    
-    //model_matrices.push_back(m);
-    //model_matrices.push_back(m);
 }
 
 void SetTextures(string texture_name) {
@@ -65,6 +120,14 @@ void SetTextureMap(string texture_name) {
     texture_map.insert(pair<string, TexRect>("sand", TexRect{0.0,0.5,0.5,0.5}));
     texture_map.insert(pair<string, TexRect>("rock", TexRect{0.5,0.5,0.5,0.5}));
     SetTextures("quad_texture.png");
+}
+
+void TranslatePlaneMatrix(string name, float x, float y, float z) {
+    glm::mat4 model_matrix;
+    int matrix_index = plane_positions[name];
+    model_matrix = model_matrices[matrix_index];
+    model_matrix = glm::translate(model_matrix, vec3(x, y, z));
+    UpdatePlaneMatrix(name, model_matrix);
 }
 
 glm::mat4 GetPlaneMatrix(string name) {
@@ -89,20 +152,11 @@ int UpdatePlaneMatrix(string name, mat4 model_matrix) {
 }
 
 void UpdateMatrixBuffer() {
-    // Test moving matrix
-    //float x = (float)glm::sin(glfwGetTime());// * 0.01;
-    //mat4 m = model_matrices[plane_positions["player"]];
-    //mat4 m2 = model_matrices[plane_positions["player2"]];
-    //m = glm::translate(m, vec3(0, x, 0));
-
     while (!update_list.empty()) {
         int matrix_index = update_list.back();
         update_list.pop_back();
         static_plane_mesh.UpdateModelMatrix(matrix_index * 64, model_matrices[matrix_index]);
     }
-    
-    //static_plane_mesh.UpdateModelMatrix(0, m);
-    //static_plane_mesh.UpdateModelMatrix(sizeof(m), m2);
 }
 
 void DrawPlanes(GLuint shader) {
@@ -112,7 +166,7 @@ void DrawPlanes(GLuint shader) {
 }
 
 
-int UpdatePlaneBuffers(vec2 pos, float width, float height, string texture, int model_loc) {
+int UpdatePlaneBuffers(float width, float height, string texture, vec2 pos, int model_loc) {
     // This should be called when we have new planes that need to be packed 
     // into our array
     // Update whole thing or just the difference.
@@ -120,8 +174,9 @@ int UpdatePlaneBuffers(vec2 pos, float width, float height, string texture, int 
     vector<GLuint> index_data;
     CreatePlane(pos, width, height, vertex_data, index_data, 
                 static_plane_mesh.VertexCount(), texture_map[texture], model_loc);
-    static_plane_mesh.AppendData(vertex_data, index_data);
-
+    int start_bytes = static_plane_mesh.AppendData(vertex_data, index_data);
+    Plane plane_data = {width, height, pos, texture, model_loc, start_bytes};
+    plane_list.push_back(plane_data);
     return 0;
 }
 
@@ -178,8 +233,4 @@ void CreatePlane(vec2 pos, float width, float height,
     vertex_data.push_back(v2);
     vertex_data.push_back(v3);
     vertex_data.push_back(v4);
-}
-
-void createTexturedPlane() {
-
 }
