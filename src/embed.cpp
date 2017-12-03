@@ -29,8 +29,8 @@ Python function calls that can be called from C.
 #define NULL_TEXTURE 0
 
 GLFWwindow* window;
-int width = 1024;
-int height = 768;
+int width = 1920;
+int height = 1080;
 bool debug_draw_normals = false;
 bool debug_draw_texcoords = false;
 bool debug_disable_lighting = false;
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-
+    //glfwSwapInterval(0);
     // ==== OPENGL START ====
     //
     
@@ -344,23 +344,19 @@ int main(int argc, char *argv[]) {
 
     };
 
-    // Planes
-    //CreatePlane(glm::vec2(5, 5), 10.0, 10.0);
-    //Mesh planes(256);
     InitPlanes(sprite_program);
 
     int player_index = UpdatePlaneMatrix("player", glm::mat4(1.0f));
     int player_index2 = UpdatePlaneMatrix("player2", glm::mat4(1.0f));
 
-    int result = UpdatePlaneBuffers(glm::vec2(1, 1), 1, 1, "grass", player_index);
-    result = UpdatePlaneBuffers(glm::vec2(4, 4), 4, 4, "rock", player_index2);
-    result = UpdatePlaneBuffers(glm::vec2(2, 2), 2, 2, "sand", 0);
-    result = UpdatePlaneBuffers(glm::vec2(0.5, 0.5), 0.5, 0.5, "dirt", 0);
+    int result = UpdatePlaneBuffers(1, 1, "grass", glm::vec2(1, 1), player_index);
+    result = UpdatePlaneBuffers(4, 4, "rock", glm::vec2(4, 4), player_index2);
+    result = UpdatePlaneBuffers(2, 2, "sand", glm::vec2(2, 2));
+    result = UpdatePlaneBuffers(0.5, 0.5, "dirt", glm::vec2(0.5, 0.5));
     if (result > 0) {
         printf("Error updating plane buffers\n");
     }
     UpdateMatrixBuffer();
-
 
     // Create our Objects
     DrawObject drawObjects[] = {
@@ -369,13 +365,7 @@ int main(int argc, char *argv[]) {
         { CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
         { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
     };
-    // What information do we need for the model?
-    // FilePath
-    // FileName
-    // Translation
-    // Rotation
-    // Scale
-    
+
     struct ModelObject {
         glm::vec3 translation;
         GLfloat rotationX;
@@ -597,40 +587,11 @@ int main(int argc, char *argv[]) {
 
         DebugDraw(Projection, rotated_view);
 
-        //ImGui_ImplGlfwGL3_NewFrame();
-        /*
-        // 1. Show a simple window
-        // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-        {
-            static float f = 0.0f;
-            ImGui::Text("Hello, world!");
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-            ImGui::ColorEdit3("clear color", (float*)&clear_color);
-            if (ImGui::Button("Test Window")) show_test_window ^= 1;
-            if (ImGui::Button("Another Window")) show_another_window ^= 1;
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        }
-
-        // 2. Show another simple window, this time using an explicit Begin/End pair
-        if (show_another_window)
-        {
-            ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello");
-            ImGui::End();
-        }
-
-        // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-        if (show_test_window)
-        {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-            ImGui::ShowTestWindow(&show_test_window);
-        }
-        */
         static bool p_open = true;
         ShowExampleAppConsole(&p_open);
-        //static ExampleAppConsole console;
-        //console.Draw("Example: Console", p_open);
+        ShowFrameInformation(&p_open);
+        ShowMainMenu(&p_open);
+        MenuParts(&p_open);
 
         ImGui::Render();
         glfwSwapBuffers(window);

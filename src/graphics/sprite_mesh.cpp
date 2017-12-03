@@ -150,13 +150,14 @@ int SpriteMesh::AppendData(vector<SpriteVertex> vertices, vector<GLuint> indices
     data_size = indices.size() * sizeof(GLuint);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, this->i_offset, data_size, &indices[0]);
+    int start_bytes = this->i_offset;
     this->i_offset += data_size;
     this->i_size += indices.size();
     this->v_size += vertices.size();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    return 0;
+    return i_offset;
 }
 
 void SpriteMesh::Draw(GLuint shader) {
