@@ -54,6 +54,34 @@ GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
 	return VertexArrayID;
 }
 
+GLuint BufferMeshDataV(vector<glm::vec3> vertices) {
+	// Create our VAO
+	GLuint VertexArrayID;
+	
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+	// Buffer data to VBO
+	GLuint vertexbuffer;
+	//GLuint elementBuffer;
+	//glGenBuffers(1, &elementBuffer);
+	glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
+    //    &indices[0], GL_STATIC_DRAW);
+	// Specify the vertex position attributes
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDisableVertexAttribArray(0);
+	return VertexArrayID;
+}
+
 GLuint BufferTextureDataFromFile(string file, string directory) {
     string filename = directory + file;
     replace(filename.begin(), filename.end(), '\\', '/');

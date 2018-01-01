@@ -86,6 +86,36 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         toggleCamera();
         Projection = getProj();
     }
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+        printf("Panning Up\n");
+        move_up();
+        Projection = getProj();
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+        printf("Panning Down\n");
+        move_down();
+        Projection = getProj();
+    }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+        printf("Panning Right\n");
+        move_right();
+        Projection = getProj();
+    }
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS)) {
+        printf("Panning Left\n");
+        move_left();
+        Projection = getProj();
+    }
+    if (key == GLFW_KEY_PAGE_DOWN && (action == GLFW_PRESS)) {
+        printf("zooming in\n");
+        zoom_in();
+        Projection = getProj();
+    }
+    if (key == GLFW_KEY_PAGE_UP && (action == GLFW_PRESS)) {
+        printf("Zooming out\n");
+        zoom_out();
+        Projection = getProj();
+    }
 }
 
 ImGuiIO& io = ImGui::GetIO();
@@ -162,8 +192,6 @@ int zoom = 0;
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    // Scroll backwards = -1.0
-    // Scroll forwards = 1.0
     zoom += yoffset;
 }
 
@@ -224,11 +252,10 @@ int pythonTesting(int argc, char *argv[]) {
         "the_time = time()\n"
         "print(f'Time is {the_time}')\n"
     );
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
-
-    LoadShapefile();
 
     pythonTesting(argc, argv);
     
@@ -320,29 +347,6 @@ int main(int argc, char *argv[]) {
     // Set up Cameras
     cameraUpdate(width, height);
     Projection = getProj();
-    // Light Objects
-    /*
-    Light Types
-    - Point light (perspective light with falloff)
-        - vec3 position
-        - float constant
-        - float linear
-        - float quadratic
-        - vec3 ambient
-        - vec3 diffuse
-        - vec3 specular
-
-    - Directional Light (orthographic light)
-        - vec3 position
-        - vec3 direction
-        - vec3 ambient
-        - vec3 diffuse
-        - vec3 specular
-    - Spot Light (orthographic with falloff and radius) 
-    */
-    struct LightObject {
-
-    };
 
     InitPlanes(sprite_program);
 
@@ -366,36 +370,8 @@ int main(int argc, char *argv[]) {
         { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
     };
 
-    struct ModelObject {
-        glm::vec3 translation;
-        GLfloat rotationX;
-        GLfloat rotationY;
-        GLfloat rotationZ;
-        glm::vec3 scale;
-        Model model;
-    };
+    LoadShapeFile();
 
-    // NOTE: I now need to seperate the Models from the drawing instances ( or not reload a loaded model )
-    vector<ModelObject> modelObjects;
-
-    modelObjects.push_back({
-        glm::vec3(2, 0, -4),
-        0.0f,
-        0.0f,
-        0.0f,
-        glm::vec3(0.2, 0.2, 0.2),
-        Model("./assets/meshes/", "nanosuit.obj")
-    });
-    
-    modelObjects.push_back({
-        glm::vec3(0, 0, 0),
-        -90.0f,
-        0.0f,
-        0.0f,
-        glm::vec3(1.0, 1.0, 1.0),
-        Model("./assets/meshes/", "warrior.fbx")
-    });
-    
     GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
     GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
     GLuint modelMatId = glGetUniformLocation(programID, "Model");
@@ -423,7 +399,9 @@ int main(int argc, char *argv[]) {
     do {
 
         glfwPollEvents();
-        ImGuiIO& io = ImGui::GetIO();
+        //ImGuiIO& io = 
+        ImGui::GetIO();
+        
         ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -444,45 +422,6 @@ int main(int argc, char *argv[]) {
 
         glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
-
-        for (uint i = 0; i < modelObjects.size(); i++) {
-            // Calculate the matrices
-            // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
-            glm::mat4 model = glm::mat4(1.0f);  // Get eye Model matrix
-            model = glm::translate(model, modelObjects[i].translation);
-            if (modelObjects[i].rotationX != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationX), glm::vec3(1, 0, 0));
-            }
-            if (modelObjects[i].rotationY != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationY), glm::vec3(0, 1, 0));
-            }
-            if (modelObjects[i].rotationZ != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationZ), glm::vec3(0, 0, 1));
-            }
-            model = glm::scale(model, modelObjects[i].scale);
-            // Done! 
-            glm::mat4 model_mvp = Projection * rotated_view * model;
-            glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-
-            MVPMatID = glGetUniformLocation(programID, "MVP");
-            glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
-            glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
-
-            glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
-            glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
-                DebugGetFlag("render:draw_normals"));
-            glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
-                DebugGetFlag("render:draw_texcoords"));
-            glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
-                DebugGetFlag("render:disable_lighting"));
-            glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-            glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
-            glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
-            glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
-            modelObjects[i].model.Draw(programID);
-            //DrawPlanes(programID);
-        }
-
 
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
@@ -533,12 +472,28 @@ int main(int argc, char *argv[]) {
             glBindVertexArray(0);
         }
 
+        glUseProgram(simple_program);
+        glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
+        glm::mat4 plane_model = glm::mat4(1.0f);
+        //model = glm::translate(model, drawObjects[i].pos);
+        //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
+        //model = glm::scale(model, drawObjects[i].scale);
+        glm::mat4 mvp = Projection * rotated_view * plane_model;
+        //normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
+        // Load camera to OpenGL
+        MVPMatID = glGetUniformLocation(simple_program, "MVP");
+        normalMatID = glGetUniformLocation(simple_program, "NormalMat");
+        modelMatId = glGetUniformLocation(simple_program, "Model");
+        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+
+        draw_shapes();
+
         // ========= SPRITE DRAWING =========
         
         glUseProgram(sprite_program);
-
+ 
         //MVPMatID = glGetUniformLocation(sprite_program, "MVP");
-        //normalMatID = glGetUniformLocation(sprite_program, "NormalMat");
+        //normalMatID = glGetUnicharformLocation(sprite_program, "NormalMat");
         projMatId = glGetUniformLocation(sprite_program, "Projection");
         viewMatId = glGetUniformLocation(sprite_program, "View");
         objectColorLoc = glGetUniformLocation(sprite_program, "objectColor");
@@ -560,14 +515,14 @@ int main(int argc, char *argv[]) {
 
         glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
-        glm::mat4 model = glm::mat4(1.0f);
+        //glm::mat4 model = glm::mat4(1.0f);
         // Need to get correct 
 
         //glm::mat4 model_mvp = Projection * rotated_view * model;
         //glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
         //glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
         //glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
-        GLint tex_loc = glGetUniformLocation(sprite_program, "texture_diffuse1");
+        //GLint tex_loc = glGetUniformLocation(sprite_program, "texture_diffuse1");
         //glUniform1i(tex_loc, 0);
 
         glm::mat4 player_mat = GetPlaneMatrix("player");

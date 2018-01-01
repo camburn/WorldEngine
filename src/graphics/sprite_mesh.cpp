@@ -24,7 +24,7 @@ A mesh also has a material (per mesh) that has the following attributes:
  - shininess
 */
 
-SpriteMesh::SpriteMesh(int max_vertices, bool use_model_buffer, char* name) {
+SpriteMesh::SpriteMesh(int max_vertices, bool use_model_buffer, string name) {
     vertices.reserve(max_vertices);
     indices.reserve(max_vertices);
     textures.reserve(max_vertices);
@@ -36,7 +36,7 @@ SpriteMesh::SpriteMesh(int max_vertices, bool use_model_buffer, char* name) {
     this->v_size = 0;
     this->m_size = 0;
     this->use_model_buffer = use_model_buffer;
-    this->name = name;
+    this->name = name.c_str();
 }
 
 void SpriteMesh::Init(GLuint sprite_program) {
@@ -130,7 +130,6 @@ int SpriteMesh::CreateUniformBlock(GLuint shader_id) {
 
 int SpriteMesh::UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix) {
     glBindBuffer(GL_ARRAY_BUFFER, this->UBO);
-    int s = sizeof(model_matrix);
     glBufferSubData(GL_ARRAY_BUFFER, start_bytes, sizeof(model_matrix), 
         &model_matrix[0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -150,7 +149,6 @@ int SpriteMesh::AppendData(vector<SpriteVertex> vertices, vector<GLuint> indices
     data_size = indices.size() * sizeof(GLuint);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, this->i_offset, data_size, &indices[0]);
-    int start_bytes = this->i_offset;
     this->i_offset += data_size;
     this->i_size += indices.size();
     this->v_size += vertices.size();

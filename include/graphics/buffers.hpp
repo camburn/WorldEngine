@@ -7,9 +7,11 @@ It manages data into OpenGL buffers and prepares it for drawing.
 #define GLEW_STATIC
 #include <algorithm>
 #include <string>
+#include <vector>
 using namespace std;
 #include <stdio.h>
 #include <SOIL.h>
+#include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -23,6 +25,7 @@ GLuint - VAO ID
 */
 GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataVT(GLfloat *mesh_data, int size);
+GLuint BufferMeshDataV(vector<glm::vec3> vertices);
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 
 #endif

@@ -42,7 +42,7 @@ public:
 
     Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
          vector<Texture> textures);
-    Mesh(int max_vertices, bool use_model_buffer=false, char* name="Default");
+    Mesh(int max_vertices, bool use_model_buffer=false, string name="Default");
     void Init();
     int UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix);
     int IndexCount();
@@ -61,7 +61,7 @@ private:
     int i_size;
     int v_size;
     int m_size;
-    char* name;
+    const char* name;
     void SetupMesh();
     void BufferData();
     void SetBuffer();

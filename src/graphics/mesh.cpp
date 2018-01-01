@@ -33,7 +33,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> text
     this->fixed = true;
 }
 
-Mesh::Mesh(int max_vertices, bool use_model_buffer, char* name) {
+Mesh::Mesh(int max_vertices, bool use_model_buffer, string name) {
     vertices.reserve(max_vertices);
     indices.reserve(max_vertices);
     textures.reserve(max_vertices);
@@ -45,7 +45,7 @@ Mesh::Mesh(int max_vertices, bool use_model_buffer, char* name) {
     this->v_size = 0;
     this->m_size = 0;
     this->use_model_buffer = use_model_buffer;
-    this->name = name;
+    this->name = name.c_str();
 }
 
 void Mesh::Init() {
@@ -143,7 +143,6 @@ int Mesh::CreateUniformBlock(GLuint shader_id) {
 
 int Mesh::UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix) {
     glBindBuffer(GL_ARRAY_BUFFER, this->UBO);
-    int s = sizeof(model_matrix);
     glBufferSubData(GL_ARRAY_BUFFER, start_bytes, sizeof(model_matrix), 
         &model_matrix[0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

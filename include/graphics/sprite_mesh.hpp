@@ -35,7 +35,7 @@ public:
     vector<GLuint> indices;
     vector<SpriteTexture> textures;
 
-    SpriteMesh(int max_vertices, bool use_model_buffer=false, char* name="Default");
+    SpriteMesh(int max_vertices, bool use_model_buffer=false, string name="Default");
     void Init(GLuint sprite_program);
     int UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix);
     int IndexCount();
@@ -54,7 +54,7 @@ private:
     int i_size;
     int v_size;
     int m_size;
-    char* name;
+    const char* name;
     void SetupMesh();
     void BufferData();
     void SetBuffer();

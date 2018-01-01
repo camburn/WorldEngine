@@ -1,10 +1,11 @@
 if not defined DevEnvDir (
     CALL "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
 )
-del /Q D:\projects\PyEngine\build\*
-cd /d D:\projects\PyEngine\build
-ECHO "Bulding PyEngine"
+REM del /Q D:\projects\WorldEngine\build\*
+cd /d D:\projects\WorldEngine\build
+ECHO "Bulding WorldEngine"
 cl /Zl /MD /EHsc /Z7^
+    ../src/graphics/shapefile_loader.cpp^
     ../src/*.cpp^
     ../src/graphics/*.cpp^
     ../src/imgui/*.cpp^
