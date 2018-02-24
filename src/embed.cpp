@@ -15,6 +15,7 @@ Python function calls that can be called from C.
 #include "graphics/imgui_impl_glfw_gl3.h"
 
 #include "python_api.hpp"
+#include "tracker.hpp"
 #include "graphics/arcball.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/shader.hpp"
@@ -189,13 +190,70 @@ int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
 int arcball_on = false;
 int zoom = 0;
 
+bool middle_button_down = false;
+glm::vec2 mouse_world_coords = glm::vec2(1.0f);
+glm::vec2 new_mouse_world_coords = glm::vec2(1.0f);
+glm::vec2 previous_mouse_position = glm::vec2(0.0f, 0.0f);
+glm::vec3 start_ortho_pos = glm::vec3(1.0f);
+
+
+glm::vec2 calc_world_coords() {
+    // Calculate mouse world coordinates
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    double dxpos, dypos;
+    glfwGetCursorPos(window, &dxpos, &dypos);
+    float xpos = (float)dxpos;
+    float ypos = (float)dypos;
+
+    if (xpos < 0.0f) {
+        xpos = 0.0f;
+    }
+    if (ypos < 0.0f) {
+        ypos = 0.0f;
+    }
+
+    glm::mat4 view_mat = getView(start_ortho_pos);
+    glm::mat4 view = Projection * view_mat;
+
+    glm::vec3 near = glm::unProject( glm::vec3(xpos, ypos, 0.0f), glm::mat4(1.0f), view, glm::vec4(0, 0, width, height));
+    glm::vec3 far = glm::unProject( glm::vec3(xpos, ypos, 1.0f), glm::mat4(1.0f), view, glm::vec4(0, 0, width, height));
+
+    glm::vec4 world_coords = glm::vec4(near.x, near.y, 0.0f, 1.0f);
+    set_mouse_world_pos(world_coords.x, world_coords.y * -1);
+    return glm::vec2(world_coords.x, world_coords.y * -1);
+}
+
+
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
+void mouseButtonCallback2( GLFWwindow * window, int button, int action, int mods ){
+    mouseButtonCallback(window, button, action, mods);
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (action == GLFW_PRESS) {
+            middle_button_down = true;
+            start_ortho_pos = get_ortho_pos();
+            mouse_world_coords = calc_world_coords();
+            //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
+            
+            printf("MOUSE BUTTON RIGHT DOWN, %i\n", middle_button_down);
+
+        } else if (action == GLFW_RELEASE) {
+            // Now we need to set our camera to our current position.
+            middle_button_down = false;
+            printf("MOUSE BUTTON RIGHT RELEASED, %i\n", middle_button_down);
+        }
+    }
+}
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     zoom += yoffset;
+    if (yoffset > 0.0) {
+        zoom_in();
+    } else {
+        zoom_out();
+    }
 }
-
-// glfwSetCursorPosCallback(window, cursor_pos_callback);
 
 void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
     width = newWidth;
@@ -311,6 +369,9 @@ int main(int argc, char *argv[]) {
                                            "./src/shaders/fragment_shader.glsl");
     GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
                                            "./src/shaders/simple_fragment_shader.glsl");
+    GLuint line_program = BuildGlProgram("./src/shaders/line_v_shader.glsl",
+                                         "./src/shaders/line_f_shader.glsl",
+                                         "./src/shaders/line_g_shader.glsl");
     DebugInit();
     glUseProgram(programID);
     glEnable(GL_CULL_FACE);
@@ -370,7 +431,7 @@ int main(int argc, char *argv[]) {
         { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
     };
 
-    LoadShapeFile();
+    LoadShapeFile("./assets/shapefiles/Australia.shp");
 
     GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
     GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
@@ -389,19 +450,55 @@ int main(int argc, char *argv[]) {
 
     // Register Key callbacks
     glfwSetKeyCallback(window, key_handler);
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback2);
     glfwSetCursorPosCallback(window, mouseCursorCallback);
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
+
+
+    const long uid = new_line();
+
+    insert_into_line(uid, 20.0f, 0.0f);
+    insert_into_line(uid, 20.0f, 20.0f);
+    insert_into_line(uid, 40.0f, 20.0f);
+    insert_into_line(uid, 40.0f, 0.0f);
+
+
+    build_line_data();
+
+    // TestInput
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        float position = glfwGetTime() * 1.0f;
+    }
+
     // Main Loop
+    printf("Tester\n");
     printf("%s\n", DebugFlagList().c_str());
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
+    float last_frame_time = glfwGetTime();
+
     do {
+        float current_frame_time = glfwGetTime();
+        float delta_time = current_frame_time - last_frame_time;
+        last_frame_time = current_frame_time;
 
         glfwPollEvents();
         //ImGuiIO& io = 
         ImGui::GetIO();
-        
+
+        //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
+        new_mouse_world_coords = calc_world_coords();
+
+        if (middle_button_down) { 
+            //new_mouse_world_coords = calc_world_coords();
+
+            glm::vec2 difference = new_mouse_world_coords - mouse_world_coords;
+            difference = glm::vec2(difference.x, difference.y);
+            translate_ortho(glm::vec3(difference, 0.0f));
+            //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
+            mouse_world_coords = new_mouse_world_coords;
+        }
+
         ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -475,6 +572,7 @@ int main(int argc, char *argv[]) {
         glUseProgram(simple_program);
         glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
         glm::mat4 plane_model = glm::mat4(1.0f);
+        rotated_view = getView();
         //model = glm::translate(model, drawObjects[i].pos);
         //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
         //model = glm::scale(model, drawObjects[i].scale);
@@ -541,6 +639,13 @@ int main(int argc, char *argv[]) {
         // ========= END SPRITE DRAWING =========
 
         DebugDraw(Projection, rotated_view);
+
+        glUseProgram(line_program);
+        MVPMatID = glGetUniformLocation(line_program, "MVP");
+        glm::mat4 model = glm::mat4(1.0f);
+        mvp = Projection * rotated_view * model;
+        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+        draw_lines();
 
         static bool p_open = true;
         ShowExampleAppConsole(&p_open);

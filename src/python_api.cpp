@@ -41,6 +41,24 @@ pyengine_debug_flatset(PyObject *self, PyObject *args) {
 }
 
 static PyObject*
+pyengine_createline(PyObject *self, PyObject *args) {
+    const long uid = new_line();
+    return Py_BuildValue("i", uid);
+}
+
+static PyObject*
+pyengine_addpoint(PyObject *self, PyObject *args) {
+    int uid;
+    float x1, y1;
+    if (!PyArg_ParseTuple(args, "iff", &uid, &x1, &y1)) {
+        return NULL;
+    }
+    insert_into_line(uid, x1, y1);
+    build_line_data();
+    return Py_BuildValue("");
+}
+
+static PyObject*
 pyengine_debug_flatlist(PyObject *self, PyObject *args) {
     std::string flagList = DebugFlagList();
     return Py_BuildValue("s", flagList.c_str());
@@ -75,6 +93,8 @@ static PyMethodDef DebugMethods[] = {
     { "flag_set", pyengine_debug_flatset, METH_VARARGS, "Set an engine debug flag." },
     { "testfunction", pyengine_testfunction, METH_VARARGS, "Multiply args."},
     { "stringfunc", pyengine_stringfunc, METH_VARARGS, "C print a python str."},
+    { "create_line", pyengine_createline, METH_VARARGS, "Create a new line."},
+    { "add_point", pyengine_addpoint, METH_VARARGS, "Add a point to an existing line."},
     {NULL, NULL, 0, NULL}
 };
 

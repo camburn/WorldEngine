@@ -2,7 +2,7 @@ echo ---------------------------------------------------------------------------
 CALL "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 cd /d "D:\projects\embed_python\build"
 REM Build AMD64
-cl /Zl /MT /EHsc^
+cl /Zi /MT /EHsc^
     ..\src\embed.c ..\src\python_api.c^
     /Fe:embed_x64.exe^
     /I"D:/libraries/glew-2.0.0/include"^

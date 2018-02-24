@@ -17,6 +17,7 @@ void ShowExampleAppConsole(bool* p_open);
 void ShowFrameInformation(bool* p_open);
 void ShowMainMenu(bool* p_open);
 void MenuParts(bool* p_open);
+void set_mouse_world_pos(float x, float y);
 struct ExampleAppConsole;
 
 #endif // !CONSOLE_INCLUDED

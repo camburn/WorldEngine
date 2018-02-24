@@ -21,7 +21,7 @@ glm::mat4 pers_view = glm::mat4(1.0f);
 
 // Control Schemes
 //static Arcball arcball(800.0f, 600.0f, 0.1f, true, true);
-glm::vec3 ortho_pos = glm::vec3(0, 1, 0);
+glm::vec3 ortho_pos = glm::vec3(0, 0, 0);
 glm::vec3 pers_pos = glm::vec3(7, 3, 6);
 
 float scroll_across = 0;
@@ -48,10 +48,13 @@ void toggleCamera() {
 
 void zoom_in() {
     camera_zoom -= 0.1f;
+    if (camera_zoom <= 0.0f) {
+        camera_zoom = 0.1f;
+    }
 }
 
 void zoom_out() {
-    camera_zoom += 1.0f;
+    camera_zoom += 0.1f;
 }
 
 void move_left() {
@@ -70,6 +73,22 @@ void move_down() {
     scroll_up -= 1.0f;
 }
 
+void translate_ortho(glm::vec3 translation) {
+    ortho_pos = ortho_pos + translation;
+}
+
+void set_ortho_pos(glm::vec3 pos) {
+    ortho_pos = pos;
+}
+
+glm::vec3 get_ortho_pos() {
+    return ortho_pos;
+}
+
+void scale_ortho(glm::vec3 scale) {
+    ortho_pos = ortho_pos + scale;
+}
+
 glm::mat4& cameraUpdate(int width, int height) {
     // Update camera with new width and height data
     pers_proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
@@ -77,8 +96,8 @@ glm::mat4& cameraUpdate(int width, int height) {
 
     //ortho_proj = glm::ortho(0.0f, (float)width/100, 0.0f, (float)height/100, -1.0f, 10.0f);
     //ortho_proj = glm::ortho(-180.0f, 180.0f, -90.0f, 90.0f, -1.0f, 10.0f);
-    ortho_proj = glm::ortho(110.0f + scroll_across, 155.0f + scroll_across, 
-                           -45.0f + scroll_up, -10.0f + scroll_up, -1.0f, 10.0f);
+    ortho_proj = glm::ortho(-180.0f + scroll_across, 180.0f + scroll_across, 
+                           -90.0f + scroll_up, 90.0f + scroll_up, -1.0f, 10.0f);
 
     if (UsePerspective) {
         return pers_proj;
@@ -91,8 +110,6 @@ glm::mat4& getProj(){
     if (UsePerspective){
         return pers_proj;
     } else {
-        ortho_proj = glm::ortho(110.0f + scroll_across * camera_zoom, 155.0f + scroll_across * camera_zoom, 
-                                -45.0f + scroll_up * camera_zoom, -10.0f + scroll_up * camera_zoom, -1.0f, 10.0f);
         return ortho_proj;
     }
 }
@@ -103,8 +120,24 @@ glm::mat4& getView(){
         pers_view = pers_view * arcball.createViewRotationMatrix();
         return pers_view;
     } else {
-        ortho_view = glm::lookAt(ortho_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-        ortho_view = glm::mat4(1.0f);
-        return ortho_view;
+        glm::mat4 eye = glm::mat4(1.0f);
+        glm::mat4 scale = glm::scale(eye, glm::vec3(camera_zoom, camera_zoom, 1.0f));
+        glm::mat4 view = glm::translate(scale, ortho_pos);
+        return view;
+    }
+}
+
+
+glm::mat4& getView(glm::vec3 custom_ortho_pos) {
+    if (UsePerspective) {
+        pers_view = glm::lookAt(pers_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        pers_view = pers_view * arcball.createViewRotationMatrix();
+        return pers_view;
+    } else {
+        glm::mat4 eye = glm::mat4(1.0f);
+        float zoomer = 1.0f * (camera_zoom * camera_zoom * camera_zoom);
+        glm::mat4 scale = glm::scale(eye, glm::vec3(camera_zoom, camera_zoom, 1.0f));
+        glm::mat4 view = glm::translate(scale, custom_ortho_pos);
+        return view;
     }
 }

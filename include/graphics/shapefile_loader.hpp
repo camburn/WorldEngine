@@ -1,13 +1,16 @@
 #pragma once
 #include <math.h>
-#include <string.h>
+#include <string>
+#include <iostream>
 #include <shapefil.h>
 #include <vector>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
 #include <glm/glm.hpp>
-#include <poly2tri/poly2tri.h>
 
+#include "graphics/triangulate.hpp"
 #include "graphics/buffers.hpp"
 
-void LoadShapefile();
-void LoadShapeFile();
+void LoadShapeFile(const std::string file_name);
 void draw_shapes();

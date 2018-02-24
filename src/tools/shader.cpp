@@ -63,6 +63,7 @@ GLuint LoadShader(const char* file_path, GLuint ShaderID) {
         fprintf(stdout, "Shader Source\n\n%s\n\n", vertex_src);
         fprintf(stderr, "Shader Compile Failed:\n %s\n", ShaderErrorMessage);
         free(ShaderErrorMessage);
+        throw std::exception("Failed to compile shader");
     }
     return ShaderID;
 }
@@ -85,9 +86,40 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
         glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
         fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
         free(ProgramErrorMessage);
+        throw std::exception("Failed to link shaders to program");
     }
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
+    glDeleteShader(vertexShaderID);
+    glDeleteShader(fragmentShaderID);
+    return programID;
+}
+
+GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_path, const char* geometry_file_path) {
+    GLuint vertexShaderID = LoadShader(vertex_file_path, glCreateShader(GL_VERTEX_SHADER));
+    GLuint fragmentShaderID = LoadShader(fragment_file_path, glCreateShader(GL_FRAGMENT_SHADER));
+    GLuint geometryShaderID = LoadShader(geometry_file_path, glCreateShader(GL_GEOMETRY_SHADER));
+    GLuint programID = glCreateProgram();
+    GLint Result = GL_FALSE;
+    int InfoLogLength;
+    fprintf(stdout, "Linking shaders to program\n");
+    glAttachShader(programID, vertexShaderID);
+    glAttachShader(programID, fragmentShaderID);
+    glAttachShader(programID, geometryShaderID);
+    glLinkProgram(programID);
+
+    glGetProgramiv(programID, GL_LINK_STATUS, &Result);
+    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        char* ProgramErrorMessage = (char *)malloc(InfoLogLength);
+        glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
+        fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
+        free(ProgramErrorMessage);
+        throw std::exception("Failed to link shaders to program");
+    }
+    glDetachShader(programID, vertexShaderID);
+    glDetachShader(programID, fragmentShaderID);
+    glDetachShader(programID, geometryShaderID);
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
     return programID;

@@ -310,6 +310,8 @@ float frame_times[COUNT] = {};
 int last_stored = 0;
 bool show_window = false;
 static bool show_plane_info = false;
+float mouse_world_pos_x = 0.0f;
+float mouse_world_pos_y = 0.0f;
 
 void add_frame_time(float time) {
 	frame_times[last_stored] = time;
@@ -328,6 +330,11 @@ float get_frame_time(void*, int i) {
 		index -= COUNT;
 	}
 	return frame_times[i];
+}
+
+void set_mouse_world_pos(float x, float y) {
+	mouse_world_pos_x = x;
+	mouse_world_pos_y = y;
 }
 
 void ShowMainMenu(bool* p_open) {
@@ -356,7 +363,9 @@ void ShowFrameInformation(bool* p_open) {
 		ImGui::End();
 		return;
 	}
-	ImGui::Text("Mouse Position: (%.1f,%.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+        
+	ImGui::Text("Mouse Position Screen: (%.1f,%.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+	ImGui::Text("Mouse Position World: (%.1f,%.1f)", mouse_world_pos_x, mouse_world_pos_y);
 	ImGui::Text("%d vertices, %d indices (%d triangles)", ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices, ImGui::GetIO().MetricsRenderIndices / 3);
 	ImGui::Text("%d allocations", ImGui::GetIO().MetricsAllocs);
 	ImGui::Separator();

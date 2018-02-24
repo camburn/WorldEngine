@@ -26,6 +26,8 @@ GLuint - VAO ID
 GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataVT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataV(vector<glm::vec3> vertices);
+GLuint BufferMeshData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint &vertex_buffer, GLuint &element_buffer);
+void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint vertex_buffer, GLuint element_buffer);
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 
 #endif

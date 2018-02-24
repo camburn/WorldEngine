@@ -4,6 +4,7 @@ if not defined DevEnvDir (
 REM del /Q D:\projects\WorldEngine\build\*
 cd /d D:\projects\WorldEngine\build
 ECHO "Bulding WorldEngine"
+
 cl /Zl /MD /EHsc /Z7^
     ../src/graphics/shapefile_loader.cpp^
     ../src/*.cpp^
@@ -11,8 +12,11 @@ cl /Zl /MD /EHsc /Z7^
     ../src/imgui/*.cpp^
     ../src/console/*.cpp^
     ../src/tools/*.cpp^
-    /Fe:embed_x86.exe^
+    ../extern/poly2tri-master/poly2tri/common/*.cc^
+    ../extern/poly2tri-master/poly2tri/sweep/*.cc^
+    /Fe:WorldEngine.exe^
     /I"../include/"^
+    /I"../extern/poly2tri-master/"^
     /I"D:/libraries/"^
     /I"D:/libraries/assimp-4.0.1/include"^
     /I"D:/libraries/freetype/include/freetype2"^

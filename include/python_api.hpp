@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include "tracker.hpp"
 #include "graphics/debug.hpp"
 #include "graphics/planes.hpp"
 

@@ -82,6 +82,40 @@ GLuint BufferMeshDataV(vector<glm::vec3> vertices) {
 	return VertexArrayID;
 }
 
+
+GLuint BufferMeshData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint &vertex_buffer, GLuint &element_buffer) {
+	// Create our VAO
+	GLuint VertexArrayID;
+	
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+
+	// Buffer data to VBO
+	glGenBuffers(1, &vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);	
+
+	//GLuint elementBuffer;
+	glGenBuffers(1, &element_buffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDisableVertexAttribArray(0);
+	return VertexArrayID;
+}
+
+void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint vertex_buffer, GLuint element_buffer) {
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+}
+
 GLuint BufferTextureDataFromFile(string file, string directory) {
     string filename = directory + file;
     replace(filename.begin(), filename.end(), '\\', '/');
