@@ -4,6 +4,8 @@ It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
 
+#include <stdlib.h> 
+
 #include <Python.h>
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -313,6 +315,19 @@ int pythonTesting(int argc, char *argv[]) {
     return 0;
 }
 
+void random_line(int num_lines) {
+    const long uid = new_line();
+    int start_x = (rand() % 360) - 180;
+    int start_y = (rand() % 180) - 90;
+    for (int x = 0; x <= num_lines; x++){
+        insert_into_line(uid, start_x, start_y);
+        start_x += (rand() % 10) - 5;
+        start_y += (rand() % 10) - 5;
+    }
+
+    
+}
+
 int main(int argc, char *argv[]) {
 
     pythonTesting(argc, argv);
@@ -456,14 +471,13 @@ int main(int argc, char *argv[]) {
     glfwSetScrollCallback(window, scrollCallback);
 
 
-    const long uid = new_line();
+    int num_lines = 10;
+    int line_point_count = 200;
 
-    insert_into_line(uid, 20.0f, 0.0f);
-    insert_into_line(uid, 20.0f, 20.0f);
-    insert_into_line(uid, 40.0f, 20.0f);
-    insert_into_line(uid, 40.0f, 0.0f);
-
-
+    for (int x=0; x < num_lines; x++) {
+        random_line(line_point_count);
+    }
+    
     build_line_data();
 
     // TestInput
@@ -640,6 +654,7 @@ int main(int argc, char *argv[]) {
 
         DebugDraw(Projection, rotated_view);
 
+        // ========= LINE DRAWING =========
         glUseProgram(line_program);
         MVPMatID = glGetUniformLocation(line_program, "MVP");
         glm::mat4 model = glm::mat4(1.0f);

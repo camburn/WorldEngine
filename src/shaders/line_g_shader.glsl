@@ -8,7 +8,7 @@ layout(triangle_strip, max_vertices = 7) out;
 //uniform float	MITER_LIMIT;	// 1.0: always miter, -1.0: never miter, 0.75: default
 //uniform vec2	WIN_SCALE;		// the size of the viewport in pixels
 
-float THICKNESS = 2.0f;
+float THICKNESS = 0.5f;
 float MITER_LIMIT = 0.75;
 vec2 WIN_SCALE = vec2(1920, 1080);
 

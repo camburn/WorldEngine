@@ -56,11 +56,12 @@ int element_size = 0;
 void build_line_data() {
     std::vector<glm::vec3> data_buffer;
     std::vector<unsigned int> index_buffer;
+    std::set<int> gaps;
     buffer_size = 0;
-    for (std::pair<const long, Line> &kv: map_line) {
-        kv.second.get_line_data(data_buffer);
 
-        
+    for (std::pair<const long, Line> &kv: map_line) {
+        kv.second.get_line_data(data_buffer); 
+        gaps.insert(data_buffer.size());
     }
     buffer_size = data_buffer.size();
 
@@ -68,10 +69,14 @@ void build_line_data() {
     data_buffer.push_back( 2.0f * data_buffer[data_buffer.size() - 1] - data_buffer[data_buffer.size() -2]);
 
     for( size_t i = 1; i < data_buffer.size() - 2; ++i ) {
-				index_buffer.push_back( i - 1 );
-				index_buffer.push_back( i );
-				index_buffer.push_back( i + 1 );
-				index_buffer.push_back( i + 2 );
+        if (gaps.count(i)) {
+            // This is the last point of a line...
+            continue;
+        }
+        index_buffer.push_back( i - 1 );
+        index_buffer.push_back( i );
+        index_buffer.push_back( i + 1 );
+        index_buffer.push_back( i + 2 );
     }
     element_size = index_buffer.size();
 

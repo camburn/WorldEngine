@@ -377,8 +377,8 @@ void ShowFrameInformation(bool* p_open) {
 	if (ImGui::Button("Show Graph")) { show_window ^= 1; }
 	if (show_window) {
 		ImGui::Begin("Menu", p_open, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize);
-		ImGui::PlotHistogram("", get_frame_time, NULL, COUNT, 0, NULL, -1.0f, 1.0f, ImVec2(400, 50));
-		ImGui::PlotLines("", get_frame_time, NULL, COUNT, 0, NULL, -1.0f, 1.0f, ImVec2(400, 50));
+		ImGui::PlotHistogram("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(400, 50));
+		ImGui::PlotLines("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(400, 50));
 		ImGui::End();
 	}
 	ImGui::End();
