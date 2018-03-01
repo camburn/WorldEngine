@@ -4,9 +4,8 @@ It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
 
-#include <stdlib.h> 
-
 #include <Python.h>
+#include <stdlib.h>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -49,73 +48,73 @@ glm::mat4 Projection = glm::mat4(1.0f);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
     if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-        printf("Toggling Draw Normals - ");
+        std::cout << "Toggling Draw Normals - " << std::endl;
         if (debug_draw_normals) {
-            printf("Off\n");
+            std::cout << "Off" << std::endl;
             disable_debugs();
         }
         else {
-            printf("On\n");
+            std::cout << "On" << std::endl;
             disable_debugs();
             debug_draw_normals = true;
         }
     }
     if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-        printf("Toggling Draw Texure Coordinates - ");
+        std::cout << "Toggling Draw Texure Coordinates - " << std::endl;
         if (debug_draw_texcoords) {
-            printf("Off\n");
+            std::cout << "Off" << std::endl;
             disable_debugs();
         }
         else {
-            printf("On\n");
+            std::cout << "On" << std::endl;
             disable_debugs();
             debug_draw_texcoords = true;
         }
     }
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-        printf("Toggling Draw Lighting - ");
+        std::cout << "Toggling Draw Lighting - " << std::endl;
         if (debug_disable_lighting) {
-            printf("On\n");
+            std::cout << "On" << std::endl;
             disable_debugs();
         }
         else {
-            printf("Off\n");
+            std::cout << "Off" << std::endl;
             disable_debugs();
             debug_disable_lighting = true;
         }
     }
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-        printf("Toggling Camera\n");
+        std::cout << "Toggling Camera" << std::endl;
         toggleCamera();
         Projection = getProj();
     }
     if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-        printf("Panning Up\n");
+        std::cout << "Panning Up" << std::endl;
         move_up();
         Projection = getProj();
     }
     if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-        printf("Panning Down\n");
+        std::cout << "Panning Down" << std::endl;
         move_down();
         Projection = getProj();
     }
     if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-        printf("Panning Right\n");
+        std::cout << "Panning Right" << std::endl;
         move_right();
         Projection = getProj();
     }
     if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS)) {
-        printf("Panning Left\n");
+        std::cout << "Panning Left" << std::endl;
         move_left();
         Projection = getProj();
     }
     if (key == GLFW_KEY_PAGE_DOWN && (action == GLFW_PRESS)) {
-        printf("zooming in\n");
+        std::cout << "zooming in" << std::endl;
         zoom_in();
         Projection = getProj();
     }
     if (key == GLFW_KEY_PAGE_UP && (action == GLFW_PRESS)) {
-        printf("Zooming out\n");
+        std::cout << "Zooming out" << std::endl;
         zoom_out();
         Projection = getProj();
     }
@@ -238,12 +237,12 @@ void mouseButtonCallback2( GLFWwindow * window, int button, int action, int mods
             mouse_world_coords = calc_world_coords();
             //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
             
-            printf("MOUSE BUTTON RIGHT DOWN, %i\n", middle_button_down);
+            std::cout << "MOUSE BUTTON RIGHT DOWN, " << middle_button_down << std::endl;
 
         } else if (action == GLFW_RELEASE) {
             // Now we need to set our camera to our current position.
             middle_button_down = false;
-            printf("MOUSE BUTTON RIGHT RELEASED, %i\n", middle_button_down);
+            std::cout << "MOUSE BUTTON RIGHT RELEASED, " << middle_button_down << std::endl;
         }
     }
 }
@@ -260,7 +259,7 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
     width = newWidth;
     height = newHeight;
-    printf("Width: %i, Height: %i\n", width, height);
+    std::cout << "Width: " << width << " Height: " << height << std::endl;
     glViewport(0, 0, width, height);
     Projection = cameraUpdate(width, height);
 }
@@ -275,16 +274,16 @@ int pythonTesting(int argc, char *argv[]) {
 
     program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
-        fprintf(stderr, "Fatal error: cannot decode argv[0] (locale)\n");
-        exit(1);
+        std::cout << "Fatal error: cannot decode argv[0] (locale)" << std::endl;
+        std::exception("Arguemnt error");
     }
     Py_SetProgramName(program);
     PyImport_AppendInittab("debug", &PyInit_Debug);
     PyImport_AppendInittab("planes", &PyInit_Planes);
     Py_Initialize();
     PyRun_SimpleString(
-        "import sys\n"
-        "sys.path.append('./')\n"
+        "import sys"
+        "sys.path.append('./')"
     );
     pName = PyUnicode_FromString("console.sample");
     pModule = PyImport_Import(pName);
@@ -297,20 +296,20 @@ int pythonTesting(int argc, char *argv[]) {
             Py_DECREF(pValue);
         } else {
             PyErr_Print();
-            fprintf(stderr, "Failed to find function - %s", "print_random_word");
+            std::cout << "Failed to find function - print_random_word" << std::endl;
             return 1;            
         }
     } else {
         PyErr_Print();
-        fprintf(stderr, "Failed to load module - %s", "console.sample");
+        std::cout << "Failed to load module - console.sample" << std::endl;
         return 1;
     }
     Py_DECREF(pModule);
     Py_DECREF(pFunc);
     PyRun_SimpleString(
-        "from time import time\n"
-        "the_time = time()\n"
-        "print(f'Time is {the_time}')\n"
+        "from time import time"
+        "the_time = time()"
+        "print(f'Time is {the_time}')"
     );
     return 0;
 }
@@ -334,7 +333,7 @@ int main(int argc, char *argv[]) {
     
     // OPENGL STUFF
     if (!glfwInit()) {
-        fprintf(stderr, "Failed to initialise GLFW\n");
+        std::cout << "Failed to initialise GLFW" << std::endl;
         exit(1);
     }
 
@@ -345,20 +344,20 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Disable legacy OpenGL
    
     //Debugging 
-    printf("DEBUGGING ON\n");
+    std::cout << "DEBUGGING ON" << std::endl;
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
     //Create window
     window = glfwCreateWindow(width, height, "Embedded Python", NULL, NULL);
     if(window == NULL) {
-        fprintf(stderr, "Failed to open GLFW window\n");
+        std::cout << "Failed to open GLFW window" << std::endl;
         glfwTerminate();
         exit(1);
     }
     glfwMakeContextCurrent(window);
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
-        fprintf(stderr, "Failed to initialise GLEW\n");
+        std::cout << "Failed to initialise GLEW" << std::endl;
         glfwTerminate();
         exit(1);
     }
@@ -387,6 +386,9 @@ int main(int argc, char *argv[]) {
     GLuint line_program = BuildGlProgram("./src/shaders/line_v_shader.glsl",
                                          "./src/shaders/line_f_shader.glsl",
                                          "./src/shaders/line_g_shader.glsl");
+
+    Shader base_shader(programID);
+
     DebugInit();
     glUseProgram(programID);
     glEnable(GL_CULL_FACE);
@@ -434,7 +436,7 @@ int main(int argc, char *argv[]) {
     result = UpdatePlaneBuffers(2, 2, "sand", glm::vec2(2, 2));
     result = UpdatePlaneBuffers(0.5, 0.5, "dirt", glm::vec2(0.5, 0.5));
     if (result > 0) {
-        printf("Error updating plane buffers\n");
+        std::cout << "Error updating plane buffers" << std::endl;
     }
     UpdateMatrixBuffer();
 
@@ -486,8 +488,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Main Loop
-    printf("Tester\n");
-    printf("%s\n", DebugFlagList().c_str());
+    std::cout << "Tester" << std::endl;
+    std::cout << DebugFlagList() << std::endl; 
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     float last_frame_time = glfwGetTime();
 

@@ -8,6 +8,7 @@ It manages data into OpenGL buffers and prepares it for drawing.
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 #include <stdio.h>
 #include <SOIL.h>
@@ -23,6 +24,37 @@ and buffers it to the GPU for render
 Returns:
 GLuint - VAO ID
 */
+
+enum class INTERLEAVE_TYPE : unsigned short {
+	V = 0,
+	VN = 1,
+	VNT = 2
+};
+
+class Shader;
+
+class Attribute {
+	// A GLSL Attribute
+public:
+	
+	const GLint id;
+	const string name;
+	const GLenum type;
+	Attribute(Shader *s, GLint i, std::string n, GLenum t);
+private:
+    Shader *shader;
+
+};
+
+class Shader {
+	//An OpenGL Shader
+public:
+	const GLuint id;
+	Shader::Shader(GLuint shader_id);
+private:
+    vector<Attribute> attributes;
+};
+
 GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataVT(GLfloat *mesh_data, int size);
 GLuint BufferMeshDataV(vector<glm::vec3> vertices);

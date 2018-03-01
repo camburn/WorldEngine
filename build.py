@@ -1,18 +1,48 @@
 import os
 import glob
 import subprocess
-
+from distutils.errors import DistutilsPlatformError
+from distutils.msvc9compiler import Reg
 import sys
 import hashlib
+import winreg
+import shelve
 
 import contextlib
 
+NATIVE_WIN64 = (sys.platform == 'win32' and sys.maxsize > 2**32)
+if NATIVE_WIN64:
+    # Visual C++ is a 32-bit application, so we need to look in
+    # the corresponding registry branch, if we're running a
+    # 64-bit Python on Win64
+    VS_BASE = r"Software\Wow6432Node\Microsoft\VisualStudio\%0.1f"
+    VSEXPRESS_BASE = r"Software\Wow6432Node\Microsoft\VCExpress\%0.1f"
+    WINSDK_BASE = r"Software\Wow6432Node\Microsoft\Microsoft SDKs\Windows"
+    NET_BASE = r"Software\Wow6432Node\Microsoft\.NETFramework"
+else:
+    VS_BASE = r"Software\Microsoft\VisualStudio\%0.1f"
+    VSEXPRESS_BASE = r"Software\Microsoft\VCExpress\%0.1f"
+    WINSDK_BASE = r"Software\Microsoft\Microsoft SDKs\Windows"
+
+RegOpenKeyEx = winreg.OpenKeyEx
+RegEnumKey = winreg.EnumKey
+RegEnumValue = winreg.EnumValue
+RegError = winreg.error
+
+HKEYS = (winreg.HKEY_USERS,
+         winreg.HKEY_CURRENT_USER,
+         winreg.HKEY_LOCAL_MACHINE,
+         winreg.HKEY_CLASSES_ROOT)
+
+
 
 BUF_SIZE = 65536
-HASH_FILE = '.\\build\\.hash'
+HASH_FILE = '.\\Debug\\.hash'
 PROGRAM_NAME = 'WorldEngine.exe'
 
-BUILD_COMMAND = 'cl /Zl /MD /EHsc /Z7 /c '
+VCVARSALL = r"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
+
+BUILD_COMMAND = 'cl /Zl /Z7 /MD /EHsc /c '
 #BUILD_COMMAND = 'D:/Programs/mingw/bin/g++.exe -Wall -c '
 INCLUDE_LIST = [
     '/I"../include/"',
@@ -30,7 +60,7 @@ INCLUDE_LIST = [
 
 #INCLUDE_LIST = [x.replace('/I', '-I') for x in INCLUDE_LIST]
 
-LINK_COMMAND = 'LINK /DEBUG /OUT:WorldEngine.exe '
+LINK_COMMAND = 'LINK /DEBUG /OUT:../debug/WorldEngine.exe '
 #LINK_COMMAND = 'D:/Programs/mingw/bin/g++.exe -Wall -o WorldEngine.exe '
 LINKER_PATHS = [
     '/LIBPATH:"D:/python36/libs/"',
@@ -83,6 +113,61 @@ def calculate_sha(filename):
     return sha1.hexdigest()
 
 
+def removeDuplicates(variable):
+    """
+    Remove duplicate values of an environment variable.
+    """
+    oldList = variable.split(os.pathsep)
+    newList = []
+    for i in oldList:
+        if i not in newList:
+            newList.append(i)
+    newVariable = os.pathsep.join(newList)
+    return newVariable
+
+
+def query_vcvarsall(version, arch="x86"):
+    """
+    Launch vcvarsall.bat and read the settings from its environment
+    """
+    vcvarsall = VCVARSALL
+    interesting = set(("include", "lib", "libpath", "path"))
+    result = {}
+
+    if vcvarsall is None:
+        raise DistutilsPlatformError("Unable to find vcvarsall.bat")
+    print("Calling 'vcvarsall.bat {}' (version={})".format( arch, version))
+    popen = subprocess.Popen('"%s" %s & set' % (vcvarsall, arch),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+    try:
+        stdout, stderr = popen.communicate()
+        if popen.wait() != 0:
+            raise DistutilsPlatformError(stderr.decode("mbcs"))
+
+        stdout = stdout.decode("mbcs")
+        for line in stdout.split("\n"):
+            line = Reg.convert_mbcs(line)
+            if '=' not in line:
+                continue
+            line = line.strip()
+            key, value = line.split('=', 1)
+            key = key.lower()
+            if key in interesting:
+                if value.endswith(os.pathsep):
+                    value = value[:-1]
+                result[key] = removeDuplicates(value)
+
+    finally:
+        popen.stdout.close()
+        popen.stderr.close()
+
+    if len(result) != len(interesting):
+        raise ValueError(str(list(result.keys())))
+
+    return result
+
+
 if __name__ == '__main__':
     # Get all source files in the src directory
     hashmap = {}
@@ -100,8 +185,18 @@ if __name__ == '__main__':
     
     os.chdir('D:/projects/WorldEngine/')
     relink = False
-    # Build files that have changed
-    with pushd('build'):
+
+    with shelve.open("./Debug/.env_cache") as cache:
+        if "VCVARSALL_ENVS" in cache:
+            vcvarsall_envs = cache["VCVARSALL_ENVS"]
+        else:
+            cache["VCVARSALL_ENVS"] = query_vcvarsall(14.0)
+            vcvarsall_envs = cache["VCVARSALL_ENVS"]
+
+    for key, value in vcvarsall_envs.items():
+        os.environ[key] = value
+
+    with pushd('Debug'):
         for filename in hashmap.keys():
             if filename not in old_hashmap or hashmap[filename] != old_hashmap[filename]:
                 print(os.getcwd())
@@ -110,7 +205,7 @@ if __name__ == '__main__':
     
         obj_files = glob.glob('*.obj')
         # relink new program
-        if relink or not os.path.exists('build/' + PROGRAM_NAME):
+        if relink or not os.path.exists(PROGRAM_NAME):
             subprocess.check_call(' '.join([LINK_COMMAND, ' '.join(LINKER_PATHS), ' '.join(LINKER_LIBS), ' '.join(obj_files)]))
         
         
