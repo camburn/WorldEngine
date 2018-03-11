@@ -114,7 +114,7 @@ glm::mat4& getProj(){
     }
 }
 
-glm::mat4& getView(){
+glm::mat4 getView(){
     if (UsePerspective) {
         pers_view = glm::lookAt(pers_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         pers_view = pers_view * arcball.createViewRotationMatrix();
@@ -128,7 +128,7 @@ glm::mat4& getView(){
 }
 
 
-glm::mat4& getView(glm::vec3 custom_ortho_pos) {
+glm::mat4 getView(glm::vec3 custom_ortho_pos) {
     if (UsePerspective) {
         pers_view = glm::lookAt(pers_pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         pers_view = pers_view * arcball.createViewRotationMatrix();
