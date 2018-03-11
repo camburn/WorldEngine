@@ -275,7 +275,7 @@ int pythonTesting(int argc, char *argv[]) {
     program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
         std::cout << "Fatal error: cannot decode argv[0] (locale)" << std::endl;
-        std::exception("Arguemnt error");
+        std::runtime_error("Arguemnt error");
     }
     Py_SetProgramName(program);
     PyImport_AppendInittab("debug", &PyInit_Debug);

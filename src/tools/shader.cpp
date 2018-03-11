@@ -63,7 +63,7 @@ GLuint LoadShader(const char* file_path, GLuint ShaderID) {
         fprintf(stdout, "Shader Source\n\n%s\n\n", vertex_src);
         fprintf(stderr, "Shader Compile Failed:\n %s\n", ShaderErrorMessage);
         free(ShaderErrorMessage);
-        throw std::exception("Failed to compile shader");
+        throw std::runtime_error("Failed to compile shader");
     }
     return ShaderID;
 }
@@ -86,7 +86,7 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
         glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
         fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
         free(ProgramErrorMessage);
-        throw std::exception("Failed to link shaders to program");
+        throw std::runtime_error("Failed to link shaders to program");
     }
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
@@ -115,7 +115,7 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
         glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
         fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
         free(ProgramErrorMessage);
-        throw std::exception("Failed to link shaders to program");
+        throw std::runtime_error("Failed to link shaders to program");
     }
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
