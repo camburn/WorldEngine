@@ -13,12 +13,12 @@ float MITER_LIMIT = 0.75;
 vec2 WIN_SCALE = vec2(1920, 1080);
 
 in VertexData{
-	vec3 mColor;
+	vec4 mColor;
 } VertexIn[4];
 
 out VertexData{
 	vec2 mTexCoord;
-	vec3 mColor;
+	vec4 mColor;
 } VertexOut;
 
 vec2 toScreenSpace( vec4 vertex )
