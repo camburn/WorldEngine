@@ -282,7 +282,7 @@ int pythonTesting(int argc, char *argv[]) {
     PyImport_AppendInittab("planes", &PyInit_Planes);
     Py_Initialize();
     PyRun_SimpleString(
-        "import sys"
+        "import sys;"
         "sys.path.append('./')"
     );
     pName = PyUnicode_FromString("console.sample");

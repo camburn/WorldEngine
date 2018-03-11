@@ -1,0 +1,56 @@
+---
+
+compile_flags:
+ - '/EHsc'
+ - '/MD'
+
+debug_compile_flags:
+ - '/DEBUG'
+ - '/Z7'
+
+link_flags:
+ - '/NODEFAULTLIB:libcmt.lib'
+ - '/LTCG' 
+ 
+debug_link_flags:
+ - '/DEBUG'
+
+include_dirs:
+ - include/
+ - D:/libraries/
+ - D:/libraries/assimp-4.0.1/include
+ - D:/libraries/freetype/include/freetype2
+ - D:/libraries/glew-2.0.0/include
+ - D:/libraries/glfw-3.2.1.bin.WIN32/include
+ - D:/libraries/glm
+ - D:/libraries/imgui-1.50
+ - D:/python36/include
+ - D:/libraries/shapelib-1.4.0
+ - D:/libraries/soil/include
+
+libs:
+ - python36.lib
+ - python36_d.lib
+ - User32.lib
+ - Gdi32.lib
+ - OpenGL32.lib
+ - kernel32.lib
+ - shell32.lib
+ - glfw3.lib
+ - glew32s.lib
+ - SOIL.lib
+ - freetype.lib
+ - assimp.lib
+ - IrrXML.lib
+ - zlibstatic.lib
+ - shapelib.lib
+
+lib_paths:
+ - D:/python36/libs/
+ - C:/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x86/
+ - D:/libraries/glfw-3.2.1.bin.WIN32/lib-vc2015/
+ - D:/libraries/glew-2.0.0/lib/Release/Win32/
+ - D:/libraries/soil/lib/
+ - D:/libraries/freetype/lib/
+ - D:/libraries/assimp-4.0.1/lib/
+ - D:/libraries/shapelib-1.4.0/

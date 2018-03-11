@@ -9,3 +9,5 @@ __pycache__
 Debug
 Release
 imgui.ini
+.sconsign.dblite
+bin
