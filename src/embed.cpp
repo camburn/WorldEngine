@@ -323,8 +323,6 @@ void random_line(int num_lines) {
         start_x += (rand() % 10) - 5;
         start_y += (rand() % 10) - 5;
     }
-
-    
 }
 
 int main(int argc, char *argv[]) {
