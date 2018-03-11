@@ -307,9 +307,9 @@ int pythonTesting(int argc, char *argv[]) {
     Py_DECREF(pModule);
     Py_DECREF(pFunc);
     PyRun_SimpleString(
-        "from time import time"
-        "the_time = time()"
-        "print(f'Time is {the_time}')"
+        "from time import time;"
+        "the_time = time();"
+        "print(f'Time is {the_time}');"
     );
     return 0;
 }
