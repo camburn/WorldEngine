@@ -14,5 +14,7 @@ void init();
 void create_window();
 
 GLFWwindow* get_window();
-}
 
+void enable_debug();
+
+}

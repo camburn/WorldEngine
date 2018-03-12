@@ -131,62 +131,6 @@ void key_handler(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 }
 
-void APIENTRY glDebugOutput(GLenum source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar *message,
-    const void *userParam) {
-    // ignore non-significant error/warning codes
-    // Message 131184 displays Buffer memory info,
-    // TODO: Load this data into a debug message window
-    if (id == 131184) return;
-    if (id == 131185) return; // This details VBO allocations (and size)
-    if (id == 131204) return; // Texture state usage warning: Texture 0 is base level inconsistent. Check texture size.
-    // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
-
-    // MESA Specific debug message, does not have a fixed id number
-    if (source == GL_DEBUG_SOURCE_SHADER_COMPILER && severity == GL_DEBUG_SEVERITY_NOTIFICATION)
-        return;
-
-    std::cout << "---------------" << std::endl;
-    std::cout << "Debug message (" << id << "): " << message << std::endl;
-
-    switch (source)
-    {
-    case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
-    case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
-    case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
-    } std::cout << std::endl;
-
-    switch (type)
-    {
-    case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
-    case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
-    case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
-    case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
-    case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
-    case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
-    case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
-    } std::cout << std::endl;
-
-    switch (severity)
-    {
-    case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
-    case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
-    case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
-    case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
-    } std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "---------------" << std::endl;
-}
-
 // Test mouse controls
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
 int arcball_on = false;
@@ -197,7 +141,6 @@ glm::vec2 mouse_world_coords = glm::vec2(1.0f);
 glm::vec2 new_mouse_world_coords = glm::vec2(1.0f);
 glm::vec2 previous_mouse_position = glm::vec2(0.0f, 0.0f);
 glm::vec3 start_ortho_pos = glm::vec3(1.0f);
-
 
 glm::vec2 calc_world_coords() {
     // Calculate mouse world coordinates
@@ -225,7 +168,6 @@ glm::vec2 calc_world_coords() {
     set_mouse_world_pos(world_coords.x, world_coords.y * -1);
     return glm::vec2(world_coords.x, world_coords.y * -1);
 }
-
 
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
 void mouseButtonCallback2( GLFWwindow * window, int button, int action, int mods ){
@@ -333,15 +275,6 @@ int main(int argc, char *argv[]) {
     window = renderer.get_window();
 
     // ------------ Graphics Engine ---------------
-    // Turn on Debug callbacks, this should be disabled for RELEASE
-    GLint flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
-    {
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(glDebugOutput, nullptr);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    }
 
     GLuint programID = BuildGlProgram(
         "./src/shaders/vertex_shader.glsl", 
