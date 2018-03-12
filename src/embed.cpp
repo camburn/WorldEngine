@@ -27,6 +27,7 @@ Python function calls that can be called from C.
 #include "graphics/debug.hpp"
 #include "graphics/shapefile_loader.hpp"
 #include "graphics/planes.hpp"
+#include "graphics/renderer.hpp"
 
 #define NULL_TEXTURE 0
 
@@ -267,7 +268,6 @@ void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
 wchar_t *program;
 
 int pythonTesting(int argc, char *argv[]) {
-    
     // Python stuff below
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
@@ -328,42 +328,10 @@ void random_line(int num_lines) {
 int main(int argc, char *argv[]) {
 
     pythonTesting(argc, argv);
-    
-    // OPENGL STUFF
-    if (!glfwInit()) {
-        std::cout << "Failed to initialise GLFW" << std::endl;
-        exit(1);
-    }
+    std::cout << "Initialising renderer" << std::endl;
+    Renderer renderer;
+    window = renderer.get_window();
 
-    glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Disable legacy OpenGL
-   
-    //Debugging 
-    std::cout << "DEBUGGING ON" << std::endl;
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-
-    //Create window
-    window = glfwCreateWindow(width, height, "Embedded Python", NULL, NULL);
-    if(window == NULL) {
-        std::cout << "Failed to open GLFW window" << std::endl;
-        glfwTerminate();
-        exit(1);
-    }
-    glfwMakeContextCurrent(window);
-    glewExperimental = true;
-    if (glewInit() != GLEW_OK) {
-        std::cout << "Failed to initialise GLEW" << std::endl;
-        glfwTerminate();
-        exit(1);
-    }
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    //glfwSwapInterval(0);
-    // ==== OPENGL START ====
-    //
-    
     // ------------ Graphics Engine ---------------
     // Turn on Debug callbacks, this should be disabled for RELEASE
     GLint flags; glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -375,15 +343,23 @@ int main(int argc, char *argv[]) {
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
 
-    GLuint programID = BuildGlProgram("./src/shaders/vertex_shader.glsl", 
-                                      "./src/shaders/fragment_shader.glsl");
-    GLuint sprite_program = BuildGlProgram("./src/shaders/sprite_vertex_shader.glsl", 
-                                           "./src/shaders/fragment_shader.glsl");
-    GLuint simple_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
-                                           "./src/shaders/simple_fragment_shader.glsl");
-    GLuint line_program = BuildGlProgram("./src/shaders/line_v_shader.glsl",
-                                         "./src/shaders/line_f_shader.glsl",
-                                         "./src/shaders/line_g_shader.glsl");
+    GLuint programID = BuildGlProgram(
+        "./src/shaders/vertex_shader.glsl", 
+        "./src/shaders/fragment_shader.glsl"
+    );
+    GLuint sprite_program = BuildGlProgram(
+        "./src/shaders/sprite_vertex_shader.glsl", 
+        "./src/shaders/fragment_shader.glsl"
+    );
+    GLuint simple_program = BuildGlProgram(
+        "./src/shaders/simple_vertex_shader.glsl",
+        "./src/shaders/simple_fragment_shader.glsl"
+    );
+    GLuint line_program = BuildGlProgram(
+        "./src/shaders/line_v_shader.glsl",
+        "./src/shaders/line_f_shader.glsl",
+        "./src/shaders/line_g_shader.glsl"
+    );
 
     Shader base_shader(programID);
 
