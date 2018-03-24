@@ -380,19 +380,14 @@ int main(int argc, char *argv[]) {
         last_frame_time = current_frame_time;
 
         glfwPollEvents();
-        //ImGuiIO& io = 
         ImGui::GetIO();
 
-        //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
         new_mouse_world_coords = calc_world_coords();
 
         if (middle_button_down) { 
-            //new_mouse_world_coords = calc_world_coords();
-
             glm::vec2 difference = new_mouse_world_coords - mouse_world_coords;
             difference = glm::vec2(difference.x, difference.y);
             translate_ortho(glm::vec3(difference, 0.0f));
-            //set_ortho_pos(glm::vec3(mouse_world_coords.x, mouse_world_coords.y, 0.0f));
             mouse_world_coords = new_mouse_world_coords;
         }
 
@@ -403,12 +398,11 @@ int main(int argc, char *argv[]) {
         glm::mat4 rotated_view = getView();
 
         renderer.activate("default");
-
         // These are specified in the shader but not used, they have been optimised out
         //renderer.active().set_uniform("Projection", Projection);
         //renderer.active().set_uniform("View", rotated_view);
 
-        // Model Drawing
+        // ========= MODEL DRAWING =========
         for (uint i = 0; i < modelObjects.size(); i++) {
             // Calculate the matrices
             // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
@@ -443,8 +437,9 @@ int main(int argc, char *argv[]) {
 
             modelObjects[i].model.Draw(renderer.active().get_shader_id());
         }
+        // ========= END MODEL DRAWING =========
 
-        // Object (CUBE) Drawing
+        // ========= CUBE DRAWING =========
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
                 float x = (float)glm::sin(glfwGetTime()) * 3;
@@ -489,68 +484,82 @@ int main(int argc, char *argv[]) {
             glDrawArrays(GL_TRIANGLES, 0, 36);
             glBindVertexArray(0);
         }
+        // ========= ENDCUBE DRAWING =========
 
-        glUseProgram(simple_program);
-        glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
-        glm::mat4 plane_model = glm::mat4(1.0f);
-        rotated_view = getView();
+        // ========= SHAPE DRAWING =========
+        {
+            glUseProgram(simple_program);
+            glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
+            glm::mat4 plane_model = glm::mat4(1.0f);
+            rotated_view = getView();
 
-        glm::mat4 mvp = Projection * rotated_view * plane_model;
-        // Load camera to OpenGL
-        renderer.active().set_uniform("MVP", mvp);
+            glm::mat4 mvp = Projection * rotated_view * plane_model;
+            // Load camera to OpenGL
+            renderer.active().set_uniform("MVP", mvp);
 
-        draw_shapes();
+            draw_shapes();
+        }
+        // ========= END SHAPE DRAWING =========
 
         // ========= SPRITE DRAWING =========
-        
-        renderer.activate("sprite");
-        
-        renderer.active().set_uniform("lightPos", lightPos);
-        renderer.active().set_uniform("viewPos", viewPos);
-        renderer.active().set_uniform("objectColor", 1.0f, 1.0f, 1.0f);
-        renderer.active().set_uniform("lightColor", 1.0f, 1.0f, 1.0f);
+        {
+            renderer.activate("sprite");
+            
+            renderer.active().set_uniform("lightPos", lightPos);
+            renderer.active().set_uniform("viewPos", viewPos);
+            renderer.active().set_uniform("objectColor", 1.0f, 1.0f, 1.0f);
+            renderer.active().set_uniform("lightColor", 1.0f, 1.0f, 1.0f);
 
-        renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
-        renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
-        renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
-        
-        renderer.active().set_uniform("Projection", Projection);
-        renderer.active().set_uniform("View", rotated_view);
+            renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
+            renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
+            renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
+            
+            renderer.active().set_uniform("Projection", Projection);
+            renderer.active().set_uniform("View", rotated_view);
 
-        glm::mat4 player_mat = GetPlaneMatrix("player");
-        float x = (float)glm::sin(glfwGetTime()) * 0.01;
-        player_mat = glm::translate(player_mat, vec3(0, x, 0));
-        UpdatePlaneMatrix("player", player_mat);
+            glm::mat4 player_mat = GetPlaneMatrix("player");
+            float x = (float)glm::sin(glfwGetTime()) * 0.01;
+            player_mat = glm::translate(player_mat, vec3(0, x, 0));
+            UpdatePlaneMatrix("player", player_mat);
 
-        player_mat = GetPlaneMatrix("player2");
-        x = (float)glm::sin(glfwGetTime()) * 0.01;
-        player_mat = glm::translate(player_mat, vec3(x, 0, 0));
-        UpdatePlaneMatrix("player2", player_mat);
+            player_mat = GetPlaneMatrix("player2");
+            x = (float)glm::sin(glfwGetTime()) * 0.01;
+            player_mat = glm::translate(player_mat, vec3(x, 0, 0));
+            UpdatePlaneMatrix("player2", player_mat);
 
-        UpdateMatrixBuffer();
-        DrawPlanes(sprite_program);
-        
+            UpdateMatrixBuffer();
+            DrawPlanes(sprite_program);
+        }
         // ========= END SPRITE DRAWING =========
 
+        // ========= DEBUG DRAWING =========
         DebugDraw(Projection, rotated_view);
+        // ========= END DEBUG DRAWING =========
 
         // ========= LINE DRAWING =========
-        glUseProgram(line_program);
-        renderer.activate("line");
-        glm::mat4 model = glm::mat4(1.0f);
-        mvp = Projection * rotated_view * model;
-        renderer.active().set_uniform("MVP", mvp);
-        draw_lines();
+        {
+            glUseProgram(line_program);
+            renderer.activate("line");
+            glm::mat4 model = glm::mat4(1.0f);
+            glm::mat4 mvp = Projection * rotated_view * model;
+            renderer.active().set_uniform("MVP", mvp);
+            draw_lines();
+        }
+        // ========= ENDLINE DRAWING =========
 
-        static bool p_open = true;
-        ShowExampleAppConsole(&p_open);
-        ShowFrameInformation(&p_open);
-        ShowMainMenu(&p_open);
-        MenuParts(&p_open);
+        // ========= INTERFACE DRAWING =========
+        {
+            static bool p_open = true;
+            ShowExampleAppConsole(&p_open);
+            ShowFrameInformation(&p_open);
+            ShowMainMenu(&p_open);
+            MenuParts(&p_open);
 
-        ImGui::Render();
+            ImGui::Render();
+        }
+        // ========= END INTERFACE DRAWING =========
+
         glfwSwapBuffers(window);
-        
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);
