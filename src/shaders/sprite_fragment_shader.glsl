@@ -15,7 +15,6 @@ uniform vec3 viewPos;
 uniform bool debug_draw_texcoords = false;
 uniform bool debug_draw_normals = false;
 uniform bool debug_disable_lighting = false;
-uniform bool use_model_buffer = false;
 
 void main(){
 	float ambientStrength = 0.2f;

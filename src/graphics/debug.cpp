@@ -124,8 +124,8 @@ void DebugCreateCube(vec3 point1, float width, float height, float depth, vec3 c
 
 void DebugInit() {
     // Create our debug shaders and program
-    debug_program = BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
-                                   "./src/shaders/simple_fragment_shader.glsl");
+    debug_program = opengl::BuildGlProgram("./src/shaders/simple_vertex_shader.glsl",
+                                           "./src/shaders/simple_fragment_shader.glsl");
     glUseProgram(debug_program);
     BufferData();
     DebugCreateLine(vec3(0.0f, 0.0f, 0.0f), vec3(3.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f));

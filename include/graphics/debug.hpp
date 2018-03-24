@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
-#include "graphics/shader.hpp"
+#include "graphics/opengl/gl_renderer.hpp"
 
 void DebugInit();
 void DebugCreateLine(float x1, float y1, float z1, float x2, float y2, float z2);

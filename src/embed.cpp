@@ -19,8 +19,6 @@ Python function calls that can be called from C.
 #include "tracker.hpp"
 #include "graphics/arcball.hpp"
 #include "graphics/camera.hpp"
-#include "graphics/shader.hpp"
-#include "graphics/cube.hpp"
 #include "graphics/buffers.hpp"
 #include "graphics/console.hpp"
 #include "graphics/model.hpp"
@@ -270,61 +268,27 @@ void random_line(int num_lines) {
 int main(int argc, char *argv[]) {
 
     pythonTesting(argc, argv);
+
     std::cout << "Initialising renderer" << std::endl;
     Renderer renderer;
     window = renderer.get_window();
 
     // ------------ Graphics Engine ---------------
 
-    GLuint programID = BuildGlProgram(
-        "./src/shaders/vertex_shader.glsl", 
-        "./src/shaders/fragment_shader.glsl"
-    );
-    GLuint sprite_program = BuildGlProgram(
-        "./src/shaders/sprite_vertex_shader.glsl", 
-        "./src/shaders/fragment_shader.glsl"
-    );
-    GLuint simple_program = BuildGlProgram(
-        "./src/shaders/simple_vertex_shader.glsl",
-        "./src/shaders/simple_fragment_shader.glsl"
-    );
-    GLuint line_program = BuildGlProgram(
-        "./src/shaders/line_v_shader.glsl",
-        "./src/shaders/line_f_shader.glsl",
-        "./src/shaders/line_g_shader.glsl"
-    );
+    GLuint programID, sprite_program, simple_program, line_program;
+    renderer.LoadShaders(&programID, &sprite_program, &simple_program, &line_program);
 
-    Shader base_shader(programID);
+    //Shader base_shader(programID);
 
     DebugInit();
-    glUseProgram(programID);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_MULTISAMPLE);
-
-    glViewport(0, 0, width, height);
-
-    GLint size;
-    glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &size);
-    std::cout << "GL_MAX_UNIFORM_BLOCK_SIZE is " << size << " bytes." << endl;
+    renderer.activate("default");
 
     // Mesh Objects
-    GLuint CubeMesh = BufferMeshDataVNT(cube_data_normal, sizeof(cube_data_normal));
-    GLuint LightMesh = BufferMeshDataVT(cube_data, sizeof(cube_data));
+    GLuint CubeMesh = primitives::cube_mesh();
+    GLuint LightMesh = primitives::light_mesh();
 
     // Load Textures
-    GLuint texture = BufferTextureDataFromFile("container.jpg", "./assets/textures/");
-
-    struct DrawObject {
-        GLuint mesh_id;
-        GLuint tex_id;
-        glm::vec3 pos;
-        glm::vec3 rot;
-        glm::vec3 scale;
-        GLuint program;
-        const char *name;
-    };
+    GLuint texture = load_texture("container.jpg", "./assets/textures/");
 
     glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
@@ -357,15 +321,26 @@ int main(int argc, char *argv[]) {
 
     LoadShapeFile("./assets/shapefiles/Australia.shp");
 
-    GLuint MVPMatID = glGetUniformLocation(programID, "MVP");
-    GLuint normalMatID = glGetUniformLocation(programID, "NormalMat");
-    GLuint modelMatId = glGetUniformLocation(programID, "Model");
-    GLuint projMatId = glGetUniformLocation(programID, "Projection");
-    GLuint viewMatId = glGetUniformLocation(programID, "View");
-    GLint objectColorLoc = glGetUniformLocation(programID, "objectColor");
-    GLint lightColorLoc = glGetUniformLocation(programID, "lightColor");
-    GLint lightPosLoc = glGetUniformLocation(programID, "lightPos");
-    GLint viewPosLoc = glGetUniformLocation(programID, "viewPos");
+    // NOTE: I now need to seperate the Models from the drawing instances ( or not reload a loaded model )
+    vector<ModelObject> modelObjects;
+
+    modelObjects.push_back({
+        glm::vec3(2, 0, -4),
+        0.0f,
+        0.0f,
+        0.0f,
+        glm::vec3(0.2, 0.2, 0.2),
+        Model("./assets/meshes/", "nanosuit.obj")
+    });
+    
+    modelObjects.push_back({
+        glm::vec3(0, 0, 0),
+        -90.0f,
+        0.0f,
+        0.0f,
+        glm::vec3(1.0, 1.0, 1.0),
+        Model("./assets/meshes/", "warrior.fbx")
+    });
 
     ImGui_ImplGlfwGL3_Init(window, true);
     ImGuiIO& io = ImGui::GetIO();
@@ -378,7 +353,6 @@ int main(int argc, char *argv[]) {
     glfwSetCursorPosCallback(window, mouseCursorCallback);
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
-
 
     int num_lines = 10;
     int line_point_count = 200;
@@ -428,28 +402,57 @@ int main(int argc, char *argv[]) {
         // Do camera changes here before we start drawing
         glm::mat4 rotated_view = getView();
 
-        glUseProgram(programID);
+        renderer.activate("default");
 
-        MVPMatID = glGetUniformLocation(programID, "MVP");
-        normalMatID = glGetUniformLocation(programID, "NormalMat");
-        modelMatId = glGetUniformLocation(programID, "Model");
-        projMatId = glGetUniformLocation(programID, "Projection");
-        viewMatId = glGetUniformLocation(programID, "View");
-        objectColorLoc = glGetUniformLocation(programID, "objectColor");
-        lightColorLoc = glGetUniformLocation(programID, "lightColor");
-        lightPosLoc = glGetUniformLocation(programID, "lightPos");
-        viewPosLoc = glGetUniformLocation(programID, "viewPos");
+        // These are specified in the shader but not used, they have been optimised out
+        //renderer.active().set_uniform("Projection", Projection);
+        //renderer.active().set_uniform("View", rotated_view);
 
-        glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
-        glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
+        // Model Drawing
+        for (uint i = 0; i < modelObjects.size(); i++) {
+            // Calculate the matrices
+            // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
+            glm::mat4 model = glm::mat4(1.0f);  // Get eye Model matrix
+            model = glm::translate(model, modelObjects[i].translation);
+            if (modelObjects[i].rotationX != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationX), glm::vec3(1, 0, 0));
+            }
+            if (modelObjects[i].rotationY != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationY), glm::vec3(0, 1, 0));
+            }
+            if (modelObjects[i].rotationZ != 0.0f) {
+                model = glm::rotate(model, glm::radians(modelObjects[i].rotationZ), glm::vec3(0, 0, 1));
+            }
+            model = glm::scale(model, modelObjects[i].scale);
+            // Done! 
+            glm::mat4 model_mvp = Projection * rotated_view * model;
+            glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
 
+            renderer.active().set_uniform("MVP", model_mvp);
+            renderer.active().set_uniform("Model", model);
+            renderer.active().set_uniform("NormalMat", model_normalMat);
+
+            renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
+            renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
+            renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
+
+            renderer.active().set_uniform("lightPos", lightPos);
+            renderer.active().set_uniform("viewPos", viewPos);
+            renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
+            renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
+
+            modelObjects[i].model.Draw(renderer.active().get_shader_id());
+        }
+
+        // Object (CUBE) Drawing
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
                 float x = (float)glm::sin(glfwGetTime()) * 3;
                 lightPos.x = x;
                 drawObjects[i].pos.x = x;
             }
-            glUseProgram(drawObjects[i].program);
+            renderer.activate(drawObjects[i].program);
+
             //recalculate the mvp
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, drawObjects[i].pos);
@@ -458,34 +461,29 @@ int main(int argc, char *argv[]) {
             glm::mat4 mvp = Projection * rotated_view * model;
             glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
             // Load camera to OpenGL
-            MVPMatID = glGetUniformLocation(drawObjects[i].program, "MVP");
-            normalMatID = glGetUniformLocation(drawObjects[i].program, "NormalMat");
-            modelMatId = glGetUniformLocation(drawObjects[i].program, "Model");
-            glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+
+            renderer.active().set_uniform("MVP", mvp);
            
-            if (drawObjects[i].program == programID) {
-                glUniformMatrix4fv(modelMatId, 1, GL_FALSE, &model[0][0]);
-                glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &normalMat[0][0]);
-                glUniform1i(glGetUniformLocation(programID, "debug_draw_normals"),
-                    DebugGetFlag("render:draw_normals"));
-                glUniform1i(glGetUniformLocation(programID, "debug_draw_texcoords"),
-                    DebugGetFlag("render:draw_texcoords"));
-                glUniform1i(glGetUniformLocation(programID, "debug_disable_lighting"),
-                    DebugGetFlag("render:disable_lighting"));
-                glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
-                glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
-                glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-                glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
+            if (drawObjects[i].program == renderer.get_shader_id("default")) {
+                renderer.active().set_uniform("Model", model);
+                renderer.active().set_uniform("NormalMat", normalMat);
+
+                renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
+                renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
+                renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
+
+                renderer.active().set_uniform("lightPos", lightPos);
+                renderer.active().set_uniform("viewPos", viewPos);
+                renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
+                renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
             }
             if (drawObjects[i].tex_id != NULL_TEXTURE) {
-                GLint tex_loc = glGetUniformLocation(drawObjects[i].program, "texture_diffuse1");
-                glUniform1i(tex_loc, 0);
+                renderer.active().set_uniform("texture_diffuse1", 0);
                 glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
             }
-            if (drawObjects[i].program == simple_program) {
-                glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), true);
-                glUniform3f(glGetUniformLocation(simple_program, "uniform_color"),
-                    1.0f, 1.0f, 1.0f);
+            if (drawObjects[i].program == renderer.get_shader_id("simple")) {
+                renderer.active().set_uniform("use_uniform_color", true);
+                renderer.active().set_uniform("uniform_color", glm::vec3(1.0f));
             }
             glBindVertexArray(drawObjects[i].mesh_id);
             glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -496,55 +494,28 @@ int main(int argc, char *argv[]) {
         glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
         glm::mat4 plane_model = glm::mat4(1.0f);
         rotated_view = getView();
-        //model = glm::translate(model, drawObjects[i].pos);
-        //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
-        //model = glm::scale(model, drawObjects[i].scale);
+
         glm::mat4 mvp = Projection * rotated_view * plane_model;
-        //normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
         // Load camera to OpenGL
-        MVPMatID = glGetUniformLocation(simple_program, "MVP");
-        normalMatID = glGetUniformLocation(simple_program, "NormalMat");
-        modelMatId = glGetUniformLocation(simple_program, "Model");
-        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+        renderer.active().set_uniform("MVP", mvp);
 
         draw_shapes();
 
         // ========= SPRITE DRAWING =========
         
-        glUseProgram(sprite_program);
- 
-        //MVPMatID = glGetUniformLocation(sprite_program, "MVP");
-        //normalMatID = glGetUnicharformLocation(sprite_program, "NormalMat");
-        projMatId = glGetUniformLocation(sprite_program, "Projection");
-        viewMatId = glGetUniformLocation(sprite_program, "View");
-        objectColorLoc = glGetUniformLocation(sprite_program, "objectColor");
-        lightColorLoc = glGetUniformLocation(sprite_program, "lightColor");
-        lightPosLoc = glGetUniformLocation(sprite_program, "lightPos");
-        viewPosLoc = glGetUniformLocation(sprite_program, "viewPos");
+        renderer.activate("sprite");
+        
+        renderer.active().set_uniform("lightPos", lightPos);
+        renderer.active().set_uniform("viewPos", viewPos);
+        renderer.active().set_uniform("objectColor", 1.0f, 1.0f, 1.0f);
+        renderer.active().set_uniform("lightColor", 1.0f, 1.0f, 1.0f);
 
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(viewPosLoc, viewPos.x, viewPos.y, viewPos.z);
-        glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f);
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Also set light's color (white)
-
-        glUniform1i(glGetUniformLocation(sprite_program, "debug_draw_normals"),
-            DebugGetFlag("render:draw_normals"));
-        glUniform1i(glGetUniformLocation(sprite_program, "debug_draw_texcoords"),
-            DebugGetFlag("render:draw_texcoords"));
-        glUniform1i(glGetUniformLocation(sprite_program, "debug_disable_lighting"),
-            DebugGetFlag("render:disable_lighting"));
-
-        glUniformMatrix4fv(projMatId, 1, GL_FALSE, &Projection[0][0]);
-        glUniformMatrix4fv(viewMatId, 1, GL_FALSE, &rotated_view[0][0]);
-        //glm::mat4 model = glm::mat4(1.0f);
-        // Need to get correct 
-
-        //glm::mat4 model_mvp = Projection * rotated_view * model;
-        //glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-        //glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &model_mvp[0][0]);
-        //glUniformMatrix3fv(normalMatID, 1, GL_FALSE, &model_normalMat[0][0]);
-        //GLint tex_loc = glGetUniformLocation(sprite_program, "texture_diffuse1");
-        //glUniform1i(tex_loc, 0);
+        renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
+        renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
+        renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
+        
+        renderer.active().set_uniform("Projection", Projection);
+        renderer.active().set_uniform("View", rotated_view);
 
         glm::mat4 player_mat = GetPlaneMatrix("player");
         float x = (float)glm::sin(glfwGetTime()) * 0.01;
@@ -565,10 +536,10 @@ int main(int argc, char *argv[]) {
 
         // ========= LINE DRAWING =========
         glUseProgram(line_program);
-        MVPMatID = glGetUniformLocation(line_program, "MVP");
+        renderer.activate("line");
         glm::mat4 model = glm::mat4(1.0f);
         mvp = Projection * rotated_view * model;
-        glUniformMatrix4fv(MVPMatID, 1, GL_FALSE, &mvp[0][0]);
+        renderer.active().set_uniform("MVP", mvp);
         draw_lines();
 
         static bool p_open = true;

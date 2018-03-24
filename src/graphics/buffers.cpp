@@ -1,21 +1,6 @@
 #include "graphics/buffers.hpp"
 
-std::map<GLuint, Shader> shader_map;
-//shader_attribute_name	// Local data format
-std::map<std::string, Format> shader_attr_format;
-
-//Format format(ATTRIBUTE_TYPE::VERTEX_DATA, GL_FLOAT_VEC3);
-//shader_attr_format["position"] = format;
-//shader_attr_format.insert(
-//	std::make_pair<std::string, Format>("position", Format(ATTRIBUTE_TYPE::VERTEX_DATA, GL_FLOAT_VEC3))
-//);
-
-//shader_attr_format["position"] = Format{ATTRIBUTE_TYPE::VERTEX_DATA, GL_FLOAT_VEC3};
-//shader_attr_format["normal"] = Format(ATTRIBUTE_TYPE::NORMAL_DATA, GL_FLOAT_VEC3);
-//shader_attr_format["texCoord"] = Format(ATTRIBUTE_TYPE::TEXTURE_DATA, GL_FLOAT_VEC2);
-
-
-GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size) {
+GLuint BufferMeshDataVNT(const GLfloat *mesh_data, int size) {
 	// Create our VAO
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -44,7 +29,7 @@ GLuint BufferMeshDataVNT(GLfloat *mesh_data, int size) {
 	return VertexArrayID;
 }
 
-GLuint BufferMeshDataVT(GLfloat *mesh_data, int size) {
+GLuint BufferMeshDataVT(const GLfloat *mesh_data, int size) {
 	// Create our VAO
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -181,132 +166,4 @@ GLuint ShadowMapBuffer() {
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return depthMap;
-}
-
-/*
-V = Vertex
-N = Normal
-C = Color
-T = u,v Coordinates
-I = Indices
-*/
-
-Shader::Shader() : id(-1) {}
-
-Shader::Shader(GLuint id) : id(id) {
-	GLint i;
-	GLint count;
-
-	GLint size; // size of the variable
-	GLenum type; // type of the variable (float, vec3 or mat4, etc)
-
-	const GLsizei bufSize = 16; // maximum name length
-	GLchar name[bufSize]; // variable name in GLSL
-	GLsizei length; // name length
-
-	std::cout << "Checking Attributes" << std::endl;
-	glGetProgramiv(id, GL_ACTIVE_ATTRIBUTES, &count);
-	std::cout << "Active Attributes: " << count << std::endl;
-	attributes.reserve(3);
-
-	for (i = 0; i < count; i++)
-	{
-		glGetActiveAttrib(id, (GLuint)i, bufSize, &length, &size, &type, name);
-		Attribute attribute(this, i, name, type);
-		attributes.push_back(attribute);
-			
-	}
-	/*
-	std::cout << "GL_FLOAT: " << GL_FLOAT << std::endl;
-	std::cout << "GL_FLOAT_VEC3: " << GL_FLOAT_VEC3 << std::endl;
-	std::cout << "GL_FLOAT_VEC2: " << GL_FLOAT_VEC2 << std::endl;
-	std::cout << "GL_FLOAT_VEC4: " << GL_FLOAT_VEC4 << std::endl;*/
-}
-
-
-DataFormat::DataFormat(bool v3f=false, bool n3f=false, bool t2f=false, bool interleaved=true, bool indices=true)
-	: V3f(v3f), N3f(n3f), T2f(t2f), Interleaved(interleaved), Indices(indices) {
-
-}
-
-Format::Format() {}
-
-Format::Format(ATTRIBUTE_TYPE type, GLenum data_type) : type(type), data_type(data_type) {
-
-}
-
-
-Attribute::Attribute(Shader *s, GLint i, string n, GLenum t) : shader(s), id(i), name(n), type(t) {
-	std::cout << "Attribute # " << id << " Type: " << type << " Name: " <<  name << std::endl;
-}
-
-
-Buffer::Buffer(vector<float> buffer_data, DataFormat data_format) {
-	// Steps ... 
-	// Set up VAO
-	// Create VBO
-	// How many do I need?
-	if (data_format.Interleaved) {
-		GLuint temp;
-		glGenBuffers(1, &temp);
-		vbo_id = temp;
-	} else {
-		// 1 VBO per data
-		// TODO
-		std::cout << "ERROR:: BUFFERS:: Data not interlaved not implemented" << std::endl;
-	}
-
-	if (data_format.Indices) {
-		glGenBuffers(1, &ebo_id);
-	}
-
-	// Set VBO Attributes
-}
-
-void Buffer::InitialiseBuffer(){
-	// When buffer is initialiased it will set the data types it supports
-	// i.e. VNT, VN, ...
-	// You cannot change data types later, need new buffer
-
-
-	
-
-
-	//glBindVertexArray(VertexArrayID);0
-	//glGenBuffers();
-}
-
-void Buffer::AddShader(GLuint shader_id) {
-	assert(shader_map.count(shader_id) == 0);
-	Shader s = shader_map[shader_id];
-
-	glGenVertexArrays(1, &vao_id);
-	shader_attributes[shader_id] = vao_id;
-
-	glBindVertexArray(vao_id);
-	SetAttributes(s);
-	glBindVertexArray(0);
-}
-
-
-void Buffer::SetAttributes(Shader s) {
-	// What do I need?
-	// For each data type supported by this buffer and shader combo
-	// Create a VAO and set the attributes, bind the right buffers.
-
-	// I need to match up shader attributes to our buffers data format
-
-	// VAO per shader
-	for (Attribute attribute : s.attributes) {
-		
-		assert(shader_attr_format.count(attribute.name) > 0 && "No mapping exists for shader attribute and data format");
-		// What is this type?
-		// Do we have a mapping?
-		Format format = shader_attr_format[attribute.name];
-
-		// Does our Buffer have data for this format?
-
-
-	}
-
 }
