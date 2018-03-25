@@ -14,12 +14,12 @@ public:
     GLuint get_shader_id() {
         return shader_id;
     }
-    void Shader::set_uniform(std::string name, glm::mat4 value);
-    void Shader::set_uniform(std::string name, glm::mat3 value);
-    void Shader::set_uniform(std::string name, glm::vec4 value);
-    void Shader::set_uniform(std::string name, glm::vec3 value);
-    void Shader::set_uniform(std::string name, float x, float y, float z);
-    void Shader::set_uniform(std::string name, bool value);
+    void set_uniform(std::string name, glm::mat4 value);
+    void set_uniform(std::string name, glm::mat3 value);
+    void set_uniform(std::string name, glm::vec4 value);
+    void set_uniform(std::string name, glm::vec3 value);
+    void set_uniform(std::string name, float x, float y, float z);
+    void set_uniform(std::string name, bool value);
     void activate() {
         glUseProgram(shader_id);
     }
