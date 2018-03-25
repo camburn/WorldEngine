@@ -18,8 +18,13 @@
 #include "graphics/opengl/gl_renderer.hpp"
 
 
+struct Sprite {
+    glm::mat4 model_matrix;
+    std::string name;
+    std::string texture_name;
+};
 
-struct DrawObject {
+struct Primitive {
     GLuint mesh_id;
     GLuint tex_id;
     glm::vec3 pos;

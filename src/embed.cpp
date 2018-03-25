@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
     UpdateMatrixBuffer();
 
     // Create our Objects
-    DrawObject drawObjects[] = {
+    Primitive drawObjects[] = {
         { CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
         { CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
         { CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
@@ -440,7 +440,7 @@ int main(int argc, char *argv[]) {
         // ========= END MODEL DRAWING =========
 
         // ========= CUBE DRAWING =========
-        for (uint i = 0; i < sizeof(drawObjects) / sizeof(DrawObject); i++) {
+        for (uint i = 0; i < sizeof(drawObjects) / sizeof(Primitive); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
                 float x = (float)glm::sin(glfwGetTime()) * 3;
                 lightPos.x = x;
