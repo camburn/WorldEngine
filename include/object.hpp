@@ -7,6 +7,9 @@ class Entity {
 public:
     Entity();
     void attach(Sprite sprite_object);
+    void render();
+    void set_position(glm::vec3 new_position);
+
 private:
     glm::vec3 position;
 
