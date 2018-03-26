@@ -4,9 +4,6 @@ Entity::Entity() {
 
 }
 
-void Entity::attach(Sprite sprite_object) {
-
-}
 
 void Entity::render() {
     // How does my entity find the renderer?
@@ -16,10 +13,13 @@ void Entity::render() {
 }
 
 void Entity::set_position(glm::vec3 new_position) {
+    if (!sprite_attached) { return; }
     // if (Sprite) {} // No null
+    
 }
 
 void Entity::attach(Sprite sprite_object) {
+    sprite_attached = true;
     sprite = sprite_object;
 }
 

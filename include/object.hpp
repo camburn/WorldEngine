@@ -13,6 +13,7 @@ public:
 private:
     glm::vec3 position;
 
+    bool sprite_attached = false;
     Sprite sprite;
     //Primitive primitive;
     //Model model;
