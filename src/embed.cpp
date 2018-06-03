@@ -27,6 +27,10 @@ Python function calls that can be called from C.
 #include "graphics/planes.hpp"
 #include "graphics/renderer.hpp"
 
+#include "managers/state_manager.hpp"
+#include "managers/texture_manager.hpp"
+#include "managers/primitive_manager.hpp"
+
 #define NULL_TEXTURE 0
 
 GLFWwindow* window;
@@ -271,6 +275,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Initialising renderer" << std::endl;
     Renderer renderer;
+    renderer.create();
     window = renderer.get_window();
 
     // ------------ Graphics Engine ---------------
@@ -288,7 +293,9 @@ int main(int argc, char *argv[]) {
     GLuint LightMesh = primitives::light_mesh();
 
     // Load Textures
-    GLuint texture = load_texture("container.jpg", "./assets/textures/");
+    TextureManager texture_manager(renderer);
+    texture_manager.add_texture("wooden_crate", "container.jpg", "./assets/textures/");
+    GLuint texture = texture_manager.get_texture("wooden_crate");
 
     glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
@@ -313,9 +320,6 @@ int main(int argc, char *argv[]) {
 
     // Create our Objects
     Primitive drawObjects[] = {
-        { CubeMesh, texture, glm::vec3(-1, 0.5, -1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube1"},
-        { CubeMesh, texture, glm::vec3(-2, 0.5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube2" },
-        { CubeMesh, texture, glm::vec3(-1, 1.5, -2), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), programID, "Cube3" },
         { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
     };
 
@@ -354,6 +358,15 @@ int main(int argc, char *argv[]) {
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
 
+    State state(renderer);
+    state.update_state();
+    PrimitiveManager primitives{state, texture_manager};
+    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
+    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
+    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
+    primitives.new_instance("Cube", glm::vec3(0,2,0), glm::vec3(1,1,1));
+    //{ LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
+    
     int num_lines = 10;
     int line_point_count = 200;
 
@@ -440,6 +453,15 @@ int main(int argc, char *argv[]) {
         // ========= END MODEL DRAWING =========
 
         // ========= CUBE DRAWING =========
+        renderer.activate("default");
+        state.set_projection(Projection);
+        state.set_view(rotated_view);
+        state.set_light_pos(lightPos);
+        state.set_view_pos(viewPos);
+        state.update_state();
+
+        primitives.draw(state);
+
         for (uint i = 0; i < sizeof(drawObjects) / sizeof(Primitive); i++) {
             if (strcmp("Light1", drawObjects[i].name) == 0) {
                 float x = (float)glm::sin(glfwGetTime()) * 3;

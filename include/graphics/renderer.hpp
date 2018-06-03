@@ -49,6 +49,7 @@ Shader get_shader(string name);
 class Renderer {
 public:
     Renderer();
+    void create();
     void LoadShaders(
         GLuint *programID, GLuint *sprite_program,
         GLuint *simple_program, GLuint *line_program

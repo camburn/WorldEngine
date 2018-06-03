@@ -1,7 +1,9 @@
 #include "graphics/renderer.hpp"
 
 
-Renderer::Renderer() {
+Renderer::Renderer() {}
+
+void Renderer::create() {
     // Prepare this renderer for rendering!
     opengl::init();
     opengl::create_window();
