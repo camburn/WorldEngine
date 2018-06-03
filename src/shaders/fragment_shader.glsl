@@ -16,13 +16,13 @@ uniform bool debug_draw_texcoords = false;
 uniform bool debug_draw_normals = false;
 uniform bool debug_disable_lighting = false;
 
-uniform bool no_shadows = false;
+uniform bool use_shadows = false;
 uniform bool use_uniform_color = false;
 uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
 
 void main(){
 
-	if (no_shadows && use_uniform_color) {
+	if (!use_shadows && use_uniform_color) {
 		color = vec4(uniform_color, 1);
 		return;
 	}
@@ -60,7 +60,7 @@ void main(){
     }
 
 	if (use_uniform_color) {
-	  	color = (uniform_color * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
+	  	color = (vec4(uniform_color, 1) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
 	} else {
 		color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
 	}

@@ -61,8 +61,24 @@ void PrimitiveInstance::set_scale(glm::vec3 new_scale) {
     scale = new_scale;
 }
 
+glm::vec3 PrimitiveInstance::get_position() {
+    return position;
+}
+
+glm::vec3 PrimitiveInstance::get_rotation() {
+    return rotation;
+}
+
+glm::vec3 PrimitiveInstance::get_scale() {
+    return scale;
+}
+
 bool PrimitiveInstance::get_texture_status() {
     return use_texture;
+}
+
+bool PrimitiveInstance::get_shading_status() {
+    return use_shading;
 }
 
 void PrimitiveInstance::draw() {
@@ -114,7 +130,11 @@ PrimitiveManager::PrimitiveManager(State &state, TextureManager &texture_manager
 }
 
 
-bool PrimitiveManager::new_instance(std::string type, std::string texture_name, glm::vec3 position) {
+unsigned int PrimitiveManager::new_instance(
+        std::string type, 
+        std::string texture_name, 
+        glm::vec3 position
+        ) {
     instance_count ++;
     std::stringstream ss;
     ss << type << std::to_string(instance_count);
@@ -131,11 +151,16 @@ bool PrimitiveManager::new_instance(std::string type, std::string texture_name, 
 
     instances.push_back(instance);
     
-    return true;
+    return instances.size() - 1;
 }
 
 
-bool PrimitiveManager::new_instance(std::string type, glm::vec3 position, glm::vec3 color) {
+unsigned int PrimitiveManager::new_instance(
+        std::string type, 
+        glm::vec3 position, 
+        glm::vec3 color,
+        bool use_shading = true
+    ) {
     instance_count ++;
     std::stringstream ss;
     ss << type << std::to_string(instance_count);
@@ -147,14 +172,42 @@ bool PrimitiveManager::new_instance(std::string type, glm::vec3 position, glm::v
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1),
         program,
-        instance_name
+        instance_name,
+        use_shading
     ); 
 
     instances.push_back(instance);
     
-    return true;
+    return instances.size() - 1;
 }
 
+PrimitiveInstance &PrimitiveManager::get_instance(unsigned int instance_id) {
+    return instances[instance_id];
+}
+
+void PrimitiveManager::update_instance_position(unsigned int instance_id, glm::vec3 position) {
+    instances[instance_id].set_position(position);
+}
+
+void PrimitiveManager::update_instance_rotation(unsigned int instance_id, glm::vec3 rotation) {
+    instances[instance_id].set_rotation(rotation);
+}
+
+void PrimitiveManager::update_instance_scale(unsigned int instance_id, glm::vec3 scale) {
+    instances[instance_id].set_scale(scale);
+}
+
+glm::vec3 PrimitiveManager::get_instance_position(unsigned int instance_id) {
+    return instances[instance_id].get_position();
+}
+
+glm::vec3 PrimitiveManager::get_instance_rotation(unsigned int instance_id) {
+    return instances[instance_id].get_rotation();
+}
+
+glm::vec3 PrimitiveManager::get_instance_scale(unsigned int instance_id) {
+    return instances[instance_id].get_scale();
+}
 
 void PrimitiveManager::draw(State &state) {
     glm::mat4 model_view_projection = state.generate_model_view();
@@ -165,6 +218,7 @@ void PrimitiveManager::draw(State &state) {
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("texture_diffuse1", 0);
         state.renderer.active().set_uniform("use_uniform_color", !prim.get_texture_status());
+        state.renderer.active().set_uniform("use_shadows", prim.get_shading_status());
 
         prim.draw();
     }

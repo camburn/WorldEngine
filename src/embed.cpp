@@ -364,11 +364,13 @@ int main(int argc, char *argv[]) {
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
-    primitives.new_instance("Cube", glm::vec3(0,2,0), glm::vec3(1,1,1));
-    //{ LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
+    unsigned int light_index = primitives.new_instance(
+        "Cube", glm::vec3(0,2,0), glm::vec3(1,1,1), false
+    );
+    primitives.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
     
-    int num_lines = 10;
-    int line_point_count = 200;
+    int num_lines = 1;
+    int line_point_count = 100;
 
     for (int x=0; x < num_lines; x++) {
         random_line(line_point_count);
@@ -454,6 +456,12 @@ int main(int argc, char *argv[]) {
 
         // ========= CUBE DRAWING =========
         renderer.activate("default");
+
+        float x = (float)glm::sin(glfwGetTime()) * 3;
+        lightPos.x = x;
+        glm::vec3 light_pos = primitives.get_instance_position(light_index);
+        primitives.update_instance_position(light_index, glm::vec3(x, light_pos.y, light_pos.z));
+
         state.set_projection(Projection);
         state.set_view(rotated_view);
         state.set_light_pos(lightPos);
@@ -462,50 +470,6 @@ int main(int argc, char *argv[]) {
 
         primitives.draw(state);
 
-        for (uint i = 0; i < sizeof(drawObjects) / sizeof(Primitive); i++) {
-            if (strcmp("Light1", drawObjects[i].name) == 0) {
-                float x = (float)glm::sin(glfwGetTime()) * 3;
-                lightPos.x = x;
-                drawObjects[i].pos.x = x;
-            }
-            renderer.activate(drawObjects[i].program);
-
-            //recalculate the mvp
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, drawObjects[i].pos);
-            //model = glm::rotate(model, 45.0f, drawObjects[i].rot);
-            model = glm::scale(model, drawObjects[i].scale);
-            glm::mat4 mvp = Projection * rotated_view * model;
-            glm::mat3 normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-            // Load camera to OpenGL
-
-            renderer.active().set_uniform("MVP", mvp);
-           
-            if (drawObjects[i].program == renderer.get_shader_id("default")) {
-                renderer.active().set_uniform("Model", model);
-                renderer.active().set_uniform("NormalMat", normalMat);
-
-                renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
-                renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
-                renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
-
-                renderer.active().set_uniform("lightPos", lightPos);
-                renderer.active().set_uniform("viewPos", viewPos);
-                renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
-                renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
-            }
-            if (drawObjects[i].tex_id != NULL_TEXTURE) {
-                renderer.active().set_uniform("texture_diffuse1", 0);
-                glBindTexture(GL_TEXTURE_2D, drawObjects[i].tex_id);
-            }
-            if (drawObjects[i].program == renderer.get_shader_id("simple")) {
-                renderer.active().set_uniform("use_uniform_color", true);
-                renderer.active().set_uniform("uniform_color", glm::vec3(1.0f));
-            }
-            glBindVertexArray(drawObjects[i].mesh_id);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-            glBindVertexArray(0);
-        }
         // ========= ENDCUBE DRAWING =========
 
         // ========= SHAPE DRAWING =========
