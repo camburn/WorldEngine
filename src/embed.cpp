@@ -363,6 +363,7 @@ int main(int argc, char *argv[]) {
     PrimitiveManager primitives{state, texture_manager};
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
+    primitives.new_instance("Plane", "wooden_crate", glm::vec3(0, 0, 0));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
     unsigned int light_index = primitives.new_instance(
         "Cube", glm::vec3(0,2,0), glm::vec3(1,1,1), false
@@ -455,6 +456,7 @@ int main(int argc, char *argv[]) {
         // ========= END MODEL DRAWING =========
 
         // ========= CUBE DRAWING =========
+
         renderer.activate("default");
 
         float x = (float)glm::sin(glfwGetTime()) * 3;

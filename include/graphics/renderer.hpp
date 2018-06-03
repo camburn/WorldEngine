@@ -71,7 +71,11 @@ GLuint load_texture(string file, string path) ;
 
 namespace primitives {
     GLuint cube_mesh();
+    GLuint plane_mesh();
     GLuint light_mesh();
+
+    const GLuint cube_mesh_vertices = 36;
+    const GLuint plane_mesh_vertices = 6;
 }
 
 #endif

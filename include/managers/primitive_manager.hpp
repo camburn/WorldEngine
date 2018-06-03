@@ -42,11 +42,13 @@ public:
     glm::vec3 get_rotation();
     glm::vec3 get_scale();
 
-    void draw();
+    void draw(GLuint array_size);
 
     GLuint get_texture_id();
     bool get_texture_status();
     bool get_shading_status();
+
+    std::string get_type();
 
     glm::mat4 get_model_matrix();
     glm::mat3 get_normal_matrix();
@@ -76,6 +78,7 @@ public:
     unsigned int new_instance(std::string type, std::string texture_name, glm::vec3 position);
     unsigned int new_instance(std::string type, glm::vec3 position, glm::vec3 color, bool use_shading);
     PrimitiveInstance &get_instance(unsigned int instance_id);
+    
     void draw(State &new_state);
 
     void update_instance_position(unsigned int instance_id, glm::vec3 position);
@@ -90,5 +93,6 @@ private:
     GLuint program;
     int instance_count = 0;
     std::unordered_map<std::string, int> primitives;
+    std::unordered_map<std::string, GLuint> primitive_size;
     std::vector<PrimitiveInstance> instances;
 };

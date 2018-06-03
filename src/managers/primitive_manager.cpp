@@ -81,12 +81,12 @@ bool PrimitiveInstance::get_shading_status() {
     return use_shading;
 }
 
-void PrimitiveInstance::draw() {
+void PrimitiveInstance::draw(GLuint array_size) {
     if (use_texture) {
         glBindTexture(GL_TEXTURE_2D, get_texture_id());
     }
     glBindVertexArray(mesh_id);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 0, array_size);
     glBindVertexArray(0);
 }
 
@@ -94,13 +94,23 @@ GLuint PrimitiveInstance::get_texture_id() {
     return tex_id;
 };
 
+std::string PrimitiveInstance::get_type() {
+    return name;
+}
+
 glm::mat4 PrimitiveInstance::get_model_matrix() {
     if (invalid_model_matrix) {
         model = glm::mat4(1.0f);
         model = glm::translate(model, position);
-        model = glm::rotate(model, rotation.x, glm::vec3(1.0f, 0, 0));
-        model = glm::rotate(model, rotation.y, glm::vec3(0, 1.0f, 0));
-        model = glm::rotate(model, rotation.z, glm::vec3(0, 0, 1.0f));
+        if (rotation.x != 0.0f) {
+            model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1, 0, 0));
+        }
+        if (rotation.y != 0.0f) {
+            model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0, 1, 0));
+        }
+        if (rotation.z != 0.0f) {
+            model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0, 0, 1));
+        }
         model = glm::scale(model, scale);
         invalid_model_matrix = false;
     }
@@ -122,11 +132,16 @@ PrimitiveManager::PrimitiveManager(State &state, TextureManager &texture_manager
         textures(texture_manager) {
     program = state.get_program();
     GLuint CubeMesh = primitives::cube_mesh();
+    GLuint PlaneMesh = primitives::plane_mesh();
 
     primitives.emplace(std::string("Cube"), CubeMesh);
-    primitives.emplace(std::string("Plane"), 0);
+    primitive_size.emplace(std::string("Cube"), primitives::cube_mesh_vertices);
+    primitives.emplace(std::string("Plane"), PlaneMesh);
+    primitive_size.emplace(std::string("Plane"), primitives::plane_mesh_vertices);
     primitives.emplace(std::string("Sphere"), 0);
+    primitive_size.emplace(std::string("Sphere"), 0);
     primitives.emplace(std::string("Cylinder"), 0);
+    primitive_size.emplace(std::string("Cylinder"), 0);
 }
 
 
@@ -136,9 +151,6 @@ unsigned int PrimitiveManager::new_instance(
         glm::vec3 position
         ) {
     instance_count ++;
-    std::stringstream ss;
-    ss << type << std::to_string(instance_count);
-    std::string instance_name = ss.str();
     PrimitiveInstance instance(
         primitives[type],
         textures.get_texture(texture_name),
@@ -146,7 +158,7 @@ unsigned int PrimitiveManager::new_instance(
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1),
         program,
-        instance_name
+        type
     ); 
 
     instances.push_back(instance);
@@ -162,9 +174,6 @@ unsigned int PrimitiveManager::new_instance(
         bool use_shading = true
     ) {
     instance_count ++;
-    std::stringstream ss;
-    ss << type << std::to_string(instance_count);
-    std::string instance_name = ss.str();
     PrimitiveInstance instance(
         primitives[type],
         color,
@@ -172,7 +181,7 @@ unsigned int PrimitiveManager::new_instance(
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1),
         program,
-        instance_name,
+        type,
         use_shading
     ); 
 
@@ -220,7 +229,7 @@ void PrimitiveManager::draw(State &state) {
         state.renderer.active().set_uniform("use_uniform_color", !prim.get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim.get_shading_status());
 
-        prim.draw();
+        prim.draw(primitive_size[prim.get_type()]);
     }
     state.renderer.active().set_uniform("use_uniform_color", false);
 }

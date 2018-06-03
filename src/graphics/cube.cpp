@@ -97,6 +97,17 @@ const GLfloat cube_data_normal[] = {
 	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
 };
 
+const GLfloat plane_data_normal[] = {
+	//  Vertex Data -------| Normal Data -------| Texcoord --|
+	// Right (facing -Z)
+	-1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
+	 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
+	 1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+	 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
+	-1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
+	-1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f
+};
+
 const GLfloat cube_data[] = {
 	//  Vertex Data -------| Texcoord --|
 	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,

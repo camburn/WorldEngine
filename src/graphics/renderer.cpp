@@ -104,6 +104,7 @@ GLuint load_texture(string file, string path) {
 
 namespace primitives {
     GLuint cube_mesh_id = 0;
+    GLuint plane_mesh_id = 0;
     GLuint light_mesh_id = 0;
 
     GLuint cube_mesh() {
@@ -113,6 +114,15 @@ namespace primitives {
             );
         }
         return cube_mesh_id;
+    }
+
+    GLuint plane_mesh() {
+        if (plane_mesh_id == 0) {
+            plane_mesh_id = BufferMeshDataVNT(
+                plane_data_normal, sizeof(plane_data_normal)
+            );
+        }
+        return plane_mesh_id;
     }
 
     GLuint light_mesh() {
