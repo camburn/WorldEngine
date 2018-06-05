@@ -3,6 +3,7 @@ build
 settings.json
 *.pyc
 *.swp
+*.obj
 __pycache__
 .vscode
 .vs
