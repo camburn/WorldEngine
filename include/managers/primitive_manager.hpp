@@ -9,6 +9,8 @@
 #include "state_manager.hpp"
 #include "texture_manager.hpp"
 
+#ifndef PRIMITIVE_H
+#define PRIMITIVE_H
 #define NULL_TEXTURE 0
 
 class PrimitiveInstance {
@@ -79,7 +81,7 @@ public:
     unsigned int new_instance(std::string type, glm::vec3 position, glm::vec3 color, bool use_shading);
     PrimitiveInstance &get_instance(unsigned int instance_id);
     
-    void draw(State &new_state);
+    void draw();
 
     void update_instance_position(unsigned int instance_id, glm::vec3 position);
     void update_instance_rotation(unsigned int instance_id, glm::vec3 rotation);
@@ -89,10 +91,13 @@ public:
     glm::vec3 get_instance_rotation(unsigned int instance_id);
     glm::vec3 get_instance_position(unsigned int instance_id);
 private:
-    TextureManager textures;
+    State &state;
+    TextureManager &textures;
     GLuint program;
     int instance_count = 0;
     std::unordered_map<std::string, int> primitives;
     std::unordered_map<std::string, GLuint> primitive_size;
     std::vector<PrimitiveInstance> instances;
 };
+
+#endif

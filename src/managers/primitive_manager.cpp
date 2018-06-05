@@ -128,8 +128,8 @@ glm::mat4 PrimitiveInstance::get_mvp_matrix(glm::mat4 view_proj_matrix) {
 }
 
 
-PrimitiveManager::PrimitiveManager(State &state, TextureManager &texture_manager) : 
-        textures(texture_manager) {
+PrimitiveManager::PrimitiveManager(State &state, TextureManager &texture_manager) 
+        : textures(texture_manager), state(state) {
     program = state.get_program();
     GLuint CubeMesh = primitives::cube_mesh();
     GLuint PlaneMesh = primitives::plane_mesh();
@@ -143,7 +143,6 @@ PrimitiveManager::PrimitiveManager(State &state, TextureManager &texture_manager
     primitives.emplace(std::string("Cylinder"), 0);
     primitive_size.emplace(std::string("Cylinder"), 0);
 }
-
 
 unsigned int PrimitiveManager::new_instance(
         std::string type, 
@@ -165,7 +164,6 @@ unsigned int PrimitiveManager::new_instance(
     
     return instances.size() - 1;
 }
-
 
 unsigned int PrimitiveManager::new_instance(
         std::string type, 
@@ -218,7 +216,7 @@ glm::vec3 PrimitiveManager::get_instance_scale(unsigned int instance_id) {
     return instances[instance_id].get_scale();
 }
 
-void PrimitiveManager::draw(State &state) {
+void PrimitiveManager::draw() {
     glm::mat4 model_view_projection = state.generate_model_view();
     for (PrimitiveInstance prim: instances) {
         glm::mat4 mvp = prim.get_mvp_matrix(model_view_projection);

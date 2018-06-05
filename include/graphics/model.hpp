@@ -21,6 +21,8 @@ using namespace std;
 
 class Model {
 public:
+    Model();
+    Model(std::string path, std::string filename);
     Model(const char* path, const char* filename);
     void Draw(GLuint shader);
 private:

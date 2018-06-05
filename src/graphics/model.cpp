@@ -4,6 +4,12 @@
 // Also note that meshes can expressed as a parent child relationship
 // Child meshes may use offsets from parent as a matrix
 
+Model::Model() {}
+
+Model::Model(std::string path, std::string filename) {
+    this->loadModel(path.c_str(), filename.c_str());
+}
+
 Model::Model(const char* path, const char* filename) {
     this->loadModel(path, filename);
 }

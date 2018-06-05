@@ -1,7 +1,13 @@
 #include "managers/state_manager.hpp"
 
 
-State::State(Renderer &state_renderer): renderer(state_renderer) {
+State::State(Renderer &state_renderer) 
+        : renderer(state_renderer) {
+    program_id = renderer.get_shader_id("default");
+}
+
+State::State(Renderer &state_renderer, glm::mat4 &proj_mat, glm::mat4 &view_mat)
+        : renderer(state_renderer), projection_matrix(proj_mat), view_matrix(view_mat) {
     program_id = renderer.get_shader_id("default");
 }
 
@@ -38,12 +44,12 @@ GLuint State::get_program() {
     return program_id;
 }
 
-void State::set_projection(glm::mat4 &matrix) {
+void State::set_projection(glm::mat4 matrix) {
     invalid_model_view = true;
     projection_matrix = matrix;
 }
 
-void State::set_view(glm::mat4 &matrix) {
+void State::set_view(glm::mat4 matrix) {
     invalid_model_view = true;
     view_matrix = matrix;
 }

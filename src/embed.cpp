@@ -46,7 +46,8 @@ void disable_debugs() {
     debug_disable_lighting = false;
 }
 
-glm::mat4 Projection = glm::mat4(1.0f);
+glm::mat4 Projection {1.0f};
+glm::mat4 rotated_view {1.0f};
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
@@ -411,7 +412,8 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
-        glm::mat4 rotated_view = getView();
+        //glm::mat4 rotated_view = getView();
+        rotated_view = getView();
 
         renderer.activate("default");
         // These are specified in the shader but not used, they have been optimised out
@@ -470,7 +472,7 @@ int main(int argc, char *argv[]) {
         state.set_view_pos(viewPos);
         state.update_state();
 
-        primitives.draw(state);
+        primitives.draw();
 
         // ========= ENDCUBE DRAWING =========
 
