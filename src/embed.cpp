@@ -226,6 +226,7 @@ int pythonTesting(int argc, char *argv[]) {
     Py_SetProgramName(program);
     PyImport_AppendInittab("debug", &PyInit_Debug);
     PyImport_AppendInittab("planes", &PyInit_Planes);
+    PyImport_AppendInittab("engine_console", &PyInit_console_engine);
     Py_Initialize();
     PyRun_SimpleString(
         "import sys;"
@@ -367,6 +368,41 @@ int main(int argc, char *argv[]) {
         float position = glfwGetTime() * 1.0f;
     }
 
+    // Set up python scripting calls
+    PyObject *py_interface_name, *py_interface_module, *pFunc;
+    
+    py_interface_name = PyUnicode_FromString("engine.interface");
+    py_interface_module = PyImport_Import(py_interface_name);
+    Py_DECREF(py_interface_name);
+
+    PyObject *py_on_init, *py_on_frame;
+
+    if (py_interface_module != NULL) {
+        py_on_init = PyObject_GetAttrString(py_interface_module, "on_init");
+        py_on_frame = PyObject_GetAttrString(py_interface_module, "on_frame");
+        
+        if (!py_on_init && !PyCallable_Check(py_on_init)) {
+            PyErr_Print();
+            std::cout << "Failed to find function - on_init" << std::endl;
+            return 1;            
+        }
+        if (!py_on_frame && !PyCallable_Check(py_on_frame)) {
+            PyErr_Print();
+            std::cout << "Failed to find function - on_frame" << std::endl;
+            return 1;            
+        }
+    } else {
+        PyErr_Print();
+        std::cout << "Failed to load module - engine.objects" << std::endl;
+        return 1;
+    }
+
+    PyObject *py_args, *py_return;
+
+    py_return = PyObject_CallObject(py_on_init, NULL);
+    Py_DECREF(py_return);
+
+
     // Main Loop
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     float last_frame_time = glfwGetTime();
@@ -375,6 +411,11 @@ int main(int argc, char *argv[]) {
         float current_frame_time = glfwGetTime();
         float delta_time = current_frame_time - last_frame_time;
         last_frame_time = current_frame_time;
+
+        py_args = PyTuple_Pack(1, Py_BuildValue("f", delta_time));
+        py_return = PyObject_CallObject(py_on_frame, py_args);
+        Py_DECREF(py_args);
+        Py_DECREF(py_return);
 
         glfwPollEvents();
         ImGui::GetIO();
@@ -491,6 +532,10 @@ int main(int argc, char *argv[]) {
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);
+
+    Py_DECREF(py_on_init);
+    Py_DECREF(py_on_frame);
+    Py_DECREF(py_interface_module);
 
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();

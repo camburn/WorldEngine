@@ -7,8 +7,10 @@
 #include "tracker.hpp"
 #include "graphics/debug.hpp"
 #include "graphics/planes.hpp"
+#include "graphics/console.hpp"
 
 PyObject* PyInit_Debug(void);
 PyObject* PyInit_Planes(void);
+PyObject* PyInit_console_engine(void);
 
 #endif

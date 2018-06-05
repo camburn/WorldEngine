@@ -192,3 +192,29 @@ PyInit_Planes(void) {
     return PyModule_Create(&PlanesModule);
 }
 /* END 2D LIBRARY - C API */
+
+static PyObject*
+pyengine_write_line(PyObject *self, PyObject *args) {
+    char* str_data;
+    if (!PyArg_ParseTuple(args, "s", &str_data)) {
+        return NULL;
+    }
+    ConsoleWriteLine(str_data);
+    return Py_BuildValue("");
+}
+
+static PyMethodDef engine_console_methods[] = {
+    { "write_line",  pyengine_write_line, METH_VARARGS, "Draw a plane." },
+    {NULL, NULL, 0, NULL}
+};
+
+// Create a python module
+static PyModuleDef engine_console_module = {
+    PyModuleDef_HEAD_INIT, "engine_console", NULL, -1, engine_console_methods,
+    NULL, NULL, NULL, NULL
+};
+
+PyObject* 
+PyInit_console_engine(void) {
+    return PyModule_Create(&engine_console_module);
+}

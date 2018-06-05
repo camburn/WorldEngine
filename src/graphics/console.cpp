@@ -384,7 +384,18 @@ void ShowFrameInformation(bool* p_open) {
 	ImGui::End();
 }
 
+std::vector<std::string> log_buffer;
+
+void ConsoleWriteLine(const char *line_text) {
+	log_buffer.push_back(std::string(line_text));
+}
+
 void ShowExampleAppConsole(bool* p_open) {
 	static ExampleAppConsole console;
+	while (!log_buffer.empty()) {
+		std::string line_text = log_buffer.back();
+		log_buffer.pop_back();
+		console.AddLog(line_text.c_str());
+	}
 	console.Draw("Example: Console", p_open);
 }
