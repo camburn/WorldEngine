@@ -29,7 +29,7 @@ if mode == 'debug':
 env.VariantDir('build', 'src', duplicate=0)
 env.Program(
     'bin/WorldEngine',
-    Glob('build/*.cpp') + Glob('build/**/*.cpp') + Glob('build/graphics/**/*.cpp'),
+    Glob('extern/imgui/*.cpp') + Glob('build/*.cpp') + Glob('build/**/*.cpp') + Glob('build/graphics/**/*.cpp'),
     CPPPATH=data['include_dirs'],
     LIBS=data['libs'],
     LIBPATH= data['lib_paths']

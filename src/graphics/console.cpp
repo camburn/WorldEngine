@@ -44,7 +44,7 @@ struct ExampleAppConsole
 		ScrollToBottom = true;
 	}
 
-	void AddLog(const char* fmt, ...) IM_PRINTFARGS(2)
+	void AddLog(const char* fmt, ...) IM_FMTARGS(2)
 	{
 		char buf[1024];
 		va_list args;
@@ -58,7 +58,7 @@ struct ExampleAppConsole
 
 	void Draw(const char* title, bool* p_open)
 	{
-		ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
 		if (!ImGui::Begin(title, p_open))
 		{
 			ImGui::End();
@@ -79,11 +79,9 @@ struct ExampleAppConsole
 		if (ImGui::SmallButton("Add Dummy Error")) 
 			AddLog("[error] something went wrong"); 
 		ImGui::SameLine();
-		if (ImGui::SmallButton("Clear")) 
-			ClearLog(); 
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Scroll to bottom")) 
-			ScrollToBottom = true;
+		if (ImGui::SmallButton("Clear")) { ClearLog(); } ImGui::SameLine();
+		bool copy_to_clipboard = ImGui::SmallButton("Copy"); ImGui::SameLine();
+		if (ImGui::SmallButton("Scroll to bottom")) ScrollToBottom = true;
 		//static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); AddLog("Spam %f", t); }
 
 		ImGui::Separator();
@@ -94,7 +92,8 @@ struct ExampleAppConsole
 		ImGui::PopStyleVar();
 		ImGui::Separator();
 
-		ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
+		const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
+        ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
 		if (ImGui::BeginPopupContextWindow())
 		{
 			if (ImGui::Selectable("Clear")) ClearLog();
@@ -113,26 +112,32 @@ struct ExampleAppConsole
 		// and appending newly elements as they are inserted. This is left as a task to the user until we can manage to improve this example code!
 		// If your items are of variable size you may want to implement code similar to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+		if (copy_to_clipboard)
+            ImGui::LogToClipboard();
+        ImVec4 col_default_text = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 		for (int i = 0; i < Items.Size; i++)
 		{
 			const char* item = Items[i];
 			if (!filter.PassFilter(item))
 				continue;
-			ImVec4 col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // A better implementation may store a type per-item. For the sample let's just parse the text.
+			ImVec4 col = col_default_text;
 			if (strstr(item, "[error]")) col = ImColor(1.0f, 0.4f, 0.4f, 1.0f);
 			else if (strncmp(item, "# ", 2) == 0) col = ImColor(1.0f, 0.78f, 0.58f, 1.0f);
 			ImGui::PushStyleColor(ImGuiCol_Text, col);
 			ImGui::TextUnformatted(item);
 			ImGui::PopStyleColor();
 		}
+		if (copy_to_clipboard)
+            ImGui::LogFinish();
 		if (ScrollToBottom)
-			ImGui::SetScrollHere();
+			ImGui::SetScrollHere(1.0f);
 		ScrollToBottom = false;
 		ImGui::PopStyleVar();
 		ImGui::EndChild();
 		ImGui::Separator();
 
 		// Command-line
+		bool reclaim_focus = false;
 		if (ImGui::InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory, &TextEditCallbackStub, (void*)this))
 		{
 			char* input_end = InputBuf + strlen(InputBuf);
@@ -143,10 +148,12 @@ struct ExampleAppConsole
             if (InputBuf)
 				ExecCommand(InputBuf);
 			strcpy(InputBuf, "");
+			reclaim_focus = true;
 		}
 
 		// Demonstrate keeping auto focus on the input box
-		if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+		ImGui::SetItemDefaultFocus();
+        if (reclaim_focus)
 			ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
 		ImGui::End();
@@ -180,7 +187,8 @@ struct ExampleAppConsole
 		}
 		else if (Stricmp(command_line, "HISTORY") == 0)
 		{
-			for (int i = History.Size >= 10 ? History.Size - 10 : 0; i < History.Size; i++)
+			int first = History.Size - 10;
+            for (int i = first > 0 ? first : 0; i < History.Size; i++)
 				AddLog("%3d: %s\n", i, History[i]);
 		}
 		else
@@ -254,7 +262,7 @@ struct ExampleAppConsole
 					for (uint i = 0; i < candidates.size() && all_candidates_matches; i++)
 						if (i == 0)
 							c = toupper(candidates[i][match_len]);
-						else if (c != toupper(candidates[i][match_len]))
+						else if (c == 0 || c != toupper(candidates[i][match_len]))
 							all_candidates_matches = false;
 					if (!all_candidates_matches)
 						break;
@@ -367,7 +375,7 @@ void ShowFrameInformation(bool* p_open) {
 	ImGui::Text("Mouse Position Screen: (%.1f,%.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
 	ImGui::Text("Mouse Position World: (%.1f,%.1f)", mouse_world_pos_x, mouse_world_pos_y);
 	ImGui::Text("%d vertices, %d indices (%d triangles)", ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices, ImGui::GetIO().MetricsRenderIndices / 3);
-	ImGui::Text("%d allocations", ImGui::GetIO().MetricsAllocs);
+	//ImGui::Text("%d allocations", ImGui::GetIO().MetricsAllocs);
 	ImGui::Separator();
 
 	float frame_time = 1000.0f / ImGui::GetIO().Framerate;

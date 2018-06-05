@@ -12,7 +12,7 @@ Python function calls that can be called from C.
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SOIL.h>
-#include <imgui.h>
+#include "imgui.h"
 #include "graphics/imgui_impl_glfw_gl3.h"
 
 #include "python_api.hpp"
@@ -125,11 +125,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-ImGuiIO& io = ImGui::GetIO();
+//ImGuiIO& io = ImGui::GetIO();
 
 void key_handler(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    ImGuiIO& io = ImGui::GetIO();
     if (io.WantCaptureKeyboard) {
-        ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+        ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     } else {
         key_callback(window, key, scancode, action, mods);
     }
@@ -323,8 +324,11 @@ int main(int argc, char *argv[]) {
 
     LoadShapeFile("./assets/shapefiles/Australia.shp");
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui_ImplGlfwGL3_Init(window, true);
-    ImGuiIO& io = ImGui::GetIO();
+
     //io.Fonts->AddFontDefault();
     io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
 
@@ -418,7 +422,7 @@ int main(int argc, char *argv[]) {
         Py_DECREF(py_return);
 
         glfwPollEvents();
-        ImGui::GetIO();
+        ImGui_ImplGlfwGL3_NewFrame();
 
         new_mouse_world_coords = calc_world_coords();
 
@@ -429,7 +433,6 @@ int main(int argc, char *argv[]) {
             mouse_world_coords = new_mouse_world_coords;
         }
 
-        ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
@@ -525,6 +528,7 @@ int main(int argc, char *argv[]) {
             MenuParts(&p_open);
 
             ImGui::Render();
+            ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         }
         // ========= END INTERFACE DRAWING =========
 
@@ -538,6 +542,9 @@ int main(int argc, char *argv[]) {
     Py_DECREF(py_interface_module);
 
     ImGui_ImplGlfwGL3_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
     // END OPENGL STUFF
 
