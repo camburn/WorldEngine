@@ -6,8 +6,8 @@ MeshInstance::MeshInstance(
     glm::vec3 scale,
     std::string filename,
     std::string path 
-    ) : position(position), rotation(rotation), scale(scale), model(path, filename) {
-    //model = Model(path, filename);
+    ) : position(position), rotation(rotation), scale(scale) {
+    model = Model(path, filename);
 }
 
 void MeshInstance::set_position(glm::vec3 new_position) {
@@ -69,7 +69,7 @@ glm::mat4 MeshInstance::get_mvp_matrix(glm::mat4 view_proj_matrix) {
 
 
 MeshManager::MeshManager(State &state, TextureManager &texture_manager) : 
-        textures(texture_manager) {
+        textures(texture_manager), state(state) {
     program = state.get_program();
 }
 
@@ -121,7 +121,7 @@ glm::vec3 MeshManager::get_instance_scale(unsigned int instance_id) {
     return instances[instance_id].get_scale();
 }
 
-void MeshManager::draw(State &state) {
+void MeshManager::draw() {
     glm::mat4 model_view_projection = state.generate_model_view();
     for (MeshInstance prim: instances) {
         glm::mat4 mvp = prim.get_mvp_matrix(model_view_projection);

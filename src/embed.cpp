@@ -30,6 +30,7 @@ Python function calls that can be called from C.
 #include "managers/state_manager.hpp"
 #include "managers/texture_manager.hpp"
 #include "managers/primitive_manager.hpp"
+#include "managers/mesh_manager.hpp"
 
 #define NULL_TEXTURE 0
 
@@ -319,33 +320,7 @@ int main(int argc, char *argv[]) {
     }
     UpdateMatrixBuffer();
 
-    // Create our Objects
-    Primitive drawObjects[] = {
-        { LightMesh, NULL_TEXTURE, lightPos, glm::vec3(0, 0, 0), glm::vec3(0.25, 0.25, 0.25), simple_program, "Light1" }
-    };
-
     LoadShapeFile("./assets/shapefiles/Australia.shp");
-
-    // NOTE: I now need to seperate the Models from the drawing instances ( or not reload a loaded model )
-    vector<ModelObject> modelObjects;
-
-    modelObjects.push_back({
-        glm::vec3(2, 0, -4),
-        0.0f,
-        0.0f,
-        0.0f,
-        glm::vec3(0.2, 0.2, 0.2),
-        Model("./assets/meshes/", "nanosuit.obj")
-    });
-    
-    modelObjects.push_back({
-        glm::vec3(0, 0, 0),
-        -90.0f,
-        0.0f,
-        0.0f,
-        glm::vec3(1.0, 1.0, 1.0),
-        Model("./assets/meshes/", "warrior.fbx")
-    });
 
     ImGui_ImplGlfwGL3_Init(window, true);
     ImGuiIO& io = ImGui::GetIO();
@@ -371,6 +346,13 @@ int main(int argc, char *argv[]) {
     );
     primitives.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
     
+    MeshManager meshes {state, texture_manager};
+    unsigned int nano = meshes.new_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
+    meshes.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
+
+    unsigned int warr = meshes.new_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
+    meshes.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
+
     int num_lines = 1;
     int line_point_count = 100;
 
@@ -386,8 +368,6 @@ int main(int argc, char *argv[]) {
     }
 
     // Main Loop
-    std::cout << "Tester" << std::endl;
-    std::cout << DebugFlagList() << std::endl; 
     glClearColor(0.0f, 0.25f, 0.25f, 0.0f);
     float last_frame_time = glfwGetTime();
 
@@ -412,52 +392,9 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Do camera changes here before we start drawing
-        //glm::mat4 rotated_view = getView();
         rotated_view = getView();
 
-        renderer.activate("default");
-        // These are specified in the shader but not used, they have been optimised out
-        //renderer.active().set_uniform("Projection", Projection);
-        //renderer.active().set_uniform("View", rotated_view);
-
         // ========= MODEL DRAWING =========
-        for (uint i = 0; i < modelObjects.size(); i++) {
-            // Calculate the matrices
-            // TODO: this should be optimised by not recalcuting the Model Matrix if nothing has changed
-            glm::mat4 model = glm::mat4(1.0f);  // Get eye Model matrix
-            model = glm::translate(model, modelObjects[i].translation);
-            if (modelObjects[i].rotationX != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationX), glm::vec3(1, 0, 0));
-            }
-            if (modelObjects[i].rotationY != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationY), glm::vec3(0, 1, 0));
-            }
-            if (modelObjects[i].rotationZ != 0.0f) {
-                model = glm::rotate(model, glm::radians(modelObjects[i].rotationZ), glm::vec3(0, 0, 1));
-            }
-            model = glm::scale(model, modelObjects[i].scale);
-            // Done! 
-            glm::mat4 model_mvp = Projection * rotated_view * model;
-            glm::mat3 model_normalMat = (glm::mat3)glm::transpose(glm::inverse(model));
-
-            renderer.active().set_uniform("MVP", model_mvp);
-            renderer.active().set_uniform("Model", model);
-            renderer.active().set_uniform("NormalMat", model_normalMat);
-
-            renderer.active().set_uniform("debug_draw_normals", DebugGetFlag("render:draw_normals"));
-            renderer.active().set_uniform("debug_draw_texcoords", DebugGetFlag("render:draw_normals"));
-            renderer.active().set_uniform("debug_disable_lighting", DebugGetFlag("render:draw_normals"));
-
-            renderer.active().set_uniform("lightPos", lightPos);
-            renderer.active().set_uniform("viewPos", viewPos);
-            renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
-            renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
-
-            modelObjects[i].model.Draw(renderer.active().get_shader_id());
-        }
-        // ========= END MODEL DRAWING =========
-
-        // ========= CUBE DRAWING =========
 
         renderer.activate("default");
 
@@ -473,8 +410,9 @@ int main(int argc, char *argv[]) {
         state.update_state();
 
         primitives.draw();
+        meshes.draw();
 
-        // ========= ENDCUBE DRAWING =========
+        // ========= MODEL DRAWING =========
 
         // ========= SHAPE DRAWING =========
         {

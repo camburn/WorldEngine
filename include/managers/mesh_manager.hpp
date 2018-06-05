@@ -52,11 +52,11 @@ class MeshManager {
 public:
     MeshManager(State &state, TextureManager &texture_manager);
 
-    unsigned int new_instance(std::string type, std::string texture_name, glm::vec3 position);
+    unsigned int new_instance(std::string filename, std::string path, glm::vec3 position);
     unsigned int new_instance(std::string type, glm::vec3 position, glm::vec3 color, bool use_shading);
     MeshInstance &get_instance(unsigned int instance_id);
     
-    void draw(State &new_state);
+    void draw();
 
     void update_instance_position(unsigned int instance_id, glm::vec3 position);
     void update_instance_rotation(unsigned int instance_id, glm::vec3 rotation);
@@ -66,6 +66,7 @@ public:
     glm::vec3 get_instance_rotation(unsigned int instance_id);
     glm::vec3 get_instance_position(unsigned int instance_id);
 private:
+    State &state;
     TextureManager &textures;
     GLuint program;
     int instance_count = 0;
