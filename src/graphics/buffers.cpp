@@ -118,7 +118,7 @@ void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, 
 GLuint BufferTextureDataFromFile(string file, string directory) {
     string filename = directory + file;
     replace(filename.begin(), filename.end(), '\\', '/');
-    printf("INFO::IMAGES:: Loading texture: %s\n:", filename.c_str());
+    printf(":INFO::IMAGES:: Loading texture: %s\n:", filename.c_str());
     // Load Textures
     int tex_w, tex_h;
     unsigned char* image = SOIL_load_image(filename.c_str(), &tex_w, &tex_h, 0, SOIL_LOAD_RGB);

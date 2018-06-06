@@ -4,7 +4,7 @@
 TextureManager::TextureManager(Renderer &renderer): renderer(renderer) {}
 
 void TextureManager::add_texture(std::string texture_name, std::string filename, std::string filepath) {
-    GLuint texture_id = load_texture("container.jpg", "./assets/textures/");
+    GLuint texture_id = load_texture(filename, filepath);
     textures.emplace(texture_name, texture_id);
 }
 

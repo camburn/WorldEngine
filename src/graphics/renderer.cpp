@@ -99,7 +99,7 @@ GLFWwindow* Renderer::get_window() {
 }
 
 GLuint load_texture(string file, string path) {
-    return BufferTextureDataFromFile("container.jpg", "./assets/textures/");
+    return BufferTextureDataFromFile(file, path);
 }
 
 namespace primitives {

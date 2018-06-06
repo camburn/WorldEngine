@@ -128,6 +128,7 @@ void MeshManager::draw() {
         glm::mat3 normal_mat = prim.get_normal_matrix();
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
+        state.renderer.active().set_uniform("Model", prim.get_model_matrix());
         state.renderer.active().set_uniform("texture_diffuse1", 0);
         state.renderer.active().set_uniform("use_uniform_color", false);
         state.renderer.active().set_uniform("use_shadows", false);

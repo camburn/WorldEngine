@@ -1,7 +1,7 @@
 #include "graphics/console.hpp"
 #include "graphics/planes.hpp"
 
-struct ExampleAppConsole
+struct PyEngineConsole
 {
 	char                  InputBuf[256];
 	ImVector<char*>       Items;
@@ -11,7 +11,7 @@ struct ExampleAppConsole
 	ImVector<const char*> Commands;
     const char            *sp;
 
-	ExampleAppConsole()
+	PyEngineConsole()
 	{
 		ClearLog();
 		memset(InputBuf, 0, sizeof(InputBuf));
@@ -24,7 +24,7 @@ struct ExampleAppConsole
         ConsoleInit();
         sp = ">>> ";
 	}
-	~ExampleAppConsole()
+	~PyEngineConsole()
 	{
 		ClearLog();
 		for (int i = 0; i < History.Size; i++)
@@ -204,7 +204,7 @@ struct ExampleAppConsole
 
 	static int TextEditCallbackStub(ImGuiTextEditCallbackData* data) // In C++11 you are better off using lambdas for this sort of forwarding callbacks
 	{
-		ExampleAppConsole* console = (ExampleAppConsole*)data->UserData;
+		PyEngineConsole* console = (PyEngineConsole*)data->UserData;
 		return console->TextEditCallback(data);
 	}
 
@@ -398,8 +398,8 @@ void ConsoleWriteLine(const char *line_text) {
 	log_buffer.push_back(std::string(line_text));
 }
 
-void ShowExampleAppConsole(bool* p_open) {
-	static ExampleAppConsole console;
+void ShowPyEngineConsole(bool* p_open) {
+	static PyEngineConsole console;
 	while (!log_buffer.empty()) {
 		std::string line_text = log_buffer.back();
 		log_buffer.pop_back();

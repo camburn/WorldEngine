@@ -16,6 +16,7 @@ Python function calls that can be called from C.
 #include "graphics/imgui_impl_glfw_gl3.h"
 
 #include "python_api.hpp"
+#include "python_manager_api.hpp"
 #include "tracker.hpp"
 #include "graphics/arcball.hpp"
 #include "graphics/camera.hpp"
@@ -228,6 +229,7 @@ int pythonTesting(int argc, char *argv[]) {
     PyImport_AppendInittab("debug", &PyInit_Debug);
     PyImport_AppendInittab("planes", &PyInit_Planes);
     PyImport_AppendInittab("engine_console", &PyInit_console_engine);
+    PyImport_AppendInittab("manager", &PyInit_manager);
     Py_Initialize();
     PyRun_SimpleString(
         "import sys;"
@@ -299,7 +301,7 @@ int main(int argc, char *argv[]) {
     // Load Textures
     TextureManager texture_manager(renderer);
     texture_manager.add_texture("wooden_crate", "container.jpg", "./assets/textures/");
-    GLuint texture = texture_manager.get_texture("wooden_crate");
+    texture_manager.add_texture("wooden_floor", "light_wood_floor.jpg", "./assets/textures/");
 
     glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
@@ -344,12 +346,13 @@ int main(int argc, char *argv[]) {
     PrimitiveManager primitives{state, texture_manager};
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
-    primitives.new_instance("Plane", "wooden_crate", glm::vec3(0, 0, 0));
+    unsigned int floor_index = primitives.new_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
     primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
     unsigned int light_index = primitives.new_instance(
         "Cube", glm::vec3(0,2,0), glm::vec3(1,1,1), false
     );
     primitives.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
+    primitives.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
     MeshManager meshes {state, texture_manager};
     unsigned int nano = meshes.new_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
@@ -357,6 +360,8 @@ int main(int argc, char *argv[]) {
 
     unsigned int warr = meshes.new_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     meshes.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
+
+    assign_managers(state, primitives, meshes);
 
     int num_lines = 1;
     int line_point_count = 100;
@@ -419,7 +424,11 @@ int main(int argc, char *argv[]) {
         py_args = PyTuple_Pack(1, Py_BuildValue("f", delta_time));
         py_return = PyObject_CallObject(py_on_frame, py_args);
         Py_DECREF(py_args);
-        Py_DECREF(py_return);
+        if (py_return == NULL) {
+            PyErr_Print();
+        } else {
+            Py_DECREF(py_return);
+        }
 
         glfwPollEvents();
         ImGui_ImplGlfwGL3_NewFrame();
@@ -522,7 +531,7 @@ int main(int argc, char *argv[]) {
         // ========= INTERFACE DRAWING =========
         {
             static bool p_open = true;
-            ShowExampleAppConsole(&p_open);
+            ShowPyEngineConsole(&p_open);
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
             MenuParts(&p_open);
