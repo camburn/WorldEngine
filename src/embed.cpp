@@ -27,6 +27,7 @@ Python function calls that can be called from C.
 #include "graphics/shapefile_loader.hpp"
 #include "graphics/planes.hpp"
 #include "graphics/renderer.hpp"
+#include "tools/profiler.hpp"
 
 #include "managers/state_manager.hpp"
 #include "managers/texture_manager.hpp"
@@ -378,7 +379,7 @@ int main(int argc, char *argv[]) {
         float position = glfwGetTime() * 1.0f;
     }
 
-    // Set up python scripting calls
+    // Building Python API
     PyObject *py_interface_name, *py_interface_module, *pFunc;
     
     py_interface_name = PyUnicode_FromString("engine.interface");
@@ -406,11 +407,12 @@ int main(int argc, char *argv[]) {
         std::cout << "Failed to load module - engine.objects" << std::endl;
         return 1;
     }
-
+    
     PyObject *py_args, *py_return;
 
     py_return = PyObject_CallObject(py_on_init, NULL);
     Py_DECREF(py_return);
+    // Python API built
 
 
     // Main Loop
@@ -422,6 +424,7 @@ int main(int argc, char *argv[]) {
         float delta_time = current_frame_time - last_frame_time;
         last_frame_time = current_frame_time;
 
+        frame_start(glfwGetTime());
         py_args = PyTuple_Pack(1, Py_BuildValue("f", delta_time));
         py_return = PyObject_CallObject(py_on_frame, py_args);
         Py_DECREF(py_args);
@@ -430,6 +433,7 @@ int main(int argc, char *argv[]) {
         } else {
             Py_DECREF(py_return);
         }
+        frame_section("Python on frame", glfwGetTime());
 
         glfwPollEvents();
         ImGui_ImplGlfwGL3_NewFrame();
@@ -450,6 +454,8 @@ int main(int argc, char *argv[]) {
 
         // ========= MODEL DRAWING =========
 
+        frame_section("Input", glfwGetTime());
+
         renderer.activate("default");
 
         float x = (float)glm::sin(glfwGetTime()) * 3;
@@ -463,8 +469,13 @@ int main(int argc, char *argv[]) {
         state.set_view_pos(viewPos);
         state.update_state();
 
+        frame_section("State Setting", glfwGetTime());
+
         primitives.draw();
+        frame_section("Primitive Drawing", glfwGetTime());
+
         meshes.draw();
+        frame_section("Mesh Drawing", glfwGetTime());
 
         // ========= MODEL DRAWING =========
 
@@ -482,7 +493,7 @@ int main(int argc, char *argv[]) {
             draw_shapes();
         }
         // ========= END SHAPE DRAWING =========
-
+        frame_section("Shape Drawing", glfwGetTime());
         // ========= SPRITE DRAWING =========
         {
             renderer.activate("sprite");
@@ -513,7 +524,7 @@ int main(int argc, char *argv[]) {
             DrawPlanes(sprite_program);
         }
         // ========= END SPRITE DRAWING =========
-
+        frame_section("Sprite Drawing", glfwGetTime());
         // ========= DEBUG DRAWING =========
         DebugDraw(Projection, rotated_view);
         // ========= END DEBUG DRAWING =========
@@ -528,14 +539,16 @@ int main(int argc, char *argv[]) {
             draw_lines();
         }
         // ========= ENDLINE DRAWING =========
-
+        frame_section("Debug Drawing", glfwGetTime());
         // ========= INTERFACE DRAWING =========
         {
+            frame_end(glfwGetTime());
             static bool p_open = true;
             ShowPyEngineConsole(&p_open);
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
             MenuParts(&p_open);
+
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

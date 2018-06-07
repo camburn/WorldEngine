@@ -1,5 +1,6 @@
 #include "graphics/console.hpp"
 #include "graphics/planes.hpp"
+#include "tools/profiler.hpp"
 
 struct PyEngineConsole
 {
@@ -318,6 +319,7 @@ float frame_times[COUNT] = {};
 int last_stored = 0;
 bool show_window = false;
 static bool show_plane_info = false;
+static bool show_profiler = false;
 float mouse_world_pos_x = 0.0f;
 float mouse_world_pos_y = 0.0f;
 
@@ -348,11 +350,14 @@ void set_mouse_world_pos(float x, float y) {
 void ShowMainMenu(bool* p_open) {
     if (ImGui::BeginMainMenuBar())
     {
-        if (ImGui::BeginMenu("Primitives"))
-        {
+        if (ImGui::BeginMenu("Primitives")) {
             ImGui::MenuItem("Planes", NULL, &show_plane_info);
             ImGui::EndMenu();
         }
+		if (ImGui::BeginMenu("Debug")) {
+			ImGui::MenuItem("Profiler", NULL, &show_profiler);
+            ImGui::EndMenu();
+		}
 
         ImGui::EndMainMenuBar();
     }
@@ -361,6 +366,9 @@ void ShowMainMenu(bool* p_open) {
 void MenuParts(bool* p_open) {
 	if (show_plane_info) {
 		DisplayPlaneData(&show_plane_info);
+	}
+	if (show_profiler) {
+		draw_profiler(&show_profiler);
 	}
 }
 
