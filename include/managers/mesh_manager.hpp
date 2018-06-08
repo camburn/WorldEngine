@@ -16,12 +16,12 @@
 
 class MeshInstance {
 public:
-MeshInstance::MeshInstance(
-    glm::vec3 position,
-    glm::vec3 rotation,
-    glm::vec3 scale,
-    std::string filename,
-    std::string path 
+    MeshInstance(
+        glm::vec3 position,
+        glm::vec3 rotation,
+        glm::vec3 scale,
+        std::string filename,
+        std::string path 
     );
 
 

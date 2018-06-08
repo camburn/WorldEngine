@@ -9,7 +9,7 @@
 
 class TextureManager {
 public: 
-    TextureManager::TextureManager(Renderer &renderer);
+    TextureManager(Renderer &renderer);
     void add_texture(
         std::string texture_name, 
         std::string filename, 

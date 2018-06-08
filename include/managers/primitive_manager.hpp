@@ -25,7 +25,7 @@ public:
         std::string name
     );
 
-    PrimitiveInstance::PrimitiveInstance(
+    PrimitiveInstance(
         GLuint mesh_id,
         vec3 uniform_color,
         glm::vec3 pos,

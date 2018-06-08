@@ -4,6 +4,7 @@ settings.json
 *.pyc
 *.swp
 *.obj
+*.o
 __pycache__
 .vscode
 .vs

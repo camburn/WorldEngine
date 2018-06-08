@@ -15,12 +15,13 @@ debug_link_flags:
 
 include_dirs:
  - include/
+ - extern/imgui/
  - /usr/include/python3.6/
  - /usr/include/GL/
  - /usr/local/include/GLFW/
  - /home/campbell/Projects/Libraries/soil/src/
+ - /home/campbell/Projects/Libraries/glm-0.9.9.0/
  - /home/campbell/Projects/Libraries/shapelib-1.4.0/
- - /home/campbell/Projects/Libraries/imgui-1.50/
  - /home/campbell/Projects/WorldEngine/include/
 
 libs:
