@@ -9,6 +9,7 @@ void Renderer::create() {
     opengl::create_window();
     opengl::enable_debug();
     opengl::set_base_state();
+    opengl::create_common_buffers();
 }
 
 Shader& Renderer::get_shader(string name) {
@@ -34,15 +35,25 @@ void Renderer::activate(GLuint id) {
 
 void Renderer::activate(string name) {
     if (shader_map.count(name) == 1) {
+        opengl::clear_buffers();
         shader_map[name].activate();
         ptr_active_shader = &shader_map[name];
+        //TODO: This should be possible per shader
+        if (name.compare("depth_mapper") == 0) {
+            opengl::activate_common_buffers();
+        }
     } else {
         std::cout << "RENDER:: Error activating render mode: " << name << std::endl;
     }
 }
 
+void Renderer::pre_draw() {
+    opengl::bind_depth_map();
+}
+
 void Renderer::LoadShaders(
-        GLuint *programID, 
+        GLuint *programID,
+        GLuint *depth_program,
         GLuint *sprite_program,
         GLuint *simple_program,
         GLuint *line_program
@@ -58,6 +69,17 @@ void Renderer::LoadShaders(
     );
     *programID = shader_map["default"].get_shader_id();
     shader_id_map.emplace(*programID, &shader_map["default"]);
+
+    shader_map.emplace(
+        "depth_mapper", 
+        Shader(
+            "depth_mapper",
+            "./src/shaders/vertex_shader_depth.glsl", 
+            "./src/shaders/fragment_shader_depth.glsl"
+        )
+    );
+    *depth_program = shader_map["depth_mapper"].get_shader_id();
+    shader_id_map.emplace(*depth_program, &shader_map["depth_mapper"]);
 
     shader_map.emplace(
         "sprite", 

@@ -61,3 +61,9 @@ glm::mat4 State::generate_model_view() {
     }
     return cached_model_view;
 }
+
+glm::mat4 State::generate_light_matrix() {
+    glm::mat4 light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 10.0f);
+    glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3( 1, 0, 0));
+    return light_projection * light_view;
+}

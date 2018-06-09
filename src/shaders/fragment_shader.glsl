@@ -3,10 +3,12 @@
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos; // In world space
+in vec4 FragPosLightSpace;
 
 out vec4 color;
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2D shadow_map;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
@@ -19,6 +21,17 @@ uniform bool debug_disable_lighting = false;
 uniform bool use_shadows = false;
 uniform bool use_uniform_color = false;
 uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
+
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
+	vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	if (proj_coords.z > 1.0) { return 0.0; }
+	proj_coords = proj_coords * 0.5 + 0.5;
+	float closest_depth = texture(shadow_map, proj_coords.xy).r;
+	float current_depth = proj_coords.z;
+	float bias = max(0.005 * (1.0 - dot(Normal, lightDir)), 0.0005);
+	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+	return shadow;
+}
 
 void main(){
 
@@ -44,7 +57,9 @@ void main(){
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	vec3 specular = specularStrength * spec * lightColor;  
 
-	vec3 light_final = (ambientStrength  + diffuse + specular) * lightColor;
+	float shadow = ShadowCalculation(FragPosLightSpace, lightDir);
+
+	vec3 light_final = (ambientStrength + (1.0 - shadow) * (diffuse + specular)) * lightColor;
 
     if (debug_disable_lighting) {
         color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0));

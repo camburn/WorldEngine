@@ -21,6 +21,7 @@ public:
     void set_uniform(std::string name, float x, float y, float z);
     void set_uniform(std::string name, bool value);
     void activate() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(shader_id);
     }
 private:

@@ -272,7 +272,10 @@ glm::vec3 InstanceManager::get_instance_scale(unsigned int instance_id) {
 }
 
 void InstanceManager::draw() {
+    state.renderer.activate("default");
     glm::mat4 model_view_projection = state.generate_model_view();
+    glm::mat4 light_mat = state.generate_light_matrix();
+    state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
         glm::mat4 mvp = prim->get_mvp_matrix(model_view_projection);
         glm::mat3 normal_mat = prim->get_normal_matrix();
@@ -280,11 +283,25 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
         state.renderer.active().set_uniform("texture_diffuse1", 0);
+        state.renderer.active().set_uniform("shadow_map", 1);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
+        state.renderer.pre_draw();
 
         prim->draw(state);
     }
     state.renderer.active().set_uniform("use_uniform_color", false);
+}
+
+void InstanceManager::draw_depth_map() {
+    state.renderer.activate("depth_mapper");
+    //Run depth mapper activation code...
+
+    glm::mat4 light_mat = state.generate_light_matrix();
+    state.renderer.active().set_uniform("light_matrix", light_mat);
+    for (auto &prim: instances) {
+        state.renderer.active().set_uniform("model", prim->get_model_matrix());
+        prim->draw(state);
+    }
 }

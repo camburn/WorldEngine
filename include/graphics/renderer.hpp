@@ -51,13 +51,17 @@ public:
     Renderer();
     void create();
     void LoadShaders(
-        GLuint *programID, GLuint *sprite_program,
-        GLuint *simple_program, GLuint *line_program
+        GLuint *programID,
+        GLuint *depth_program,
+        GLuint *sprite_program,
+        GLuint *simple_program,
+        GLuint *line_program
     );
     GLFWwindow* get_window();
     Shader& active();
     void activate(string name);
     void activate(GLuint id);
+    void pre_draw();
     GLuint get_shader_id(string name);
     Shader& get_shader(string name);
     

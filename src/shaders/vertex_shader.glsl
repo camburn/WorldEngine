@@ -5,6 +5,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 
 uniform mat4 MVP;
+uniform mat4 light_matrix;
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -13,11 +14,13 @@ uniform mat3 NormalMat;
 out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos; // In World Space
+out vec4 FragPosLightSpace;
 
 void main(){
     TexCoord = texCoord;
-	Normal = NormalMat * normal;
-	FragPos = vec3(Model * vec4(position, 1.0f));
+    Normal = NormalMat * normal;
+    FragPos = vec3(Model * vec4(position, 1.0f));
+    FragPosLightSpace = light_matrix * vec4(FragPos, 1.0);
     // More efficient way (precalculate MVP)
     gl_Position = MVP * vec4(position, 1);
 }

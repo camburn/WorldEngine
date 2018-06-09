@@ -25,5 +25,5 @@ GLuint BufferMeshDataV(vector<glm::vec3> vertices);
 GLuint BufferMeshData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint &vertex_buffer, GLuint &element_buffer);
 void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint vertex_buffer, GLuint element_buffer);
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
-
+GLuint DepthMapBuffer(GLuint width, GLuint height);
 #endif

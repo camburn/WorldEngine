@@ -286,8 +286,8 @@ int main(int argc, char *argv[]) {
 
     // ------------ Graphics Engine ---------------
 
-    GLuint programID, sprite_program, simple_program, line_program;
-    renderer.LoadShaders(&programID, &sprite_program, &simple_program, &line_program);
+    GLuint programID, depth_program, sprite_program, simple_program, line_program;
+    renderer.LoadShaders(&programID, &depth_program, &sprite_program, &simple_program, &line_program);
 
     //Shader base_shader(programID);
 
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("wooden_floor", "light_wood_floor.jpg", "./assets/textures/");
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
 
-    glm::vec3 lightPos = glm::vec3(3.0f, 2.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
     unsigned int floor_index = instances.new_primitive_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
     unsigned int light_index = instances.new_primitive_instance(
-        "Cube", glm::vec3(0,2,0), glm::vec3(1,1,1), false
+        "Cube", glm::vec3(0,5,0), glm::vec3(1,1,1), false
     );
     instances.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
     instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
@@ -446,21 +446,24 @@ int main(int argc, char *argv[]) {
 
         frame_section("Input", glfwGetTime());
 
-        renderer.activate("default");
+        //renderer.activate("default");
 
         float x = (float)glm::sin(glfwGetTime()) * 3;
         lightPos.x = x;
         glm::vec3 light_pos = instances.get_instance_position(light_index);
-        instances.update_instance_position(light_index, glm::vec3(x, light_pos.y, light_pos.z));
+        instances.update_instance_position(light_index, lightPos);
 
         state.set_projection(Projection);
         state.set_view(rotated_view);
         state.set_light_pos(lightPos);
         state.set_view_pos(viewPos);
-        state.update_state();
 
         frame_section("State Setting", glfwGetTime());
 
+        instances.draw_depth_map();
+        frame_section("Depth Map Drawing", glfwGetTime());
+        
+        state.update_state();
         instances.draw();
         frame_section("Instance Drawing", glfwGetTime());
 

@@ -23,6 +23,7 @@ public:
 
     void update_state();
 
+    glm::mat4 generate_light_matrix();
     glm::mat4 generate_model_view();
     Renderer renderer;
 

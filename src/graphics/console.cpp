@@ -1,6 +1,7 @@
 #include "graphics/console.hpp"
 #include "graphics/planes.hpp"
 #include "tools/profiler.hpp"
+#include "graphics/opengl/gl_renderer.hpp"
 
 struct PyEngineConsole
 {
@@ -319,6 +320,7 @@ bool show_window = false;
 static bool show_plane_info = false;
 static bool show_profiler = false;
 static bool show_demo_window = false;
+static bool show_buffers = false;
 float mouse_world_pos_x = 0.0f;
 float mouse_world_pos_y = 0.0f;
 
@@ -335,6 +337,7 @@ void ShowMainMenu(bool* p_open) {
 		}
         if (ImGui::BeginMenu("Primitives")) {
             ImGui::MenuItem("Planes", NULL, &show_plane_info);
+			ImGui::MenuItem("Buffers", NULL, &show_buffers);
             ImGui::EndMenu();
         }
 		if (ImGui::BeginMenu("Debug")) {
@@ -354,6 +357,9 @@ void MenuParts(bool* p_open) {
 	}
 	if (show_profiler) {
 		draw_profiler(&show_profiler);
+	}
+	if (show_buffers) {
+		opengl::draw_buffers(&show_buffers);
 	}
 }
 

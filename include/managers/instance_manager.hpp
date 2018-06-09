@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "graphics/renderer.hpp"
+#include "graphics/buffers.hpp"
 
 #include "state_manager.hpp"
 #include "texture_manager.hpp"
@@ -123,6 +124,7 @@ public:
     Instance &get_instance(unsigned int instance_id);
     
     void draw();
+    void draw_depth_map();
 
     void update_instance_position(unsigned int instance_id, glm::vec3 position);
     void update_instance_rotation(unsigned int instance_id, glm::vec3 rotation);

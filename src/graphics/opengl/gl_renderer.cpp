@@ -2,6 +2,9 @@
 
 namespace opengl {
 
+GLuint buffer_id;
+GLuint depth_map_width = 4096;
+GLuint depth_map_height = 4096;
 int width = 1920;
 int height = 1080;
 GLFWwindow* window;
@@ -52,6 +55,23 @@ void set_base_state() {
     glDepthFunc(GL_LESS);
     glEnable(GL_MULTISAMPLE);
     glViewport(0, 0, width, height);
+}
+
+void clear_buffers() {
+    glViewport(0, 0, width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glCullFace(GL_BACK);
+}
+
+void create_common_buffers() {
+    buffer_id = DepthMapBuffer(depth_map_width, depth_map_height);
+}
+
+void activate_common_buffers() {
+    glViewport(0, 0, depth_map_width, depth_map_height);
+    glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    //glCullFace(GL_FRONT);
 }
 
 GLFWwindow* get_window() {
@@ -203,6 +223,26 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
     return programID;
+}
+
+void draw_buffers(bool* p_open) {
+    if (!ImGui::Begin("Planes", p_open))
+	{
+		ImGui::End();
+		return;
+	}
+    ImGui::Text("Plane Data");
+    if (ImGui::TreeNode("Shadow Map Buffer")) {
+        ImGui::Image((void*)(buffer_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        ImGui::TreePop();
+    }
+    ImGui::End();
+}
+
+void bind_depth_map () {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, buffer_id);
+    glActiveTexture(GL_TEXTURE0);
 }
 
 } // end namespace
