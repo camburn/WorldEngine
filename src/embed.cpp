@@ -31,8 +31,7 @@ Python function calls that can be called from C.
 
 #include "managers/state_manager.hpp"
 #include "managers/texture_manager.hpp"
-#include "managers/primitive_manager.hpp"
-#include "managers/mesh_manager.hpp"
+#include "managers/instance_manager.hpp"
 
 #define NULL_TEXTURE 0
 
@@ -341,25 +340,25 @@ int main(int argc, char *argv[]) {
 
     State state(renderer);
     state.update_state();
-    PrimitiveManager primitives{state, texture_manager};
-    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
-    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
-    unsigned int floor_index = primitives.new_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
-    primitives.new_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
-    unsigned int light_index = primitives.new_instance(
+    InstanceManager instances{state, texture_manager};
+    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
+    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
+    unsigned int floor_index = instances.new_primitive_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
+    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
+    unsigned int light_index = instances.new_primitive_instance(
         "Cube", glm::vec3(0,2,0), glm::vec3(1,1,1), false
     );
-    primitives.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
-    primitives.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
+    instances.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
+    instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
-    MeshManager meshes {state, texture_manager};
-    unsigned int nano = meshes.new_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
-    meshes.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
+    //MeshManager meshes {state, texture_manager};
+    unsigned int nano = instances.new_mesh_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
+    instances.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
 
-    unsigned int warr = meshes.new_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
-    meshes.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
+    unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
+    instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
-    assign_managers(state, primitives, meshes);
+    assign_managers(state, instances);
 
     int num_lines = 1;
     int line_point_count = 100;
@@ -370,13 +369,8 @@ int main(int argc, char *argv[]) {
     
     build_line_data();
 
-    // TestInput
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        float position = glfwGetTime() * 1.0f;
-    }
-
     // Building Python API
-    PyObject *py_interface_name, *py_interface_module, *pFunc;
+    PyObject *py_interface_name, *py_interface_module;
     
     py_interface_name = PyUnicode_FromString("engine.interface");
     py_interface_module = PyImport_Import(py_interface_name);
@@ -456,8 +450,8 @@ int main(int argc, char *argv[]) {
 
         float x = (float)glm::sin(glfwGetTime()) * 3;
         lightPos.x = x;
-        glm::vec3 light_pos = primitives.get_instance_position(light_index);
-        primitives.update_instance_position(light_index, glm::vec3(x, light_pos.y, light_pos.z));
+        glm::vec3 light_pos = instances.get_instance_position(light_index);
+        instances.update_instance_position(light_index, glm::vec3(x, light_pos.y, light_pos.z));
 
         state.set_projection(Projection);
         state.set_view(rotated_view);
@@ -467,11 +461,8 @@ int main(int argc, char *argv[]) {
 
         frame_section("State Setting", glfwGetTime());
 
-        primitives.draw();
-        frame_section("Primitive Drawing", glfwGetTime());
-
-        meshes.draw();
-        frame_section("Mesh Drawing", glfwGetTime());
+        instances.draw();
+        frame_section("Instance Drawing", glfwGetTime());
 
         // ========= MODEL DRAWING =========
 

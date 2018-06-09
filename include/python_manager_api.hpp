@@ -10,10 +10,9 @@
 #include "graphics/console.hpp"
 
 #include "managers/state_manager.hpp"
-#include "managers/primitive_manager.hpp"
-#include "managers/mesh_manager.hpp"
+#include "managers/instance_manager.hpp"
 
 PyObject* PyInit_manager(void);
-void assign_managers(State &state, PrimitiveManager &primitive, MeshManager &mesh);
+void assign_managers(State &state, InstanceManager &instances);
 
 #endif

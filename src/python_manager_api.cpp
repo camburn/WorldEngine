@@ -3,17 +3,16 @@
 // State Manager
 class Storage {
 public:
-    Storage(State &state, PrimitiveManager &primitive, MeshManager &mesh) 
-        : state_manager(state), primitive_manager(primitive), mesh_manager(mesh) {}
+    Storage(State &state, InstanceManager &instances) 
+        : state_manager(state), instances(instances) {}
     State &state_manager;
-    PrimitiveManager &primitive_manager;
-    MeshManager &mesh_manager;
+    InstanceManager &instances;
 };
 
 Storage *storage;
 
-void assign_managers(State &state, PrimitiveManager &primitive, MeshManager &mesh) {
-    storage = new Storage(state, primitive, mesh);
+void assign_managers(State &state, InstanceManager &primitive) {
+    storage = new Storage(state, primitive);
 }
 
 static PyObject*
@@ -23,7 +22,7 @@ pyengine_set_mesh_rotation(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->mesh_manager.update_instance_rotation(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_rotation(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
@@ -34,7 +33,7 @@ pyengine_set_mesh_position(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->mesh_manager.update_instance_position(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_position(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
@@ -45,7 +44,7 @@ pyengine_set_mesh_scale(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->mesh_manager.update_instance_scale(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_scale(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
@@ -60,7 +59,7 @@ pyengine_create_primitive(PyObject *self, PyObject *args) {
     std::string str_primitive_type(primitive_type);
     std::string str_texture_name(texture_name);
     //("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
-    unsigned int instance_id = storage->primitive_manager.new_instance(
+    unsigned int instance_id = storage->instances.new_primitive_instance(
         str_primitive_type, 
         str_texture_name, 
         glm::vec3(x, y, z)
@@ -75,7 +74,7 @@ pyengine_set_primitive_rotation(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->primitive_manager.update_instance_rotation(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_rotation(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
@@ -86,7 +85,7 @@ pyengine_set_primitive_position(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->primitive_manager.update_instance_position(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_position(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
@@ -97,7 +96,7 @@ pyengine_set_primitive_scale(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "ifff", &index, &x, &y, &z)) {
         return NULL;
     }
-    storage->primitive_manager.update_instance_scale(index, glm::vec3(x, y, z));
+    storage->instances.update_instance_scale(index, glm::vec3(x, y, z));
     return Py_BuildValue("");
 }
 
