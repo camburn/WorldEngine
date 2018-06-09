@@ -295,10 +295,6 @@ int main(int argc, char *argv[]) {
     DebugInit();
     renderer.activate("default");
 
-    // Mesh Objects
-    GLuint CubeMesh = primitives::cube_mesh();
-    GLuint LightMesh = primitives::light_mesh();
-
     // Load Textures
     TextureManager texture_manager(renderer);
     texture_manager.add_texture("wooden_crate", "container.jpg", "./assets/textures/");
@@ -548,7 +544,6 @@ int main(int argc, char *argv[]) {
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
             MenuParts(&p_open);
-
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

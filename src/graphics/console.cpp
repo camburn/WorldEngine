@@ -314,33 +314,13 @@ struct PyEngineConsole
 	}
 };
 
-const int COUNT = 100;
-float frame_times[COUNT] = {};
-int last_stored = 0;
+
 bool show_window = false;
 static bool show_plane_info = false;
 static bool show_profiler = false;
+static bool show_demo_window = false;
 float mouse_world_pos_x = 0.0f;
 float mouse_world_pos_y = 0.0f;
-
-void add_frame_time(float time) {
-	frame_times[last_stored] = time;
-	last_stored += 1;
-
-	if (last_stored >= COUNT) {
-		last_stored = 0;
-	}
-}
-
-float get_frame_time(void*, int i) {
-	// We want to always start with the oldest
-	int oldest_index = last_stored + 1;
-	int index = i + oldest_index;
-	if (index == COUNT) {
-		index -= COUNT;
-	}
-	return frame_times[i];
-}
 
 void set_mouse_world_pos(float x, float y) {
 	mouse_world_pos_x = x;
@@ -348,8 +328,11 @@ void set_mouse_world_pos(float x, float y) {
 }
 
 void ShowMainMenu(bool* p_open) {
-    if (ImGui::BeginMainMenuBar())
-    {
+    if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("Demo")) {
+			ImGui::MenuItem("DemoWindow", NULL, &show_demo_window);
+            ImGui::EndMenu();
+		}
         if (ImGui::BeginMenu("Primitives")) {
             ImGui::MenuItem("Planes", NULL, &show_plane_info);
             ImGui::EndMenu();
@@ -358,12 +341,14 @@ void ShowMainMenu(bool* p_open) {
 			ImGui::MenuItem("Profiler", NULL, &show_profiler);
             ImGui::EndMenu();
 		}
-
         ImGui::EndMainMenuBar();
     }
 }
 
 void MenuParts(bool* p_open) {
+	if (show_demo_window) {
+		ImGui::ShowDemoWindow(&show_demo_window);
+	}
 	if (show_plane_info) {
 		DisplayPlaneData(&show_plane_info);
 	}
@@ -374,11 +359,17 @@ void MenuParts(bool* p_open) {
 
 void ShowFrameInformation(bool* p_open) {
 	ImGui::SetNextWindowPos(ImVec2(10,15));
-	if (!ImGui::Begin("Example: Fixed Overlay", p_open, ImVec2(0,0), 0.0f, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings))
-	{
+	if (!ImGui::Begin("Example: Fixed Overlay", p_open, ImVec2(0,0), 0.0f, 
+				ImGuiWindowFlags_NoTitleBar|
+				ImGuiWindowFlags_NoResize|
+				ImGuiWindowFlags_NoMove|
+				ImGuiWindowFlags_NoSavedSettings
+			)
+		) {
 		ImGui::End();
 		return;
 	}
+
         
 	ImGui::Text("Mouse Position Screen: (%.1f,%.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
 	ImGui::Text("Mouse Position World: (%.1f,%.1f)", mouse_world_pos_x, mouse_world_pos_y);
@@ -387,16 +378,8 @@ void ShowFrameInformation(bool* p_open) {
 	ImGui::Separator();
 
 	float frame_time = 1000.0f / ImGui::GetIO().Framerate;
-	add_frame_time(frame_time);
 	ImGui::Text("Frame Times %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SameLine();
-	if (ImGui::Button("Show Graph")) { show_window ^= 1; }
-	if (show_window) {
-		ImGui::Begin("Menu", p_open, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize);
-		ImGui::PlotHistogram("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(400, 50));
-		ImGui::PlotLines("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(400, 50));
-		ImGui::End();
-	}
 	ImGui::End();
 }
 

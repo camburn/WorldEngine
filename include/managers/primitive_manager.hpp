@@ -44,6 +44,8 @@ public:
     glm::vec3 get_rotation();
     glm::vec3 get_scale();
 
+    glm::vec3 get_uniform_color();
+
     void draw(GLuint array_size);
 
     GLuint get_texture_id();

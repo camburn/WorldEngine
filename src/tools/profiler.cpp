@@ -43,8 +43,10 @@ private:
 
 std::map<std::string, Average> frame_sections;
 
-//accumulator = (alpha * new_value) + (1.0 - alpha) * accumulator
 float alpha = 1.0f;
+const int COUNT = 100;
+float frame_times[COUNT] = {};
+int last_stored = 0;
 
 float accumulate(float delta, float accumulation) {
     accumulation = (alpha * delta) + (1.0 - alpha) * accumulation;
@@ -83,6 +85,26 @@ void frame_end(float end_time) {
     frame_end_time = end_time;
 }
 
+void add_frame_time(float time) {
+	frame_times[last_stored] = time;
+	last_stored += 1;
+
+	if (last_stored >= COUNT) {
+		last_stored = 0;
+	}
+}
+
+float get_frame_time(void*, int i) {
+	// We want to always start with the oldest
+	int oldest_index = last_stored + 1;
+	int index = i + oldest_index;
+	if (index == COUNT) {
+		index -= COUNT;
+	}
+	return frame_times[i];
+}
+
+
 #include <stdint.h>
 
 //  Windows
@@ -101,13 +123,18 @@ uint64_t rdtsc(){
     __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     return ((uint64_t)hi << 32) | lo;
 }
-
 #endif
 
 void draw_profiler(bool* p_open) {
     float total_frame_time = frame_end_time - frame_start_time;
     frame_sections["total_frame_time"].add_sample(total_frame_time);
     ImGui::Begin("Menu", p_open);
+
+	float frame_time = 1000.0f / ImGui::GetIO().Framerate;
+	add_frame_time(frame_time);
+    ImGui::Text("Frame draw time");
+    ImGui::PlotHistogram("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(0, 50));
+    ImGui::PlotLines("", get_frame_time, NULL, COUNT, 0, NULL, 0.0f, 50.0f, ImVec2(0, 50));
     
     ImGui::Columns(3, "mycolumns");
     ImGui::Separator();

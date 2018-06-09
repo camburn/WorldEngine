@@ -58,7 +58,6 @@ void main(){
         color = vec4(Normal, 1.0f);
 		return;
     }
-
 	if (use_uniform_color) {
 	  	color = (vec4(uniform_color, 1) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
 	} else {

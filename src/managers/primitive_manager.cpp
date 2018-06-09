@@ -22,7 +22,8 @@ PrimitiveInstance::PrimitiveInstance(
     scale(scale),
     program(program),
     name(name) {
-        bool use_texture = true;
+        use_texture = true;
+        uniform_color = glm::vec3(0.25, 0.25, 0.25);
     }
 
 PrimitiveInstance::PrimitiveInstance(
@@ -43,7 +44,7 @@ PrimitiveInstance::PrimitiveInstance(
     program(program),
     name(name),
     use_shading(use_shading) {
-        bool use_texture = false;
+        use_texture = false;
     }
 
 void PrimitiveInstance::set_position(glm::vec3 new_position) {
@@ -81,9 +82,15 @@ bool PrimitiveInstance::get_shading_status() {
     return use_shading;
 }
 
+glm::vec3 PrimitiveInstance::get_uniform_color() {
+    return uniform_color;
+}
+
 void PrimitiveInstance::draw(GLuint array_size) {
     if (use_texture) {
         glBindTexture(GL_TEXTURE_2D, get_texture_id());
+    } else {
+
     }
     glBindVertexArray(mesh_id);
     glDrawArrays(GL_TRIANGLES, 0, array_size);
@@ -225,6 +232,7 @@ void PrimitiveManager::draw() {
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim.get_model_matrix());
         state.renderer.active().set_uniform("texture_diffuse1", 0);
+        state.renderer.active().set_uniform("uniform_color", prim.get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim.get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim.get_shading_status());
 
