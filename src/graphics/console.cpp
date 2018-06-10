@@ -2,6 +2,7 @@
 #include "graphics/planes.hpp"
 #include "tools/profiler.hpp"
 #include "graphics/opengl/gl_renderer.hpp"
+#include "managers/state_manager.hpp"
 
 struct PyEngineConsole
 {
@@ -321,6 +322,7 @@ static bool show_plane_info = false;
 static bool show_profiler = false;
 static bool show_demo_window = false;
 static bool show_buffers = false;
+static bool show_shadow_settings = false;
 float mouse_world_pos_x = 0.0f;
 float mouse_world_pos_y = 0.0f;
 
@@ -344,6 +346,10 @@ void ShowMainMenu(bool* p_open) {
 			ImGui::MenuItem("Profiler", NULL, &show_profiler);
             ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("Settings")) {
+			ImGui::MenuItem("Shadow Settings", NULL, &show_shadow_settings);
+            ImGui::EndMenu();
+		}
         ImGui::EndMainMenuBar();
     }
 }
@@ -360,6 +366,9 @@ void MenuParts(bool* p_open) {
 	}
 	if (show_buffers) {
 		opengl::draw_buffers(&show_buffers);
+	}
+	if (show_shadow_settings) {
+		show_shadow_map_settings(&show_shadow_settings);
 	}
 }
 

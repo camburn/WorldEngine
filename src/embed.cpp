@@ -359,6 +359,10 @@ int main(int argc, char *argv[]) {
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
+    unsigned int house = instances.new_mesh_instance("Medieval_House.obj", "./assets/meshes/Medieval_House/", glm::vec3(0, 0, 0));
+    instances.update_instance_position(house, glm::vec3(5, 0, 5));
+    instances.update_instance_scale(house, glm::vec3(0.01, 0.01, 0.01));
+
     assign_managers(state, instances);
 
     int num_lines = 1;

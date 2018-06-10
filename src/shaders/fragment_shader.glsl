@@ -22,16 +22,28 @@ uniform bool use_shadows = false;
 uniform bool use_uniform_color = false;
 uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
 
+uniform int pcf_samples = 1;
+uniform float shadow_map_bias = 0.005f;
+
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
 	vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 	if (proj_coords.z > 1.0) { return 0.0; }
 	proj_coords = proj_coords * 0.5 + 0.5;
+	// Shadow biasing to remove shadow acne
+	float bias = clamp(shadow_map_bias*tan(acos(dot(Normal, lightDir))), 0, 0.01);
 	float closest_depth = texture(shadow_map, proj_coords.xy).r;
 	float current_depth = proj_coords.z;
-	// Shadow biasing to remove shadow acne
-	float bias = max(0.005 * (1.0 - dot(Normal, lightDir)), 0.0005);
-	bias = clamp(0.005*tan(acos(dot(Normal, lightDir))), 0, 0.01);
-	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+	
+	// PCF (shadow softening)
+	float shadow = 0.0;
+	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+	for (int x = -pcf_samples; x <= pcf_samples; ++x) {
+		for (int y = -pcf_samples; y <= pcf_samples; ++y) {
+			float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
+			shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+		}
+	}
+	shadow /= 9.0;
 	return shadow;
 }
 

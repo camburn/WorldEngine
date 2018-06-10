@@ -6,6 +6,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "graphics/opengl/gl_renderer.hpp"
 
+enum UNIFORM_TYPE {
+    U_FLOAT,
+    U_BOOL,
+    U_INT,
+    U_UINT
+};
+
 class Shader {
 public:
     Shader() {};
@@ -20,6 +27,7 @@ public:
     void set_uniform(std::string name, glm::vec3 value);
     void set_uniform(std::string name, float x, float y, float z);
     void set_uniform(std::string name, bool value);
+    void set_uniform(std::string name, void* value, UNIFORM_TYPE u_type);
     void activate() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(shader_id);

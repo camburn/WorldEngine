@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "imgui.h"
 #include "graphics/renderer.hpp"
 #include "graphics/debug.hpp"
 
@@ -37,4 +38,6 @@ private:
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {1.0f};
 };
+
+void show_shadow_map_settings(bool* p_open);
 #endif 

@@ -93,3 +93,16 @@ void Shader::set_uniform(std::string name, bool value) {
         std::cout << "RENDER:: Invalid uniform name: " << name << std::endl;
     }
 }
+
+void Shader::set_uniform(std::string name, void* value, UNIFORM_TYPE u_type) {
+    if (uniform_locs.count(name) == 1) {
+        switch(u_type) {
+            case U_BOOL  : glUniform1i(uniform_locs[name], *(bool *)value); break;
+            case U_FLOAT : glUniform1f(uniform_locs[name], *(float *)value); break;
+            case U_INT   : glUniform1i(uniform_locs[name], *(int *)value); break;
+            case U_UINT  : glUniform1ui(uniform_locs[name], *(GLuint *)value); break;
+        }
+    } else {
+        std::cout << "RENDER:: Invalid uniform name: " << name << std::endl;
+    }
+}

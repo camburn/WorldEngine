@@ -1,6 +1,7 @@
 #include "managers/state_manager.hpp"
 
-
+int pcf_samples = 1;
+float shadow_map_bias = 0.005f;
 State::State(Renderer &state_renderer) 
         : renderer(state_renderer) {
     program_id = renderer.get_shader_id("default");
@@ -30,6 +31,9 @@ void State::update_state() {
     renderer.active().set_uniform("viewPos", view_pos);
     renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
     renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
+
+    renderer.active().set_uniform("pcf_samples", &pcf_samples, U_INT);
+    renderer.active().set_uniform("shadow_map_bias", &shadow_map_bias, U_FLOAT);
 }
 
 void State::set_light_pos(glm::vec3 pos) {
@@ -66,4 +70,20 @@ glm::mat4 State::generate_light_matrix() {
     glm::mat4 light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 10.0f);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3( 1, 0, 0));
     return light_projection * light_view;
+}
+
+void show_shadow_map_settings(bool* p_open) {
+    const ImS32 s32_one = 1;
+    const float f32_one = 0.005f;
+    if (!ImGui::Begin("Settings", p_open))
+	{
+		ImGui::End();
+		return;
+	}
+    if (ImGui::TreeNode("Shadow Map Settings")) {
+        ImGui::InputScalar("input s32",     ImGuiDataType_S32,    &pcf_samples, true ? &s32_one : NULL, NULL, "%u");
+        ImGui::InputScalar("input float",   ImGuiDataType_Float,  &shadow_map_bias, true ? &f32_one : NULL);
+        ImGui::TreePop();
+    }
+    ImGui::End();
 }
