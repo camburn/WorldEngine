@@ -28,7 +28,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
 	proj_coords = proj_coords * 0.5 + 0.5;
 	float closest_depth = texture(shadow_map, proj_coords.xy).r;
 	float current_depth = proj_coords.z;
+	// Shadow biasing to remove shadow acne
 	float bias = max(0.005 * (1.0 - dot(Normal, lightDir)), 0.0005);
+	bias = clamp(0.005*tan(acos(dot(Normal, lightDir))), 0, 0.01);
 	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
 	return shadow;
 }

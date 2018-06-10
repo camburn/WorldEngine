@@ -299,6 +299,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("wooden_crate", "container.jpg", "./assets/textures/");
     texture_manager.add_texture("wooden_floor", "light_wood_floor.jpg", "./assets/textures/");
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
+    texture_manager.add_texture("red_brick", "red_brick.jpg", "./assets/textures/");
 
     glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
@@ -449,7 +450,9 @@ int main(int argc, char *argv[]) {
         //renderer.activate("default");
 
         float x = (float)glm::sin(glfwGetTime()) * 3;
+        float z = (float)glm::cos(glfwGetTime()) * -5;
         lightPos.x = x;
+        lightPos.z = z;
         glm::vec3 light_pos = instances.get_instance_position(light_index);
         instances.update_instance_position(light_index, lightPos);
 
