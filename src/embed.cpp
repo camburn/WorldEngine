@@ -216,10 +216,6 @@ void resizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
 wchar_t *program;
 
 int pythonTesting(int argc, char *argv[]) {
-    // Python stuff below
-    PyObject *pName, *pModule, *pFunc;
-    PyObject *pArgs, *pValue;
-
     program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
         std::cout << "Fatal error: cannot decode argv[0] (locale)" << std::endl;
@@ -234,32 +230,6 @@ int pythonTesting(int argc, char *argv[]) {
     PyRun_SimpleString(
         "import sys;"
         "sys.path.append('./')"
-    );
-    pName = PyUnicode_FromString("console.sample");
-    pModule = PyImport_Import(pName);
-    if (pModule != NULL) {
-        pFunc = PyObject_GetAttrString(pModule, "print_random_word");
-        if (pFunc && PyCallable_Check(pFunc)) {
-            pArgs = PyTuple_Pack(1, Py_BuildValue("i", 10));
-            pValue = PyObject_CallObject(pFunc, pArgs);
-            Py_DECREF(pArgs);
-            Py_DECREF(pValue);
-        } else {
-            PyErr_Print();
-            std::cout << "Failed to find function - print_random_word" << std::endl;
-            return 1;            
-        }
-    } else {
-        PyErr_Print();
-        std::cout << "Failed to load module - console.sample" << std::endl;
-        return 1;
-    }
-    Py_DECREF(pModule);
-    Py_DECREF(pFunc);
-    PyRun_SimpleString(
-        "from time import time;"
-        "the_time = time();"
-        "print(f'Time is {the_time}');"
     );
     return 0;
 }
@@ -288,8 +258,6 @@ int main(int argc, char *argv[]) {
 
     GLuint programID, depth_program, sprite_program, simple_program, line_program;
     renderer.LoadShaders(&programID, &depth_program, &sprite_program, &simple_program, &line_program);
-
-    //Shader base_shader(programID);
 
     DebugInit();
     renderer.activate("default");

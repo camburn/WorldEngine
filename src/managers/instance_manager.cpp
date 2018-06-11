@@ -295,6 +295,7 @@ void InstanceManager::draw() {
 }
 
 void InstanceManager::draw_depth_map() {
+    //Drawing for directional light
     state.renderer.activate("depth_mapper");
     //Run depth mapper activation code...
 
@@ -304,4 +305,9 @@ void InstanceManager::draw_depth_map() {
         state.renderer.active().set_uniform("model", prim->get_model_matrix());
         prim->draw(state);
     }
+    // Drawing for point light(s)
+    /* The right shader is already activated
+    We need to get the light matrix (for the point light)
+    
+    */
 }

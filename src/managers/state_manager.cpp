@@ -72,6 +72,28 @@ glm::mat4 State::generate_light_matrix() {
     return light_projection * light_view;
 }
 
+std::vector<glm::mat4> State::generate_light_matrix(int light_index) {
+    std::vector<glm::mat4> matrix_cube;
+
+    int width = 1024;
+    int height = 1024;
+    float aspect = (float)width/(float)height;
+    float near = 1.0f;
+    float far = 25.0f;
+
+    glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far);
+
+    matrix_cube.emplace_back(
+        light_projection * glm::lookAt(
+            point_light_pos,
+            point_light_pos + glm::vec3(1.0, 0.0, 0.0),
+            glm::vec3(0.0, -1.0, 0.0)
+        )
+    );
+    
+    return matrix_cube;
+}
+
 void show_shadow_map_settings(bool* p_open) {
     const ImS32 s32_one = 1;
     const float f32_one = 0.005f;

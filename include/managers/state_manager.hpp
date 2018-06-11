@@ -9,6 +9,14 @@
 
 #ifndef STATE_H
 #define STATE_H
+
+class PointLight {
+public:
+
+protected:
+
+};
+
 class State {
     // Represents the world state of a single shader and camera
 public:
@@ -25,6 +33,7 @@ public:
     void update_state();
 
     glm::mat4 generate_light_matrix();
+    std::vector<glm::mat4> generate_light_matrix(int light_index);
     glm::mat4 generate_model_view();
     Renderer renderer;
 
@@ -37,6 +46,7 @@ private:
 
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {1.0f};
+    std::vector<PointLight> point_lights;
 };
 
 void show_shadow_map_settings(bool* p_open);
