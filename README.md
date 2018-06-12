@@ -61,8 +61,10 @@ PyEngine contains the following dependencies:
 - shapelib
 - soil
 
-Most of these libraries are compiled and linked against statically. A few are header only (glm). A bundled zip can be downloaded that contains all the
-libraries. On linux (Ubuntu) most dependencies are available as apt packages.
+Most of these libraries are compiled and linked against statically. A few are
+header only (glm). A bundled zip can be downloaded that contains all the libraries see the
+[External Libraries](https://github.com/camburn/WorldEngine/releases/tag/external_libs)
+release. On linux (Ubuntu) most dependencies are available as apt packages.
 
 In addition the following Packages are required:
 
