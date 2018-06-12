@@ -81,6 +81,8 @@ std::vector<glm::mat4> State::generate_light_matrix(int light_index) {
     float near = 1.0f;
     float far = 25.0f;
 
+    glm::vec3 point_light_pos(1,1,1);
+
     glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
     matrix_cube.emplace_back(

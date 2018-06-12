@@ -14,7 +14,7 @@ class PointLight {
 public:
 
 protected:
-
+    glm::vec3 position;
 };
 
 class State {
