@@ -46,7 +46,7 @@ libs:
  - shapelib.lib
 
 lib_paths:
- - $(PYTHON_PATH)libs/
+ - $(PYTHON_PATH)/libs/
  - $(WIN_KIT_DIR)/Windows Kits/10/Lib/10.0.14393.0/um/x86/
  - $(EXTERNAL_LIBS)/glfw-3.2.1.bin.WIN32/lib-vc2015/
  - $(EXTERNAL_LIBS)/glew-2.0.0/lib/Release/Win32/
