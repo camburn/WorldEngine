@@ -177,6 +177,10 @@ glm::vec2 calc_world_coords() {
 
 // glfwSetMouseButtonCallback(window, mouse_button_callback);
 void mouseButtonCallback2( GLFWwindow * window, int button, int action, int mods ){
+    ImGuiIO& io = ImGui::GetIO();
+    if (ImGui::IsMouseHoveringAnyWindow()) {
+        return;
+    }
     mouseButtonCallback(window, button, action, mods);
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
@@ -197,6 +201,11 @@ void mouseButtonCallback2( GLFWwindow * window, int button, int action, int mods
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (ImGui::IsMouseHoveringAnyWindow()) {
+        ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+        return;
+    }
     zoom += yoffset;
     if (yoffset > 0.0) {
         zoom_in();

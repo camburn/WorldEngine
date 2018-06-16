@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "imgui.h"
 #include "graphics/arcball.hpp"
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
@@ -12,6 +13,7 @@ glm::mat4& getProj();
 glm::mat4 getView();
 glm::mat4 getView(glm::vec3 custom_ortho_pos);
 
+void camera_settings(bool *p_open);
 void translate_ortho(glm::vec3 translation);
 void set_ortho_pos(glm::vec3 pos);
 glm::vec3 get_ortho_pos();

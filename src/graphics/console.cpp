@@ -3,6 +3,7 @@
 #include "tools/profiler.hpp"
 #include "graphics/opengl/gl_renderer.hpp"
 #include "managers/state_manager.hpp"
+#include "graphics/camera.hpp"
 
 struct PyEngineConsole
 {
@@ -323,6 +324,7 @@ static bool show_profiler = false;
 static bool show_demo_window = false;
 static bool show_buffers = false;
 static bool show_shadow_settings = false;
+static bool show_camera_settings = false;
 float mouse_world_pos_x = 0.0f;
 float mouse_world_pos_y = 0.0f;
 
@@ -348,6 +350,7 @@ void ShowMainMenu(bool* p_open) {
 		}
 		if (ImGui::BeginMenu("Settings")) {
 			ImGui::MenuItem("Shadow Settings", NULL, &show_shadow_settings);
+			ImGui::MenuItem("Camera Settings", NULL, &show_camera_settings);
             ImGui::EndMenu();
 		}
         ImGui::EndMainMenuBar();
@@ -369,6 +372,9 @@ void MenuParts(bool* p_open) {
 	}
 	if (show_shadow_settings) {
 		show_shadow_map_settings(&show_shadow_settings);
+	}
+	if (show_camera_settings) {
+		camera_settings(&show_camera_settings);
 	}
 }
 
