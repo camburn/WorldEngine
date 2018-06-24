@@ -66,34 +66,44 @@ glm::mat4 State::generate_model_view() {
     return cached_model_view;
 }
 
+void State::set_direction_light(glm::vec3 pos) {
+    direction_light.update_position(pos);
+}
+
+void State::create_point_light(glm::vec3 pos) {
+    point_lights.emplace_back(PointLight {pos});
+}
+
+void State::update_point_light(int index, glm::vec3 pos) {
+    point_lights[index].update_position(pos);   
+}
+
 glm::mat4 State::generate_light_matrix() {
-    glm::mat4 light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 10.0f);
+    glm::mat4 light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3( 1, 0, 0));
     return light_projection * light_view;
 }
 
-std::vector<glm::mat4> State::generate_light_matrix(int light_index) {
-    std::vector<glm::mat4> matrix_cube;
-
+void PointLight::generate_light_matrix() {
     int width = 1024;
     int height = 1024;
     float aspect = (float)width/(float)height;
     float near = 1.0f;
     float far = 25.0f;
 
-    glm::vec3 point_light_pos(1,1,1);
-
     glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
-    matrix_cube.emplace_back(
-        light_projection * glm::lookAt(
-            point_light_pos,
-            point_light_pos + glm::vec3(1.0, 0.0, 0.0),
+    for (int i = 0; i >= cube_sides; i++) {
+        cube_map[i] = light_projection * glm::lookAt(
+            position,
+            position + glm::vec3(1.0, 0.0, 0.0),
             glm::vec3(0.0, -1.0, 0.0)
-        )
-    );
-    
-    return matrix_cube;
+        );
+    }
+}
+
+void Light::update_position(glm::vec3 new_pos) {
+    position = new_pos;
 }
 
 void show_shadow_map_settings(bool* p_open) {
@@ -111,3 +121,5 @@ void show_shadow_map_settings(bool* p_open) {
     }
     ImGui::End();
 }
+
+

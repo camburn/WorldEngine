@@ -10,11 +10,41 @@
 #ifndef STATE_H
 #define STATE_H
 
-class PointLight {
+class Light {
 public:
+    Light() : position(glm::vec3(1.0f)), light_color(glm::vec3(1.0f)), intensity(1.0f) {}
+    Light(glm::vec3 position) : position(position), light_color(glm::vec3(1.0f)), intensity(1.0f) {}
+    const std::string type = "Light";
+
+    void update_position(glm::vec3 new_pos);
 
 protected:
+
     glm::vec3 position;
+    glm::vec3 light_color;
+    float intensity;
+};
+
+class DirectionLight : public Light {
+public:
+    DirectionLight() : Light() {}
+    const std::string type = "DirectionLight";
+
+protected:
+};
+
+class PointLight : public Light {
+public:
+    PointLight() : Light() {}
+    PointLight(glm::vec3 position) : Light(position) {}
+    const std::string type = "PointLight";
+
+    void generate_light_matrix();
+
+protected:
+    const int cube_sides {6};
+    glm::mat4 cube_map[6];
+
 };
 
 class State {
@@ -32,8 +62,11 @@ public:
 
     void update_state();
 
+    void set_direction_light(glm::vec3 pos);
+    void create_point_light(glm::vec3 pos);
+    void update_point_light(int index, glm::vec3 pos);
+
     glm::mat4 generate_light_matrix();
-    std::vector<glm::mat4> generate_light_matrix(int light_index);
     glm::mat4 generate_model_view();
     Renderer renderer;
 
@@ -47,6 +80,7 @@ private:
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {1.0f};
     std::vector<PointLight> point_lights;
+    DirectionLight direction_light;   // Currently only support 1 light
 };
 
 void show_shadow_map_settings(bool* p_open);

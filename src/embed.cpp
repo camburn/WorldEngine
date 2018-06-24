@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
     texture_manager.add_texture("red_brick", "red_brick.jpg", "./assets/textures/");
 
-    glm::vec3 lightPos = glm::vec3(3.0f, 5.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(3.0f, 8.0f, 0.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
@@ -426,10 +426,13 @@ int main(int argc, char *argv[]) {
 
         //renderer.activate("default");
 
-        float x = (float)glm::sin(glfwGetTime()) * 3;
-        float z = (float)glm::cos(glfwGetTime()) * -5;
+        float x = (float)glm::sin(glfwGetTime()) * 10;
+        float y = (float)glm::cos(glfwGetTime()) * 5;
+        if (y < 0.0f ) { 
+            y * -1.0f; 
+        }
         lightPos.x = x;
-        lightPos.z = z;
+        lightPos.y = y;
         glm::vec3 light_pos = instances.get_instance_position(light_index);
         instances.update_instance_position(light_index, lightPos);
 
