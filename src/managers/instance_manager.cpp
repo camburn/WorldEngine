@@ -310,4 +310,13 @@ void InstanceManager::draw_depth_map() {
     We need to get the light matrix (for the point light)
     
     */
+    // For light activate the cube shadow map
+    for (PointLight point_light: state.point_lights) {
+        state.renderer.active().set_uniform("light_cube_stuff", ?);
+        for (auto &prim: instances) {
+            prim->draw(state);
+        }
+
+    }
+    // For instance - draw
 }

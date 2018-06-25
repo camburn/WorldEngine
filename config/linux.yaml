@@ -20,8 +20,8 @@ include_dirs:
  - /usr/include/GL/
  - /usr/local/include/GLFW/
  - $(EXTERNAL_LIBS)/soil/src/
- - $(EXTERNAL_LIBS)/Libraries/glm-0.9.9.0/
- - $(EXTERNAL_LIBS)/Libraries/shapelib-1.4.0/
+ - $(EXTERNAL_LIBS)/glm-0.9.9.0/
+ - $(EXTERNAL_LIBS)/shapelib-1.4.0/
 
 libs:
  - python3.6m
