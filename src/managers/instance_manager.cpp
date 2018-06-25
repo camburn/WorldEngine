@@ -312,7 +312,15 @@ void InstanceManager::draw_depth_map() {
     */
     // For light activate the cube shadow map
     for (PointLight point_light: state.point_lights) {
-        state.renderer.active().set_uniform("light_cube_stuff", ?);
+        for (int i=0; i < point_light.cube_sides; ++i){
+            // Set each side of the cube
+            state.renderer.active().set_uniform("cube_matrix", true);
+            state.renderer.active().set_uniform(
+                "light_cube_matrix[" + std::to_string(i) + "]", 
+                point_light.generate_light_matrix()
+            );
+        }
+        
         for (auto &prim: instances) {
             prim->draw(state);
         }

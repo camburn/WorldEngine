@@ -39,10 +39,11 @@ public:
     PointLight(glm::vec3 position) : Light(position) {}
     const std::string type = "PointLight";
 
-    void generate_light_matrix();
+    glm::mat4* generate_light_matrix();
+    glm::mat4* get_cube_map();
+    const int cube_sides {6};
 
 protected:
-    const int cube_sides {6};
     glm::mat4 cube_map[6];
 
 };
@@ -70,6 +71,8 @@ public:
     glm::mat4 generate_model_view();
     Renderer renderer;
 
+    std::vector<PointLight> point_lights;
+
 private:
     GLuint program_id = -1;
     bool invalid_model_view = true;
@@ -79,7 +82,7 @@ private:
 
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {1.0f};
-    std::vector<PointLight> point_lights;
+    
     DirectionLight direction_light;   // Currently only support 1 light
 };
 

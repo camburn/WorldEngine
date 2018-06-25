@@ -79,12 +79,13 @@ void State::update_point_light(int index, glm::vec3 pos) {
 }
 
 glm::mat4 State::generate_light_matrix() {
-    glm::mat4 light_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
+    glm::mat4 light_projection = glm::ortho(-12.0f, 12.0f, -12.0f, 12.0f, 1.0f, 50.0f);
+    //light_projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 25.0f);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3( 1, 0, 0));
     return light_projection * light_view;
 }
 
-void PointLight::generate_light_matrix() {
+glm::mat4* PointLight::generate_light_matrix() {
     int width = 1024;
     int height = 1024;
     float aspect = (float)width/(float)height;
@@ -100,6 +101,11 @@ void PointLight::generate_light_matrix() {
             glm::vec3(0.0, -1.0, 0.0)
         );
     }
+    return cube_map;
+}
+
+glm::mat4* PointLight::get_cube_map() {
+    return cube_map;
 }
 
 void Light::update_position(glm::vec3 new_pos) {

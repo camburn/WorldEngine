@@ -46,21 +46,21 @@ def create_mountain():
     
     DATA_STORE['box_a'] = manager.create_primitive('Cube', 'metal_box', 3.0, 0.5, 3)
 
-    wall_a = manager.create_primitive('Plane', 'red_brick', 0, 3, -10)
+    wall_a = manager.create_primitive('Cube', 'red_brick', 0, 1.5, -10)
     manager.set_primitive_rotation(wall_a, 90.0, 0.0, 0.0)
-    manager.set_primitive_scale(wall_a, 10, 1, 5)
+    manager.set_primitive_scale(wall_a, 20, 0.5, 3)
 
-    wall_d = manager.create_primitive('Plane', 'red_brick', 0, 3, 10)
+    wall_d = manager.create_primitive('Cube', 'red_brick', 0, 1.5, 10)
     manager.set_primitive_rotation(wall_d, -90.0, 0.0, 0.0)
-    manager.set_primitive_scale(wall_d, 10, 1, 5)
+    manager.set_primitive_scale(wall_d, 20, 0.5, 3)
 
-    wall_b = manager.create_primitive('Plane', 'red_brick', 10, 3, 0)
+    wall_b = manager.create_primitive('Cube', 'red_brick', 10, 1.5, 0)
     manager.set_primitive_rotation(wall_b, 90.0, 0.0, 90.0)
-    manager.set_primitive_scale(wall_b, 10, 1, 5)
+    manager.set_primitive_scale(wall_b, 20, 0.5, 3)
 
-    wall_c = manager.create_primitive('Plane', 'red_brick', -10, 3, 0)
+    wall_c = manager.create_primitive('Cube', 'red_brick', -10, 1.5, 0)
     manager.set_primitive_rotation(wall_c, 90.0, 0.0, -90.0)
-    manager.set_primitive_scale(wall_c, 10, 1, 5)
+    manager.set_primitive_scale(wall_c, 20, 0.5, 3)
 
 
 @register_on_frame
