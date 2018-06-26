@@ -71,11 +71,15 @@ public:
     void create_point_light(glm::vec3 pos);
     void update_point_light(int index, glm::vec3 pos);
 
+    void light_settings(bool* p_open);
+
     glm::mat4 generate_light_matrix();
     glm::mat4 generate_model_view();
     Renderer renderer;
 
     std::vector<PointLight> point_lights;
+
+    bool animate_direction_light = false;
 
 private:
     GLuint program_id = -1;
@@ -85,9 +89,10 @@ private:
     glm::mat4 view_matrix {1.0f};
 
     glm::vec3 view_pos {1.0f};
-    glm::vec3 light_pos {1.0f};
+    glm::vec3 light_pos {3.0f, 6.0f, 3.0f};
     
     DirectionLight direction_light;   // Currently only support 1 light
+    
 };
 
 void show_shadow_map_settings(bool* p_open);

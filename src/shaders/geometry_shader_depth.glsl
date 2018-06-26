@@ -7,6 +7,7 @@ uniform mat4 light_matrix;
 uniform mat4 light_cube_matrix[6];
 
 out vec4 frag_pos; // FragPos from GS (output per emitvertex)
+out int gl_Layer;
 
 void main()
 {   
@@ -20,6 +21,7 @@ void main()
         }  
         return;
     }
+    int gl_Layer;
     for(int face = 0; face < 6; ++face) {
         gl_Layer = face; // built-in variable that specifies to which face we render.
         for(int i = 0; i < 3; ++i) // for each triangle's vertices

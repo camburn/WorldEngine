@@ -429,25 +429,28 @@ int main(int argc, char *argv[]) {
 
         //renderer.activate("default");
 
-        float min_y = 3.0f;
+        lightPos = state.get_light_pos();
+        if (state.animate_direction_light) {
+            float min_y = 3.0f;
 
-        float x = (float)glm::sin(glfwGetTime()/10) * 15;
-        float y = (float)glm::cos(glfwGetTime()/10) * 10;
-        float z = (float)glm::sin(glfwGetTime()/50) * 15;
-        if (y < min_y) {
-            if (y < 0.0f) {
-                y *= -1.0f; 
-            }
+            float x = (float)glm::sin(glfwGetTime()/10) * 15;
+            float y = (float)glm::cos(glfwGetTime()/10) * 10;
+            float z = (float)glm::sin(glfwGetTime()/50) * 15;
             if (y < min_y) {
-                y = min_y;
+                if (y < 0.0f) {
+                    y *= -1.0f; 
+                }
+                if (y < min_y) {
+                    y = min_y;
+                }
             }
+            
+            lightPos.x = x;
+            lightPos.y = y;
+            lightPos.z = z;
         }
-        //lightPos.x = x;
-        //lightPos.y = y;
-        //lightPos.z = z;
-        glm::vec3 light_pos = instances.get_instance_position(light_index);
         instances.update_instance_position(light_index, lightPos);
-
+        
         state.set_projection(Projection);
         state.set_view(rotated_view);
         state.set_light_pos(lightPos);
@@ -532,7 +535,7 @@ int main(int argc, char *argv[]) {
             ShowPyEngineConsole(&p_open);
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
-            MenuParts(&p_open);
+            MenuParts(&p_open, state);
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

@@ -83,7 +83,7 @@ void State::update_point_light(int index, glm::vec3 pos) {
 }
 
 glm::mat4 State::generate_light_matrix() {
-    glm::mat4 light_projection = glm::ortho(-12.0f, 12.0f, -12.0f, 12.0f, 1.0f, 50.0f);
+    glm::mat4 light_projection = glm::ortho(-12.0f, 12.0f, -12.0f, 12.0f, 1.0f, 25.0f);
     //light_projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 25.0f);
     glm::mat4 light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3( 1, 0, 0));
     return light_projection * light_view;
@@ -113,6 +113,31 @@ glm::mat4* PointLight::get_cube_map() {
 
 void Light::update_position(glm::vec3 new_pos) {
     position = new_pos;
+}
+
+void State::light_settings(bool* p_open) {
+    const ImS32 s32_one = 1;
+    const float f32_one = 1.0f;
+    if (!ImGui::Begin("Settings", p_open))
+	{
+		ImGui::End();
+		return;
+	}
+    if (ImGui::TreeNode("Direction Light Settings")) {
+        ImGui::Checkbox("Animate", &animate_direction_light);
+        float X = light_pos.x;
+        float Y = light_pos.y;
+        float Z = light_pos.z;
+        ImGui::InputScalar("X",   ImGuiDataType_Float,  &X, true ? &f32_one : NULL);
+        ImGui::InputScalar("Y",   ImGuiDataType_Float,  &Y, true ? &f32_one : NULL);
+        ImGui::InputScalar("Z",   ImGuiDataType_Float,  &Z, true ? &f32_one : NULL);
+        if (X != light_pos.x || Y != light_pos.y || Z != light_pos.z){
+            set_light_pos(glm::vec3(X, Y, Z));
+        }
+        
+        ImGui::TreePop();
+    }
+    ImGui::End();
 }
 
 void show_shadow_map_settings(bool* p_open) {
