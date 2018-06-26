@@ -8,6 +8,7 @@ GLuint depth_map_height = 4096;
 int width = 1920;
 int height = 1080;
 GLFWwindow* window;
+bool blit_stall_message = false;
 
 void init() {
     if (!glfwInit()) {
@@ -92,6 +93,10 @@ void APIENTRY glDebugOutput(GLenum source,
     if (id == 131185) return; // This details VBO allocations (and size)
     if (id == 131204) return; // Texture state usage warning: Texture 0 is base level inconsistent. Check texture size.
     // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    // TODO: This error message needs to be investigated in Intel GPUs
+    if (blit_stall_message) { return; }
+    if (id == 53) { blit_stall_message = true; }
 
     // MESA Specific debug message, does not have a fixed id number
     if (source == GL_DEBUG_SOURCE_SHADER_COMPILER && severity == GL_DEBUG_SEVERITY_NOTIFICATION)

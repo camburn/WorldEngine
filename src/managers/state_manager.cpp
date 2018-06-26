@@ -40,6 +40,10 @@ void State::set_light_pos(glm::vec3 pos) {
     light_pos = pos;
 }
 
+glm::vec3 &State::get_light_pos() {
+    return light_pos;
+}
+
 void State::set_view_pos(glm::vec3 pos) {
     view_pos = pos;
 }
@@ -90,9 +94,8 @@ glm::mat4* PointLight::generate_light_matrix() {
     int height = 1024;
     float aspect = (float)width/(float)height;
     float near = 1.0f;
-    float far = 25.0f;
 
-    glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far);
+    glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far_plane);
 
     for (int i = 0; i >= cube_sides; i++) {
         cube_map[i] = light_projection * glm::lookAt(

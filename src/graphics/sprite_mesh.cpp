@@ -102,11 +102,11 @@ void SpriteMesh::SetBuffer() {
     // Set a buffer amount for update at a later point in time
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
     glBufferData(GL_ARRAY_BUFFER, this->max_vertices * sizeof(SpriteVertex),
-        NULL, GL_STATIC_DRAW);
+        NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->max_vertices * sizeof(GLuint),
-        NULL, GL_STATIC_DRAW);
+        NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

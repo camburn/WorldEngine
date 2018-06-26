@@ -299,6 +299,10 @@ void InstanceManager::draw_depth_map() {
     state.renderer.activate("depth_mapper");
     //Run depth mapper activation code...
 
+    state.renderer.active().set_uniform("cube_matrix", false);
+    state.renderer.active().set_uniform("light_pos", state.get_light_pos());
+    float far_plane = 50.0f;
+    state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
@@ -310,21 +314,26 @@ void InstanceManager::draw_depth_map() {
     We need to get the light matrix (for the point light)
     
     */
-    // For light activate the cube shadow map
+    
     for (PointLight point_light: state.point_lights) {
+        // For light activate the cube shadow map (need to send each mat4 seperatly)
+        state.renderer.active().set_uniform("light_pos", point_light.get_position());
+        float far_plane = point_light.get_far_plane();
+        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
+        glm::mat4* pers = point_light.generate_light_matrix();
         for (int i=0; i < point_light.cube_sides; ++i){
             // Set each side of the cube
             state.renderer.active().set_uniform("cube_matrix", true);
             state.renderer.active().set_uniform(
                 "light_cube_matrix[" + std::to_string(i) + "]", 
-                point_light.generate_light_matrix()
+                pers[i]
             );
         }
         
         for (auto &prim: instances) {
             prim->draw(state);
         }
-
+        state.renderer.active().set_uniform("cube_matrix", false);
     }
     // For instance - draw
 }

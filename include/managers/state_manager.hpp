@@ -17,6 +17,7 @@ public:
     const std::string type = "Light";
 
     void update_position(glm::vec3 new_pos);
+    glm::vec3 get_position() { return position; }
 
 protected:
 
@@ -42,10 +43,11 @@ public:
     glm::mat4* generate_light_matrix();
     glm::mat4* get_cube_map();
     const int cube_sides {6};
+    float get_far_plane() {return far_plane;}
 
 protected:
     glm::mat4 cube_map[6];
-
+    float far_plane {25.0f};
 };
 
 class State {
@@ -57,6 +59,8 @@ public:
 
     void set_projection(glm::mat4 matrix);
     void set_view(glm::mat4 matrix);
+
+    glm::vec3 &get_light_pos();
 
     void set_light_pos(glm::vec3 pos);
     void set_view_pos(glm::vec3 pos);

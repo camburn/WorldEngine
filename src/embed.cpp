@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
     texture_manager.add_texture("red_brick", "red_brick.jpg", "./assets/textures/");
 
-    glm::vec3 lightPos = glm::vec3(3.0f, 8.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(3.0f, 8.0f, 3.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
@@ -319,6 +319,9 @@ int main(int argc, char *argv[]) {
     State state(renderer);
     state.update_state();
     InstanceManager instances{state, texture_manager};
+
+    //state.create_point_light(glm::vec3(2, 2, 2));
+
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
     unsigned int floor_index = instances.new_primitive_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
@@ -439,9 +442,9 @@ int main(int argc, char *argv[]) {
                 y = min_y;
             }
         }
-        lightPos.x = x;
-        lightPos.y = y;
-        lightPos.z = z;
+        //lightPos.x = x;
+        //lightPos.y = y;
+        //lightPos.z = z;
         glm::vec3 light_pos = instances.get_instance_position(light_index);
         instances.update_instance_position(light_index, lightPos);
 
