@@ -170,7 +170,7 @@ GLuint DepthMapBuffer(GLuint width=1024, GLuint height=1024) {
     return depthMap;
 }
 
-GLuint DepthCubeMapBuffer(GLuint width=1024, GLuint height=1024) {
+TextureBuffer DepthCubeMapBuffer(GLuint width=1024, GLuint height=1024) {
     GLuint depthMapFBO;
 
     glGenFramebuffers(1, &depthMapFBO);
@@ -194,5 +194,7 @@ GLuint DepthCubeMapBuffer(GLuint width=1024, GLuint height=1024) {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return depthMap;
+
+	TextureBuffer texture_buffer {depthMapFBO, depthMap};
+    return texture_buffer;
 }

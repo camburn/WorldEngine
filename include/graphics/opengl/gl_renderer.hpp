@@ -23,6 +23,7 @@ void enable_debug();
 void set_base_state();
 void create_common_buffers();
 void activate_common_buffers();
+void activate_buffer_cube_shadow_map();
 void clear_buffers();
 void bind_depth_map();
 

@@ -9,9 +9,11 @@ out vec4 color;
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D shadow_map;
+uniform samplerCube shadow_cube_map;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
+uniform vec3 lightPointPos;
 uniform vec3 viewPos;
 
 uniform bool debug_draw_texcoords = false;
@@ -37,7 +39,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
 	
 	// PCF (shadow softening)
 	float shadow = 0.0;
-	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+	vec2 texel_size = 1.0 / textureSize(shadow_map,   0);
 	for (int x = -pcf_samples; x <= pcf_samples; ++x) {
 		for (int y = -pcf_samples; y <= pcf_samples; ++y) {
 			float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
@@ -51,10 +53,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
 float ShadowCalculation(vec3 fragPos)
 {
     // get vector between fragment position and light position
-    //vec3 fragToLight = fragPos - lightPos;
-	vec3 fragToLight = FragPosLightSpace.xyz / FragPosLightSpace.w;
+    vec3 fragToLight = fragPos - lightPointPos;
     // ise the fragment to light vector to sample from the depth map    
-    float closestDepth = texture(shadow_map, fragToLight.xy).r;
+    float closestDepth = texture(shadow_cube_map, fragToLight).r;
     // it is currently in linear range between [0,1], let's re-transform it back to original depth value
     closestDepth *= 25.0f;
     // now get current linear depth as the length between the fragment and light position
@@ -93,7 +94,8 @@ void main(){
 	vec3 specular = specularStrength * spec * lightColor;  
 
 	float shadow = ShadowCalculation(FragPosLightSpace, lightDir);
-	//float shadow = ShadowCalculation(FragPos);
+	//shadow += ShadowCalculation(FragPos);
+	
 
 	vec3 light_final = (ambientStrength + (1.0 - shadow) * (diffuse + specular)) * lightColor;
 

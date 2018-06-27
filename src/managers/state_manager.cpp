@@ -27,7 +27,7 @@ void State::update_state() {
         DebugGetFlag("render:draw_normals")
     );
 
-    renderer.active().set_uniform("lightPos", light_pos);
+    renderer.active().set_uniform("position", light_pos);
     renderer.active().set_uniform("viewPos", view_pos);
     renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
     renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
@@ -97,13 +97,12 @@ glm::mat4* PointLight::generate_light_matrix() {
 
     glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far_plane);
 
-    for (int i = 0; i >= cube_sides; i++) {
-        cube_map[i] = light_projection * glm::lookAt(
-            position,
-            position + glm::vec3(1.0, 0.0, 0.0),
-            glm::vec3(0.0, -1.0, 0.0)
-        );
-    }
+    cube_map[0] = light_projection * glm::lookAt(position, position + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+    cube_map[1] = light_projection * glm::lookAt(position, position + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+    cube_map[2] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f));
+    cube_map[3] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f));
+    cube_map[4] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+    cube_map[5] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
     return cube_map;
 }
 

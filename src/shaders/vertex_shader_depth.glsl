@@ -5,6 +5,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 
 uniform mat4 model;
+uniform mat4 light_matrix;
 
 void main(){
 

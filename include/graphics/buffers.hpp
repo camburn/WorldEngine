@@ -18,6 +18,11 @@ using namespace std;
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+class TextureBuffer{
+public:
+	GLuint framebuffer;
+	GLuint texture_id;
+};
 
 GLuint BufferMeshDataVNT(const GLfloat *mesh_data, int size);
 GLuint BufferMeshDataVT(const GLfloat *mesh_data, int size);
@@ -26,4 +31,5 @@ GLuint BufferMeshData(vector<glm::vec3> vertices, vector<unsigned int> indices, 
 void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, GLuint vertex_buffer, GLuint element_buffer);
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 GLuint DepthMapBuffer(GLuint width, GLuint height);
+TextureBuffer DepthCubeMapBuffer(GLuint width, GLuint height);
 #endif

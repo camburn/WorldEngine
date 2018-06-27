@@ -1,14 +1,14 @@
 #version 330 core
 
 in vec4 frag_pos;
-out float gl_FragDepth;
+// Is this an Nvidia - Intel difference?
+//out float gl_FragDepth;
 
 uniform vec3 light_pos;
 uniform float far_plane;
 uniform bool cube_matrix = false;
 
-void main(){
-    /*
+void main() {
     if (cube_matrix) {
         // get distance between fragment and light source
         float light_distance = length(frag_pos.xyz - light_pos);
@@ -16,9 +16,8 @@ void main(){
         // map to [0;1] range by dividing by far_plane
         light_distance = light_distance / far_plane;
         gl_FragDepth = light_distance;
-    //gl_FragDepth = frag_pos.z;
     } else {
-        return;
+        float f_ndc_depth = frag_pos.z / frag_pos.w;
+        gl_FragDepth = (1.0 - 0.0) * 0.5 * f_ndc_depth + (1.0 + 0.0) * 0.5;
     }
-    */
 }

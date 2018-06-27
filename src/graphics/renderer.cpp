@@ -47,6 +47,11 @@ void Renderer::activate(string name) {
     }
 }
 
+// TODO: Abstract this better
+void Renderer::activate_buffer_cube_shadow_map() {
+    opengl::activate_buffer_cube_shadow_map();
+}
+
 void Renderer::pre_draw() {
     opengl::bind_depth_map();
 }

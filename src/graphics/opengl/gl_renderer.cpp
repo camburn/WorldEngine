@@ -3,6 +3,8 @@
 namespace opengl {
 
 GLuint buffer_id;
+GLuint shadow_cube_buffer_id;
+GLuint shadow_cube_texture_id;
 GLuint depth_map_width = 4096;
 GLuint depth_map_height = 4096;
 int width = 1920;
@@ -66,11 +68,21 @@ void clear_buffers() {
 
 void create_common_buffers() {
     buffer_id = DepthMapBuffer(depth_map_width, depth_map_height);
+    TextureBuffer texture_data = DepthCubeMapBuffer(2048, 2048);
+    shadow_cube_buffer_id = texture_data.framebuffer;
+    shadow_cube_texture_id = texture_data.texture_id;
 }
 
 void activate_common_buffers() {
     glViewport(0, 0, depth_map_width, depth_map_height);
     glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    //glCullFace(GL_FRONT);
+}
+
+void activate_buffer_cube_shadow_map() {
+    glViewport(0, 0, depth_map_width, depth_map_height);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadow_cube_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
 }
@@ -93,6 +105,16 @@ void APIENTRY glDebugOutput(GLenum source,
     if (id == 131185) return; // This details VBO allocations (and size)
     if (id == 131204) return; // Texture state usage warning: Texture 0 is base level inconsistent. Check texture size.
     // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    if (id == 38) {
+        std::cout << "Nonsense" << std::endl;
+    }
+    // TODO: Fix these warnings
+    // Intel Warning to ignore
+    if (id == 14) {return;} // OpenGL Debug message (14): Copying to larger program cache: 16 kB -> 32 kB
+    if (id == 41) {return;} // Recompiling fragment shader for program 3
+    if (id == 42) {return;} // multisampled FBO 0->1
+    if (id == 47) {return;} // FS compile took 6.315 ms and stalled the GPU
 
     // TODO: This error message needs to be investigated in Intel GPUs
     if (blit_stall_message) { return; }
@@ -238,15 +260,24 @@ void draw_buffers(bool* p_open) {
 	}
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
+        glActiveTexture(GL_TEXTURE1);
         ImGui::Image((void*)(buffer_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Cube Map Buffer")) {
+        glActiveTexture(GL_TEXTURE2);
+        //ImGui::Image((void*)(shadow_cube_texture_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        ImGui::TreePop();
+    }
     ImGui::End();
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void bind_depth_map () {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, buffer_id);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_cube_texture_id);
     glActiveTexture(GL_TEXTURE0);
 }
 

@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
     state.update_state();
     InstanceManager instances{state, texture_manager};
 
-    //state.create_point_light(glm::vec3(2, 2, 2));
+    state.create_point_light(glm::vec3(2, 2, 2));
 
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
