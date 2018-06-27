@@ -322,7 +322,7 @@ void InstanceManager::draw_depth_map() {
         state.renderer.active().set_uniform("light_pos", point_light.get_position());
         float far_plane = point_light.get_far_plane();
         state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
-        glm::mat4* pers = point_light.generate_light_matrix();
+        std::vector<glm::mat4> pers = point_light.generate_light_matrix();
         for (int i=0; i < point_light.cube_sides; ++i){
             // Set each side of the cube
             state.renderer.active().set_uniform("cube_matrix", true);

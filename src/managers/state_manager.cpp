@@ -27,7 +27,7 @@ void State::update_state() {
         DebugGetFlag("render:draw_normals")
     );
 
-    renderer.active().set_uniform("position", light_pos);
+    renderer.active().set_uniform("lightPos", light_pos);
     renderer.active().set_uniform("viewPos", view_pos);
     renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
     renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
@@ -89,24 +89,31 @@ glm::mat4 State::generate_light_matrix() {
     return light_projection * light_view;
 }
 
-glm::mat4* PointLight::generate_light_matrix() {
-    int width = 1024;
-    int height = 1024;
+std::vector<glm::mat4> PointLight::generate_light_matrix() {
+    int width = 4096;
+    int height = 4096;
     float aspect = (float)width/(float)height;
     float near = 1.0f;
 
     glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far_plane);
 
-    cube_map[0] = light_projection * glm::lookAt(position, position + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
-    cube_map[1] = light_projection * glm::lookAt(position, position + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f));
-    cube_map[2] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f));
-    cube_map[3] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f));
-    cube_map[4] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
-    cube_map[5] = light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f));
+    cube_map.clear();
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    cube_map.push_back(
+        light_projection * glm::lookAt(position, position + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
     return cube_map;
 }
 
-glm::mat4* PointLight::get_cube_map() {
+std::vector<glm::mat4> PointLight::get_cube_map() {
     return cube_map;
 }
 

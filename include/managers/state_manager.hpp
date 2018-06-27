@@ -36,17 +36,21 @@ protected:
 
 class PointLight : public Light {
 public:
-    PointLight() : Light() {}
-    PointLight(glm::vec3 position) : Light(position) {}
+    PointLight() : Light() {
+        cube_map.reserve(cube_sides);
+    }
+    PointLight(glm::vec3 position) : Light(position) {
+        cube_map.reserve(cube_sides);
+    }
     const std::string type = "PointLight";
 
-    glm::mat4* generate_light_matrix();
-    glm::mat4* get_cube_map();
+    std::vector<glm::mat4> generate_light_matrix();
+    std::vector<glm::mat4> get_cube_map();
     const int cube_sides {6};
     float get_far_plane() {return far_plane;}
 
 protected:
-    glm::mat4 cube_map[6];
+    std::vector<glm::mat4> cube_map;
     float far_plane {25.0f};
 };
 

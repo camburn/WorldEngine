@@ -2,7 +2,8 @@
 
 namespace opengl {
 
-GLuint buffer_id;
+GLuint shadow_map_buffer_id;
+GLuint shadow_map_texture_id;
 GLuint shadow_cube_buffer_id;
 GLuint shadow_cube_texture_id;
 GLuint depth_map_width = 4096;
@@ -67,7 +68,9 @@ void clear_buffers() {
 }
 
 void create_common_buffers() {
-    buffer_id = DepthMapBuffer(depth_map_width, depth_map_height);
+    TextureBuffer shadow_map_texture_data = DepthMapBuffer(depth_map_width, depth_map_height);
+    shadow_map_texture_id = shadow_map_texture_data.texture_id;
+    shadow_map_buffer_id = shadow_map_texture_data.framebuffer;
     TextureBuffer texture_data = DepthCubeMapBuffer(2048, 2048);
     shadow_cube_buffer_id = texture_data.framebuffer;
     shadow_cube_texture_id = texture_data.texture_id;
@@ -75,7 +78,7 @@ void create_common_buffers() {
 
 void activate_common_buffers() {
     glViewport(0, 0, depth_map_width, depth_map_height);
-    glBindFramebuffer(GL_FRAMEBUFFER, buffer_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
 }
@@ -242,7 +245,7 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
         glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
         fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
         free(ProgramErrorMessage);
-        throw std::runtime_error("Failed to link shaders to program");
+        //throw std::runtime_error("Failed to link shaders to program");
     }
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
@@ -261,7 +264,7 @@ void draw_buffers(bool* p_open) {
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
         glActiveTexture(GL_TEXTURE1);
-        ImGui::Image((void*)(buffer_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        ImGui::Image((void*)(shadow_map_texture_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Cube Map Buffer")) {
@@ -275,7 +278,7 @@ void draw_buffers(bool* p_open) {
 
 void bind_depth_map () {
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, buffer_id);
+    glBindTexture(GL_TEXTURE_2D, shadow_map_texture_id);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_cube_texture_id);
     glActiveTexture(GL_TEXTURE0);
