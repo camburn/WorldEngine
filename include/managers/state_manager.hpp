@@ -21,7 +21,7 @@ public:
 
 protected:
 
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(1.0f);
     glm::vec3 light_color;
     float intensity;
 };

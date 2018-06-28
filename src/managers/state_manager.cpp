@@ -25,6 +25,7 @@ void State::update_state() {
         DebugGetFlag("render:draw_normals")
     );
 
+    renderer.active().set_uniform("lightPointPos", State::get_point_light(0).get_position());
     renderer.active().set_uniform("lightPos", light_pos);
     renderer.active().set_uniform("viewPos", view_pos);
     renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
@@ -80,11 +81,11 @@ void State::create_point_light(glm::vec3 pos) {
 }
 
 void State::update_point_light(int index, glm::vec3 pos) {
-    point_lights[index].update_position(pos);   
+    point_lights[index].update_position(pos);
 }
 
 PointLight State::get_point_light(int index) {
-    return point_lights[index];   
+    return point_lights[index];
 }
 
 glm::mat4 State::generate_light_matrix() {
@@ -98,7 +99,7 @@ std::vector<glm::mat4> PointLight::generate_light_matrix() {
     int width = 1024;
     int height = 1024;
     float aspect = (float)width/(float)height;
-    float near = 1.0f;
+    float near = 0.1f;
 
     glm::mat4 light_projection = glm::perspective(
         glm::radians(90.0f), 

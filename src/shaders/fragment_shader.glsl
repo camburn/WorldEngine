@@ -48,10 +48,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
     for (int x = -pcf_samples; x <= pcf_samples; ++x) {
         for (int y = -pcf_samples; y <= pcf_samples; ++y) {
             float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
-            shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+            shadow += current_depth - bias > pcf_depth ? 0.5f : 0.0f;
         }
     }
-    shadow /= 9.0;
     return shadow;
 }
 
@@ -60,21 +59,17 @@ float ShadowCalculation(vec3 fragPos)
     // get vector between fragment position and light position
     vec3 fragToLight = fragPos - lightPointPos;
     // ise the fragment to light vector to sample from the depth map
-    float closestDepth = texture(shadow_cube_map, fragToLight).r;
+    float closest_depth = texture(shadow_cube_map, fragToLight).r;
     // it is currently in linear range between [0,1], let's re-transform it back to original depth value
-    closestDepth *= far_plane;
+    closest_depth *= far_plane;
     // now get current linear depth as the length between the fragment and light position
     float current_depth = length(fragToLight);
     // test for shadows
     //float shadow = currentDepth - cube_map_bias > closestDepth ? 1.0 : 0.0;
-    if (closestDepth + cube_map_bias < current_depth) {
-        return 1.0f;
+    if (closest_depth + cube_map_bias < current_depth) {
+        return 0.5f;
     }
     return 0.0f;
-    // display closestDepth as debug (to visualize depth cubemap)
-    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
-    //shadow /= 5.0;
-    
 }
 
 void main(){
