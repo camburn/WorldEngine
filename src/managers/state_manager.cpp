@@ -1,7 +1,7 @@
 #include "managers/state_manager.hpp"
 
 int pcf_samples = 1;
-float shadow_map_bias = 0.005f;
+float shadow_map_bias = 0.00005f;
 State::State(Renderer &state_renderer) 
         : renderer(state_renderer) {
     program_id = renderer.get_shader_id("default");
@@ -34,6 +34,7 @@ void State::update_state() {
 
     renderer.active().set_uniform("pcf_samples", &pcf_samples, U_INT);
     renderer.active().set_uniform("shadow_map_bias", &shadow_map_bias, U_FLOAT);
+    renderer.active().set_uniform("use_point_shadow", &use_point_shadow, U_BOOL);
 }
 
 void State::set_light_pos(glm::vec3 pos) {
@@ -90,16 +91,26 @@ glm::mat4 State::generate_light_matrix() {
 }
 
 std::vector<glm::mat4> PointLight::generate_light_matrix() {
-    int width = 4096;
-    int height = 4096;
+    int width = 1024;
+    int height = 1024;
     float aspect = (float)width/(float)height;
     float near = 1.0f;
 
-    glm::mat4 light_projection = glm::perspective(glm::radians(90.0f), aspect, near, far_plane);
+    glm::mat4 light_projection = glm::perspective(
+        glm::radians(90.0f), 
+        aspect, 
+        near, 
+        far_plane
+    );
 
     cube_map.clear();
     cube_map.push_back(
-        light_projection * glm::lookAt(position, position + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        light_projection * glm::lookAt(
+            position, 
+            position + glm::vec3( 1.0f,  0.0f,  0.0f), 
+            glm::vec3(0.0f, -1.0f,  0.0f)
+        )
+    );
     cube_map.push_back(
         light_projection * glm::lookAt(position, position + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
     cube_map.push_back(
@@ -122,7 +133,6 @@ void Light::update_position(glm::vec3 new_pos) {
 }
 
 void State::light_settings(bool* p_open) {
-    const ImS32 s32_one = 1;
     const float f32_one = 1.0f;
     if (!ImGui::Begin("Settings", p_open))
 	{
@@ -143,12 +153,27 @@ void State::light_settings(bool* p_open) {
         
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Point Light Settings")) {
+        ImGui::Checkbox("Show point shadows", &use_point_shadow);
+        /*
+        float X = light_pos.x;
+        float Y = light_pos.y;
+        float Z = light_pos.z;
+        ImGui::InputScalar("X",   ImGuiDataType_Float,  &X, true ? &f32_one : NULL);
+        ImGui::InputScalar("Y",   ImGuiDataType_Float,  &Y, true ? &f32_one : NULL);
+        ImGui::InputScalar("Z",   ImGuiDataType_Float,  &Z, true ? &f32_one : NULL);
+        if (X != light_pos.x || Y != light_pos.y || Z != light_pos.z){
+            set_light_pos(glm::vec3(X, Y, Z));
+        }
+        */
+        ImGui::TreePop();
+    }
     ImGui::End();
 }
 
 void show_shadow_map_settings(bool* p_open) {
     const ImS32 s32_one = 1;
-    const float f32_one = 0.005f;
+    const float f32_one = 0.00005f;
     if (!ImGui::Begin("Settings", p_open))
 	{
 		ImGui::End();

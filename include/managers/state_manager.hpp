@@ -84,6 +84,7 @@ public:
     std::vector<PointLight> point_lights;
 
     bool animate_direction_light = false;
+    bool use_point_shadow = false;
 
 private:
     GLuint program_id = -1;

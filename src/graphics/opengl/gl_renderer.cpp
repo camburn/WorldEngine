@@ -71,7 +71,7 @@ void create_common_buffers() {
     TextureBuffer shadow_map_texture_data = DepthMapBuffer(depth_map_width, depth_map_height);
     shadow_map_texture_id = shadow_map_texture_data.texture_id;
     shadow_map_buffer_id = shadow_map_texture_data.framebuffer;
-    TextureBuffer texture_data = DepthCubeMapBuffer(2048, 2048);
+    TextureBuffer texture_data = DepthCubeMapBuffer(1024, 1024);
     shadow_cube_buffer_id = texture_data.framebuffer;
     shadow_cube_texture_id = texture_data.texture_id;
 }
@@ -84,7 +84,7 @@ void activate_common_buffers() {
 }
 
 void activate_buffer_cube_shadow_map() {
-    glViewport(0, 0, depth_map_width, depth_map_height);
+    glViewport(0, 0, 1024, 1024);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_cube_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
@@ -110,7 +110,7 @@ void APIENTRY glDebugOutput(GLenum source,
     // if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
 
     if (id == 38) {
-        std::cout << "Nonsense" << std::endl;
+        std::cout << "tester";
     }
     // TODO: Fix these warnings
     // Intel Warning to ignore
@@ -175,6 +175,17 @@ void enable_debug() {
     }
 }
 
+void CheckMessage(GLuint program_id) {
+    int InfoLogLength;
+    glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        char* ProgramErrorMessage = (char *)malloc(InfoLogLength);
+        glGetProgramInfoLog(program_id, InfoLogLength, NULL, ProgramErrorMessage);
+        fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
+        free(ProgramErrorMessage);
+    }
+}
+
 GLuint LoadShader(const char* file_path, GLuint ShaderID) {   
     GLint Result = GL_FALSE;
     int InfoLogLength;
@@ -203,21 +214,44 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     GLuint fragmentShaderID = LoadShader(fragment_file_path, glCreateShader(GL_FRAGMENT_SHADER));
     GLuint programID = glCreateProgram();
     GLint Result = GL_FALSE;
-    int InfoLogLength;
+    GLint valid=1;
+
     fprintf(stdout, "Linking shaders to program\n");
     glAttachShader(programID, vertexShaderID);
     glAttachShader(programID, fragmentShaderID);
     glLinkProgram(programID);
 
     glGetProgramiv(programID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        char* ProgramErrorMessage = (char *)malloc(InfoLogLength);
-        glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
-        fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
-        free(ProgramErrorMessage);
-        throw std::runtime_error("Failed to link shaders to program");
+    if (!Result) {
+        CheckMessage(programID);
+        throw std::runtime_error("Failed to link shaders");
     }
+
+    glUseProgram(programID);
+    // Set sampler units
+    // TODO: This should happen in a smarter way
+    GLint texture_sampler_id = glGetUniformLocation(programID, "texture_diffuse1");
+    GLint shadow_sampler_id = glGetUniformLocation(programID, "shadow_map");
+    GLint shadow_cube_sampler_id = glGetUniformLocation(programID, "shadow_cube_map");
+
+    if (texture_sampler_id > 0) {
+        glUniform1i(texture_sampler_id, 0);
+    }
+    if (shadow_sampler_id > 0) {
+        glUniform1i(shadow_sampler_id, 1);
+    }
+    if (shadow_cube_sampler_id > 0) {
+        glUniform1i(shadow_cube_sampler_id, 2);
+    }
+
+    glValidateProgram(programID);
+    glGetProgramiv(programID, GL_VALIDATE_STATUS, &valid);
+    if (!valid) {
+        CheckMessage(programID);
+        throw std::runtime_error("Failed to validate program");
+    }
+
+    glUseProgram(0);
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
     glDeleteShader(vertexShaderID);
@@ -231,7 +265,8 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     GLuint geometryShaderID = LoadShader(geometry_file_path, glCreateShader(GL_GEOMETRY_SHADER));
     GLuint programID = glCreateProgram();
     GLint Result = GL_FALSE;
-    int InfoLogLength;
+    GLint valid=1;
+
     fprintf(stdout, "Linking shaders to program\n");
     glAttachShader(programID, vertexShaderID);
     glAttachShader(programID, fragmentShaderID);
@@ -239,14 +274,23 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     glLinkProgram(programID);
 
     glGetProgramiv(programID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        char* ProgramErrorMessage = (char *)malloc(InfoLogLength);
-        glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage);
-        fprintf(stderr, "Program Link Failure:\n %s\n", ProgramErrorMessage);
-        free(ProgramErrorMessage);
-        //throw std::runtime_error("Failed to link shaders to program");
+    if (!Result) {
+        CheckMessage(programID);
+        throw std::runtime_error("Failed to link shaders");
     }
+
+    glUseProgram(programID);
+    // Set sampler units
+
+    glValidateProgram(programID);
+    glGetProgramiv(programID, GL_VALIDATE_STATUS, &valid);
+    if (!valid) {
+        CheckMessage(programID);
+        throw std::runtime_error("Failed to validate program");
+    }
+
+    glUseProgram(0);
+
     glDetachShader(programID, vertexShaderID);
     glDetachShader(programID, fragmentShaderID);
     glDetachShader(programID, geometryShaderID);

@@ -133,6 +133,7 @@ PrimitiveInstance::PrimitiveInstance(
 
 void PrimitiveInstance::draw(State &state) {
     if (use_texture) {
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, get_texture_id());
     }
     glBindVertexArray(mesh_id);
@@ -283,9 +284,12 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
-        state.renderer.active().set_uniform("texture_diffuse1", 0);
-        state.renderer.active().set_uniform("shadow_map", 1);
-        state.renderer.active().set_uniform("shadow_cube_map", 2);
+        int texture_sampler_id = 0;
+        int shadow_sampler_id = 1;
+        int cube_sampler_id = 2;
+        state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_map", &shadow_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_cube_map", &cube_sampler_id, U_INT);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
@@ -323,9 +327,9 @@ void InstanceManager::draw_depth_map() {
         float far_plane = point_light.get_far_plane();
         state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
         std::vector<glm::mat4> pers = point_light.generate_light_matrix();
+        state.renderer.active().set_uniform("cube_matrix", true);
         for (int i=0; i < point_light.cube_sides; ++i){
             // Set each side of the cube
-            state.renderer.active().set_uniform("cube_matrix", true);
             state.renderer.active().set_uniform(
                 "light_cube_matrix[" + std::to_string(i) + "]", 
                 pers[i]
