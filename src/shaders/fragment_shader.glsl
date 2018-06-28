@@ -28,7 +28,7 @@ uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
 
 uniform int pcf_samples = 1;
 uniform float shadow_map_bias = 0.00005f;
-uniform float cube_map_bias = 0.00005f;
+uniform float cube_map_bias = 0.05f;
 
 uniform float far_plane;
 

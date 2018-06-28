@@ -166,6 +166,7 @@ void State::light_settings(bool* p_open) {
     const float pos_interval = 1.0f;
     const ImS32 s32_one = 1;
     const float bias_interval = 0.00005f;
+    const float cube_bias_interval = 0.005f;
     if (!ImGui::Begin("Settings", p_open))
 	{
 		ImGui::End();
@@ -189,7 +190,7 @@ void State::light_settings(bool* p_open) {
     }
     if (ImGui::TreeNode("Point Light Settings")) {
         ImGui::Checkbox("Cast Shadows", &use_point_shadow);
-        ImGui::InputScalar("Bias",   ImGuiDataType_Float,  &cube_map_bias, true ? &bias_interval : NULL);
+        ImGui::InputScalar("Bias", ImGuiDataType_Float, &cube_map_bias, true ? &cube_bias_interval : NULL);
         glm::vec3 pos = point_lights[0].get_position();
         float X = pos.x;
         float Y = pos.y;

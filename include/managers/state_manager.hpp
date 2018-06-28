@@ -85,13 +85,13 @@ public:
     std::vector<PointLight> point_lights;
 
     bool animate_direction_light = false;
-    bool use_point_shadow = false;
-    bool use_direction_shadow = false;
+    bool use_point_shadow = true;
+    bool use_direction_shadow = true;
 
 private:
     int pcf_samples = 1;
-    float shadow_map_bias = 0.00005f;
-    float cube_map_bias = 0.00005f;
+    float shadow_map_bias = 0.0005f;
+    float cube_map_bias = 0.05f;
     GLuint program_id = -1;
     bool invalid_model_view = true;
     glm::mat4 cached_model_view {1.0f};
