@@ -455,6 +455,7 @@ int main(int argc, char *argv[]) {
             lightPos.z = z;
         }
         instances.update_instance_position(light_index, lightPos);
+        instances.update_instance_position(point_light_index, state.get_point_light(0).get_position());
         
         state.set_projection(Projection);
         state.set_view(rotated_view);

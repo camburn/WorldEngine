@@ -74,6 +74,7 @@ public:
     void set_direction_light(glm::vec3 pos);
     void create_point_light(glm::vec3 pos);
     void update_point_light(int index, glm::vec3 pos);
+    PointLight get_point_light(int index);
 
     void light_settings(bool* p_open);
 
@@ -85,8 +86,12 @@ public:
 
     bool animate_direction_light = false;
     bool use_point_shadow = false;
+    bool use_direction_shadow = false;
 
 private:
+    int pcf_samples = 1;
+    float shadow_map_bias = 0.00005f;
+    float cube_map_bias = 0.00005f;
     GLuint program_id = -1;
     bool invalid_model_view = true;
     glm::mat4 cached_model_view {1.0f};
@@ -100,5 +105,4 @@ private:
     
 };
 
-void show_shadow_map_settings(bool* p_open);
 #endif 

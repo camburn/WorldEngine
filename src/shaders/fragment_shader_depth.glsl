@@ -11,7 +11,7 @@ uniform bool cube_matrix = false;
 void main() {
     if (cube_matrix) {
         // get distance between fragment and light source
-        float light_distance = length(frag_pos.xyz - light_pos);
+        float light_distance = distance(light_pos, frag_pos.xyz);
         
         // map to [0;1] range by dividing by far_plane
         light_distance = light_distance / far_plane;

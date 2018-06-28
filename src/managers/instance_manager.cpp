@@ -293,6 +293,8 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
+        float far_plane = 25.0f;
+        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
 
         prim->draw(state);
     }
@@ -323,11 +325,11 @@ void InstanceManager::draw_depth_map() {
     state.renderer.activate_buffer_cube_shadow_map();
     for (PointLight point_light: state.point_lights) {
         // For light activate the cube shadow map (need to send each mat4 seperatly)
+        state.renderer.active().set_uniform("cube_matrix", true);
         state.renderer.active().set_uniform("light_pos", point_light.get_position());
         float far_plane = point_light.get_far_plane();
         state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
         std::vector<glm::mat4> pers = point_light.generate_light_matrix();
-        state.renderer.active().set_uniform("cube_matrix", true);
         for (int i=0; i < point_light.cube_sides; ++i){
             // Set each side of the cube
             state.renderer.active().set_uniform(
@@ -337,9 +339,10 @@ void InstanceManager::draw_depth_map() {
         }
         
         for (auto &prim: instances) {
+            state.renderer.active().set_uniform("model", prim->get_model_matrix());
             prim->draw(state);
         }
-        state.renderer.active().set_uniform("cube_matrix", false);
     }
+    state.renderer.active().set_uniform("cube_matrix", false);
     // For instance - draw
 }

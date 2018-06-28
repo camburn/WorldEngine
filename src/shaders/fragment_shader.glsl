@@ -20,13 +20,17 @@ uniform bool debug_draw_texcoords = false;
 uniform bool debug_draw_normals = false;
 uniform bool debug_disable_lighting = false;
 
-uniform bool use_point_shadow = false;
+uniform bool use_point_shadow = true;
+uniform bool use_direction_shadow = true;
 uniform bool use_shadows = false;
 uniform bool use_uniform_color = false;
 uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
 
 uniform int pcf_samples = 1;
 uniform float shadow_map_bias = 0.00005f;
+uniform float cube_map_bias = 0.00005f;
+
+uniform float far_plane;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
     vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -58,16 +62,19 @@ float ShadowCalculation(vec3 fragPos)
     // ise the fragment to light vector to sample from the depth map
     float closestDepth = texture(shadow_cube_map, fragToLight).r;
     // it is currently in linear range between [0,1], let's re-transform it back to original depth value
-    closestDepth *= 25.0f;
+    closestDepth *= far_plane;
     // now get current linear depth as the length between the fragment and light position
-    float currentDepth = length(fragToLight);
+    float current_depth = length(fragToLight);
     // test for shadows
-    float bias = 0.05;
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    //float shadow = currentDepth - cube_map_bias > closestDepth ? 1.0 : 0.0;
+    if (closestDepth + cube_map_bias < current_depth) {
+        return 1.0f;
+    }
+    return 0.0f;
     // display closestDepth as debug (to visualize depth cubemap)
     // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
     //shadow /= 5.0;
-    return shadow;
+    
 }
 
 void main(){
@@ -94,14 +101,18 @@ void main(){
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
     vec3 specular = specularStrength * spec * lightColor;  
 
-    float shadow = ShadowCalculation(FragPosLightSpace, lightDir);
+    float direction_shadow = ShadowCalculation(FragPosLightSpace, lightDir);
     float point_shadow = ShadowCalculation(FragPos);
     
     vec3 light_final;
-    if (use_point_shadow == true) {
-        light_final = (ambientStrength + (1.0 - clamp(shadow + point_shadow, 0.0f, 1.0f)) * (diffuse + specular)) * lightColor;
+    if (use_point_shadow == true && use_direction_shadow == true) {
+        light_final = (ambientStrength + (1.0 - clamp(direction_shadow + point_shadow, 0.0f, 1.0f)) * (diffuse + specular)) * lightColor;
+    } else if (use_direction_shadow == true && use_point_shadow == false) {
+        light_final = (ambientStrength + (1.0 - direction_shadow) * (diffuse + specular)) * lightColor;
+    } else if (use_direction_shadow == false && use_point_shadow == true) {
+        light_final = (ambientStrength + (1.0 - clamp(point_shadow, 0.0f, 1.0f)) * (diffuse + specular)) * lightColor;
     } else {
-        light_final = (ambientStrength + (1.0 - shadow) * (diffuse + specular)) * lightColor;
+        light_final = vec3(1.0f);
     }
 
     if (debug_disable_lighting) {

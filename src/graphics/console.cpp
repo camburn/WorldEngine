@@ -369,7 +369,6 @@ void MenuParts(bool* p_open, State &state) {
 		opengl::draw_buffers(&show_buffers);
 	}
 	if (show_settings) {
-		show_shadow_map_settings(&show_settings);
 		camera_settings(&show_settings);
 		state.light_settings(&show_settings);
 	}

@@ -78,6 +78,7 @@ void create_common_buffers() {
 
 void activate_common_buffers() {
     glViewport(0, 0, depth_map_width, depth_map_height);
+    // /glClear(GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
@@ -85,6 +86,7 @@ void activate_common_buffers() {
 
 void activate_buffer_cube_shadow_map() {
     glViewport(0, 0, 1024, 1024);
+    //glClear(GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_cube_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
