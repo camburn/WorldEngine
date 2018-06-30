@@ -10,6 +10,8 @@
 #ifndef STATE_H
 #define STATE_H
 
+
+
 class Light {
 public:
     Light() : position(glm::vec3(1.0f)), light_color(glm::vec3(1.0f)), intensity(1.0f) {}
@@ -36,6 +38,21 @@ protected:
 
 class PointLight : public Light {
 public:
+
+    struct Data {
+        vec3 position;
+
+        float constant;
+        float linear;
+        float quadratic;
+
+        vec3 ambience;
+        vec3 diffuse;
+        vec3 specular;
+
+        float far_plane;
+    };
+
     PointLight() : Light() {
         cube_map.reserve(cube_sides);
     }
@@ -99,7 +116,7 @@ private:
     glm::mat4 view_matrix {1.0f};
 
     glm::vec3 view_pos {1.0f};
-    glm::vec3 light_pos {3.0f, 6.0f, 3.0f};
+    glm::vec3 light_pos {3.0f, 10.0f, 3.0f};
     
     DirectionLight direction_light;   // Currently only support 1 light
     

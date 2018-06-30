@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
     texture_manager.add_texture("red_brick", "red_brick.jpg", "./assets/textures/");
 
-    glm::vec3 lightPos = glm::vec3(3.0f, 8.0f, 3.0f);
+    glm::vec3 lightPos = glm::vec3(3.0f, 10.0f, 3.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
