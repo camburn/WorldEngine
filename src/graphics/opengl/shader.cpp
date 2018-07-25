@@ -47,8 +47,12 @@ void Shader::get_uniforms() {
 }
 
 void Shader::set_uniform(std::string name, glm::mat4 value) {
-    if (uniform_locs.count(name) == 1) {
-        glUniformMatrix4fv(uniform_locs[name], 1, GL_FALSE, &value[0][0]);
+    if (uniform_locs.count(name) == 1 || true) {
+        // FIXME: the name is light_cube_matrix[0] but can be sent with 
+        // light_cube_matrix[x]
+        //glUniformMatrix4fv(uniform_locs[name], 1, GL_FALSE, &value[0][0]);
+        GLuint uniform_loc = glGetUniformLocation(shader_id, name.c_str());
+        glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, &value[0][0]);
     } else {
         std::cout << "RENDER:: Invalid uniform name: " << name << std::endl;
     }

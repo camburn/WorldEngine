@@ -2,21 +2,39 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices=18) out;
 
-uniform mat4 shadowMatrices[6];
+uniform bool cube_matrix = false;
+uniform mat4 light_matrix;
+uniform mat4 light_cube_matrix[6];
 
-out vec4 FragPos; // FragPos from GS (output per emitvertex)
+out vec4 frag_pos; // FragPos from GS (output per emitvertex)
+// FIXME: Is this an Nvidia - Intel difference?
+//out int gl_Layer;
 
 void main()
-{
-    for(int face = 0; face < 6; ++face)
-    {
-        gl_Layer = face; // built-in variable that specifies to which face we render.
+{   
+    if (!cube_matrix) {
+        // Just emit the regular vertices
         for(int i = 0; i < 3; ++i) // for each triangle's vertices
         {
-            FragPos = gl_in[i].gl_Position;
-            gl_Position = shadowMatrices[face] * FragPos;
+            frag_pos = gl_in[i].gl_Position;
+            frag_pos = light_matrix * frag_pos;
+            gl_Position = frag_pos;
             EmitVertex();
-        }    
+        }
         EndPrimitive();
+    } else {
+        // FIXME: Is this an Nvidia - Intel difference?
+        ///int gl_Layer;
+        for(int face = 0; face < 6; ++face) {
+            for(int i = 0; i < 3; ++i) // for each triangle's vertices
+            {
+                gl_Layer = face;
+                frag_pos = gl_in[i].gl_Position;
+                gl_Position = light_cube_matrix[face] * frag_pos;
+                //gl_Position = frag_pos;
+                EmitVertex();
+            }
+            EndPrimitive();
+        }
     }
 } 

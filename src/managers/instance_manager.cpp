@@ -133,6 +133,7 @@ PrimitiveInstance::PrimitiveInstance(
 
 void PrimitiveInstance::draw(State &state) {
     if (use_texture) {
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, get_texture_id());
     }
     glBindVertexArray(mesh_id);
@@ -279,15 +280,21 @@ void InstanceManager::draw() {
     for (auto &prim: instances) {
         glm::mat4 mvp = prim->get_mvp_matrix(model_view_projection);
         glm::mat3 normal_mat = prim->get_normal_matrix();
+        state.renderer.pre_draw();
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
-        state.renderer.active().set_uniform("texture_diffuse1", 0);
-        state.renderer.active().set_uniform("shadow_map", 1);
+        int texture_sampler_id = 0;
+        int shadow_sampler_id = 1;
+        int cube_sampler_id = 2;
+        state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_map", &shadow_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_cube_map", &cube_sampler_id, U_INT);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
-        state.renderer.pre_draw();
+        float far_plane = 25.0f;
+        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
 
         prim->draw(state);
     }
@@ -299,6 +306,11 @@ void InstanceManager::draw_depth_map() {
     state.renderer.activate("depth_mapper");
     //Run depth mapper activation code...
 
+    state.renderer.active().set_uniform("cube_matrix", false);
+    glm::vec3 light_pos = state.get_light_pos();
+    state.renderer.active().set_uniform("light_pos", light_pos);
+    float far_plane = 25.0f;
+    state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
@@ -310,21 +322,27 @@ void InstanceManager::draw_depth_map() {
     We need to get the light matrix (for the point light)
     
     */
-    // For light activate the cube shadow map
+    state.renderer.activate_buffer_cube_shadow_map();
     for (PointLight point_light: state.point_lights) {
+        // For light activate the cube shadow map (need to send each mat4 seperatly)
+        state.renderer.active().set_uniform("cube_matrix", true);
+        state.renderer.active().set_uniform("light_pos", point_light.get_position());
+        float far_plane = point_light.get_far_plane();
+        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
+        std::vector<glm::mat4> pers = point_light.generate_light_matrix();
         for (int i=0; i < point_light.cube_sides; ++i){
             // Set each side of the cube
-            state.renderer.active().set_uniform("cube_matrix", true);
             state.renderer.active().set_uniform(
                 "light_cube_matrix[" + std::to_string(i) + "]", 
-                point_light.generate_light_matrix()
+                pers[i]
             );
         }
         
         for (auto &prim: instances) {
+            state.renderer.active().set_uniform("model", prim->get_model_matrix());
             prim->draw(state);
         }
-
     }
+    state.renderer.active().set_uniform("cube_matrix", false);
     // For instance - draw
 }

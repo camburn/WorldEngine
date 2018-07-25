@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
     texture_manager.add_texture("metal_box", "metal_box.jpg", "./assets/textures/");
     texture_manager.add_texture("red_brick", "red_brick.jpg", "./assets/textures/");
 
-    glm::vec3 lightPos = glm::vec3(3.0f, 8.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(3.0f, 10.0f, 3.0f);
     glm::vec3 viewPos = glm::vec3(7, 3, 6);
 
     // Set up Cameras
@@ -317,8 +317,10 @@ int main(int argc, char *argv[]) {
     glfwSetScrollCallback(window, scrollCallback);
 
     State state(renderer);
+    state.create_point_light(glm::vec3(1, 1, 2));
     state.update_state();
     InstanceManager instances{state, texture_manager};
+
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
     instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
     unsigned int floor_index = instances.new_primitive_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
@@ -329,6 +331,11 @@ int main(int argc, char *argv[]) {
     instances.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
     instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
+    unsigned int point_light_index = instances.new_primitive_instance(
+        "Cube", glm::vec3(2,2,2), glm::vec3(1,1,1), false
+    );
+    instances.update_instance_scale(point_light_index, glm::vec3(0.25, 0.25, 0.25));
+
     //MeshManager meshes {state, texture_manager};
     unsigned int nano = instances.new_mesh_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
     instances.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
@@ -426,25 +433,29 @@ int main(int argc, char *argv[]) {
 
         //renderer.activate("default");
 
-        float min_y = 3.0f;
+        lightPos = state.get_light_pos();
+        if (state.animate_direction_light) {
+            float min_y = 3.0f;
 
-        float x = (float)glm::sin(glfwGetTime()/10) * 15;
-        float y = (float)glm::cos(glfwGetTime()/10) * 10;
-        float z = (float)glm::sin(glfwGetTime()/50) * 15;
-        if (y < min_y) {
-            if (y < 0.0f) {
-                y *= -1.0f; 
-            }
+            float x = (float)glm::sin(glfwGetTime()/10) * 15;
+            float y = (float)glm::cos(glfwGetTime()/10) * 10;
+            float z = (float)glm::sin(glfwGetTime()/50) * 15;
             if (y < min_y) {
-                y = min_y;
+                if (y < 0.0f) {
+                    y *= -1.0f; 
+                }
+                if (y < min_y) {
+                    y = min_y;
+                }
             }
+            
+            lightPos.x = x;
+            lightPos.y = y;
+            lightPos.z = z;
         }
-        lightPos.x = x;
-        lightPos.y = y;
-        lightPos.z = z;
-        glm::vec3 light_pos = instances.get_instance_position(light_index);
         instances.update_instance_position(light_index, lightPos);
-
+        instances.update_instance_position(point_light_index, state.get_point_light(0).get_position());
+        
         state.set_projection(Projection);
         state.set_view(rotated_view);
         state.set_light_pos(lightPos);
@@ -529,7 +540,7 @@ int main(int argc, char *argv[]) {
             ShowPyEngineConsole(&p_open);
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
-            MenuParts(&p_open);
+            MenuParts(&p_open, state);
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

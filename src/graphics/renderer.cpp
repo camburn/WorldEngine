@@ -47,6 +47,11 @@ void Renderer::activate(string name) {
     }
 }
 
+// TODO: Abstract this better
+void Renderer::activate_buffer_cube_shadow_map() {
+    opengl::activate_buffer_cube_shadow_map();
+}
+
 void Renderer::pre_draw() {
     opengl::bind_depth_map();
 }
@@ -63,7 +68,7 @@ void Renderer::LoadShaders(
         "default", 
         Shader(
             "default",
-            "./src/shaders/vertex_shader.glsl", 
+            "./src/shaders/vertex_shader.glsl",
             "./src/shaders/fragment_shader.glsl"
         )
     );
@@ -74,8 +79,9 @@ void Renderer::LoadShaders(
         "depth_mapper", 
         Shader(
             "depth_mapper",
-            "./src/shaders/vertex_shader_depth.glsl", 
-            "./src/shaders/fragment_shader_depth.glsl"
+            "./src/shaders/vertex_shader_depth.glsl",
+            "./src/shaders/fragment_shader_depth.glsl",
+            "./src/shaders/geometry_shader_depth.glsl"
         )
     );
     *depth_program = shader_map["depth_mapper"].get_shader_id();
@@ -85,7 +91,7 @@ void Renderer::LoadShaders(
         "sprite", 
         Shader(
             "sprite",
-            "./src/shaders/sprite_vertex_shader.glsl", 
+            "./src/shaders/sprite_vertex_shader.glsl",
             "./src/shaders/sprite_fragment_shader.glsl"
         )
     );

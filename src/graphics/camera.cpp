@@ -156,6 +156,7 @@ glm::mat4& cameraUpdate(int width, int height) {
     window_width = width;
     // Update camera with new width and height data
     pers_proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    pers_proj = glm::perspective(glm::radians(90.0f), (float)width / (float)height, 0.1f, 100.0f);
     arcball = Arcball(width, height, 0.1f, true, true);
 
     //ortho_proj = glm::ortho(0.0f, (float)width/100, 0.0f, (float)height/100, -1.0f, 10.0f);

@@ -61,6 +61,7 @@ public:
     Shader& active();
     void activate(string name);
     void activate(GLuint id);
+    void activate_buffer_cube_shadow_map();
     void pre_draw();
     GLuint get_shader_id(string name);
     Shader& get_shader(string name);
