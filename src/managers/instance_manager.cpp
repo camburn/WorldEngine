@@ -6,6 +6,40 @@ They then make available this data via names.
 #include "managers/instance_manager.hpp"
 
 
+Material::Material() : data(
+    MaterialData{glm::vec3(1,1,1), 32.0f, false, false, 0, 0}
+) {}
+
+Material::Material(
+    glm::vec3 base_color,
+    GLuint diffuse_texture_sampler_id,
+    GLuint specular_texture_sampler_id
+) : data(
+    MaterialData{base_color, 32.0f, true, true, diffuse_texture_sampler_id, specular_texture_sampler_id}
+) {}
+
+Material::Material(
+    glm::vec3 base_color,
+    GLuint diffuse_texture_sampler_id
+) : data(
+    MaterialData{base_color, 32.0f, true, false, diffuse_texture_sampler_id, 0}
+) {}
+
+Material::Material(
+    glm::vec3 base_color
+) : data(
+    MaterialData{base_color, 32.0f, false, false, 0, 0}
+) {}
+
+MaterialData Material::get_data() {
+    return data;
+}
+
+void Material::set_shininess(float shininess) {
+    data.shininess = shininess;
+}
+
+
 Instance::Instance(
         vec3 uniform_color = glm::vec3(1,1,1),
         glm::vec3 pos = glm::vec3(0,0,0),

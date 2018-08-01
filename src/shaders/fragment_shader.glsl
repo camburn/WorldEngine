@@ -23,9 +23,12 @@ struct DirectionLight {
 };
 
 struct Material {
+    vec3 base_color;
+    float shininess;
+    bool diffuse_set;
+    bool specular_set;
     sampler2D diffuse;
     sampler2D specular;
-    float shininess;
 };
 
 in vec2 TexCoord;

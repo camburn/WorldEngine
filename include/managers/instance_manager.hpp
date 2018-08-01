@@ -15,6 +15,40 @@
 #define PRIMITIVE_H
 #define NULL_TEXTURE 0
 
+class MaterialData{
+public:
+    glm::vec3 base_color;
+    float shininess;
+    bool diffuse_set;
+    bool specular_set;
+    GLuint diffuse_texture_sampler_id;
+    GLuint specular_texture_sampler_id;
+};
+
+class Material {
+
+public:
+    Material();
+    Material(
+        glm::vec3 base_color,
+        GLuint diffuse_texture_sampler_id,
+        GLuint specular_texture_sampler_id
+    );
+    Material(
+        glm::vec3 base_color,
+        GLuint diffuse_texture_sampler_id
+    );
+    Material(
+        glm::vec3 base_color
+    );
+    MaterialData get_data();
+    void set_shininess(float shininess);
+
+protected:
+    MaterialData data;
+    
+};
+
 class Instance{
 public:
     Instance(
