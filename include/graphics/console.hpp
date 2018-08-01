@@ -11,13 +11,14 @@
 
 #include "pyconsole.hpp"
 #include "managers/state_manager.hpp"
+#include "managers/instance_manager.hpp"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 void ShowPyEngineConsole(bool* p_open);
 void ShowFrameInformation(bool* p_open);
 void ShowMainMenu(bool* p_open);
-void MenuParts(bool* p_open, State& state);
+void MenuParts(bool* p_open, State& state, InstanceManager &instance_manager);
 void ConsoleWriteLine(const char *line_text);
 void set_mouse_world_pos(float x, float y);
 struct PyEngineConsole;

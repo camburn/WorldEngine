@@ -42,6 +42,7 @@ public:
     bool get_shading_status();
 
     std::string get_type();
+    std::string get_name() { return name; }
 
     glm::mat4 get_model_matrix();
     glm::mat3 get_normal_matrix();
@@ -133,6 +134,9 @@ public:
     glm::vec3 get_instance_scale(unsigned int instance_id);
     glm::vec3 get_instance_rotation(unsigned int instance_id);
     glm::vec3 get_instance_position(unsigned int instance_id);
+
+    void draw_interface(bool* p_open);
+     
 private:
     State &state;
     TextureManager &textures;

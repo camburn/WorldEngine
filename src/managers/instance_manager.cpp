@@ -346,3 +346,53 @@ void InstanceManager::draw_depth_map() {
     state.renderer.active().set_uniform("cube_matrix", false);
     // For instance - draw
 }
+
+glm::vec3 widget_vertex3(glm::vec3 value) {
+    const float pos_interval = 0.1f;
+    float X = value.x;
+    float Y = value.y;
+    float Z = value.z;
+    ImGui::PushItemWidth(120);
+    ImGui::InputScalar("X", ImGuiDataType_Float, &X, true ? &pos_interval : NULL);
+    ImGui::SameLine();
+    ImGui::InputScalar("Y", ImGuiDataType_Float, &Y, true ? &pos_interval : NULL);
+    ImGui::SameLine();
+    ImGui::InputScalar("Z", ImGuiDataType_Float, &Z, true ? &pos_interval : NULL);
+    ImGui::PopItemWidth();
+    return glm::vec3(X, Y, Z);
+}
+
+void InstanceManager::draw_interface(bool* p_open) {
+    if (!ImGui::Begin("Details", p_open)) {
+        ImGui::End();
+        return;
+    }
+    int count = 0;
+    for (auto &prim: instances) {
+        // for each instance
+        std::string node_name = prim->get_name() + std::to_string(count);
+        if (ImGui::TreeNode(node_name.c_str())) {
+            
+            glm::vec3 pos = prim->get_position();
+            glm::vec3 rot = prim->get_rotation();
+            glm::vec3 scale = prim->get_scale();
+
+            glm::vec3 new_value;
+            new_value = widget_vertex3(pos);
+            if (new_value != pos) {
+                prim->set_position(new_value);
+            }
+            new_value = widget_vertex3(rot);
+            if (new_value != rot) {
+                prim->set_rotation(new_value);
+            }
+            new_value = widget_vertex3(scale);
+            if (new_value != scale) {
+                prim->set_scale(new_value);
+            }
+            ImGui::TreePop();
+        }
+        count ++;
+    }
+    ImGui::End();
+}

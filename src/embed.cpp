@@ -540,7 +540,7 @@ int main(int argc, char *argv[]) {
             ShowPyEngineConsole(&p_open);
             ShowFrameInformation(&p_open);
             ShowMainMenu(&p_open);
-            MenuParts(&p_open, state);
+            MenuParts(&p_open, state, instances);
 
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
