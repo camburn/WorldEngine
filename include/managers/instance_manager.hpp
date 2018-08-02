@@ -42,7 +42,7 @@ public:
     bool get_shading_status();
 
     std::string get_type();
-    std::string get_name() { return name; }
+    std::string get_name();
 
     glm::mat4 get_model_matrix();
     glm::mat3 get_normal_matrix();
@@ -71,6 +71,7 @@ public:
         glm::vec3 rot,
         glm::vec3 scale,
         GLuint program,
+        std::string type,
         std::string name
     );
 
@@ -82,6 +83,7 @@ public:
         glm::vec3 rot,
         glm::vec3 scale,
         GLuint program,
+        std::string type,
         std::string name,
         bool use_shading
     );
@@ -90,6 +92,7 @@ public:
     GLuint get_texture_id();
 
 private:
+    string type;
     GLuint mesh_array_size;
     GLuint mesh_id;
     GLuint tex_id;
@@ -119,8 +122,8 @@ class InstanceManager {
 public:
     InstanceManager(State &state, TextureManager &texture_manager);
 
-    unsigned int new_primitive_instance(std::string type, std::string texture_name, glm::vec3 position);
-    unsigned int new_primitive_instance(std::string type, glm::vec3 position, glm::vec3 color, bool use_shading);
+    unsigned int new_primitive_instance(std::string name, std::string type, std::string texture_name, glm::vec3 position);
+    unsigned int new_primitive_instance(std::string name, std::string type, glm::vec3 position, glm::vec3 color, bool use_shading);
     unsigned int new_mesh_instance(std::string filename, std::string path, glm::vec3 pos);
     Instance &get_instance(unsigned int instance_id);
     

@@ -66,6 +66,10 @@ std::string Instance::get_type() {
     return name;
 }
 
+std::string Instance::get_name() {
+    return name;
+}
+
 glm::mat4 Instance::get_model_matrix() {
     if (invalid_model_matrix) {
         model = glm::mat4(1.0f);
@@ -104,9 +108,11 @@ PrimitiveInstance::PrimitiveInstance(
     glm::vec3 rot,
     glm::vec3 scale,
     GLuint program,
+    std::string type,
     std::string name
 ): 
     Instance(glm::vec3(0.25, 0.25, 0.25), pos, rot, scale, name, use_shading),
+    type(type),
     mesh_id(mesh_id),
     mesh_array_size(mesh_array_size),
     tex_id(tex_id) {
@@ -121,10 +127,12 @@ PrimitiveInstance::PrimitiveInstance(
     glm::vec3 rot,
     glm::vec3 scale,
     GLuint program,
+    std::string type,
     std::string name,
     bool use_shading = true
 ): 
     Instance(uniform_color, pos, rot, scale, name, use_shading),
+    type(type),
     mesh_id(mesh_id),
     mesh_array_size(mesh_array_size),
     program(program) {
@@ -184,6 +192,7 @@ InstanceManager::InstanceManager(State &state, TextureManager &texture_manager)
 }
 
 unsigned int InstanceManager::new_primitive_instance(
+        std::string name,
         std::string type, 
         std::string texture_name, 
         glm::vec3 position
@@ -197,13 +206,15 @@ unsigned int InstanceManager::new_primitive_instance(
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1),
         program,
-        type
+        type,
+        name
     )); 
     
     return instances.size() - 1;
 }
 
 unsigned int InstanceManager::new_primitive_instance(
+        std::string name,
         std::string type, 
         glm::vec3 position, 
         glm::vec3 color,
@@ -219,6 +230,7 @@ unsigned int InstanceManager::new_primitive_instance(
         glm::vec3(1, 1, 1),
         program,
         type,
+        name,
         use_shading
     )); 
     
@@ -347,30 +359,22 @@ void InstanceManager::draw_depth_map() {
     // For instance - draw
 }
 
-glm::vec3 widget_vertex3(glm::vec3 value) {
-    const float pos_interval = 0.1f;
-    float X = value.x;
-    float Y = value.y;
-    float Z = value.z;
-    ImGui::PushItemWidth(120);
-    ImGui::InputScalar("X", ImGuiDataType_Float, &X, true ? &pos_interval : NULL);
-    ImGui::SameLine();
-    ImGui::InputScalar("Y", ImGuiDataType_Float, &Y, true ? &pos_interval : NULL);
-    ImGui::SameLine();
-    ImGui::InputScalar("Z", ImGuiDataType_Float, &Z, true ? &pos_interval : NULL);
+glm::vec3 widget_vertex3(string name, glm::vec3 value) {
+    float output[3] {value.x, value.y, value.z};
+    ImGui::PushItemWidth(160);
+    ImGui::InputFloat3(name.c_str(), output);
     ImGui::PopItemWidth();
-    return glm::vec3(X, Y, Z);
+    return glm::vec3(output[0], output[1], output[2]);
 }
 
 void InstanceManager::draw_interface(bool* p_open) {
-    if (!ImGui::Begin("Details", p_open)) {
+    if (!ImGui::Begin("Instances", p_open, ImVec2(125, 200))) {
         ImGui::End();
         return;
     }
     int count = 0;
     for (auto &prim: instances) {
-        // for each instance
-        std::string node_name = prim->get_name() + std::to_string(count);
+        std::string node_name = prim->get_name();
         if (ImGui::TreeNode(node_name.c_str())) {
             
             glm::vec3 pos = prim->get_position();
@@ -378,18 +382,15 @@ void InstanceManager::draw_interface(bool* p_open) {
             glm::vec3 scale = prim->get_scale();
 
             glm::vec3 new_value;
-            new_value = widget_vertex3(pos);
-            if (new_value != pos) {
-                prim->set_position(new_value);
-            }
-            new_value = widget_vertex3(rot);
-            if (new_value != rot) {
-                prim->set_rotation(new_value);
-            }
-            new_value = widget_vertex3(scale);
-            if (new_value != scale) {
-                prim->set_scale(new_value);
-            }
+            new_value = widget_vertex3("Position", pos);
+            if (new_value != pos) { prim->set_position(new_value); }
+
+            new_value = widget_vertex3("Rotation", rot);
+            if (new_value != rot) { prim->set_rotation(new_value); }
+
+            new_value = widget_vertex3("Scale", scale);
+            if (new_value != scale) { prim->set_scale(new_value); }
+
             ImGui::TreePop();
         }
         count ++;

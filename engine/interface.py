@@ -37,28 +37,28 @@ def on_frame(frame_time):
 
 @register_on_init
 def create_mountain():
-    manager.create_primitive('Cube', 'metal_box', 0, 0.5, -5)
-    manager.create_primitive('Cube', 'metal_box', 1, 0.5, -5)
-    manager.create_primitive('Cube', 'metal_box', 2, 0.5, -5)
-    manager.create_primitive('Cube', 'metal_box', 0.5, 1.5, -5)
-    manager.create_primitive('Cube', 'metal_box', 1.5, 1.5, -5)
-    manager.create_primitive('Cube', 'metal_box', 1.0, 2.5, -5)
+    manager.create_primitive('python_test_0', 'Cube', 'metal_box', 0, 0.5, -5)
+    manager.create_primitive('python_test_1', 'Cube', 'metal_box', 1, 0.5, -5)
+    manager.create_primitive('python_test_2', 'Cube', 'metal_box', 2, 0.5, -5)
+    manager.create_primitive('python_test_3', 'Cube', 'metal_box', 0.5, 1.5, -5)
+    manager.create_primitive('python_test_4', 'Cube', 'metal_box', 1.5, 1.5, -5)
+    manager.create_primitive('python_test_5', 'Cube', 'metal_box', 1.0, 2.5, -5)
     
-    DATA_STORE['box_a'] = manager.create_primitive('Cube', 'metal_box', 3.0, 0.5, 3)
+    DATA_STORE['box_a'] = manager.create_primitive('python_moving_cube', 'Cube', 'metal_box', 3.0, 0.5, 3)
 
-    wall_a = manager.create_primitive('Cube', 'red_brick', 0, 1.5, -10)
+    wall_a = manager.create_primitive('python_wall_a', 'Cube', 'red_brick', 0, 1.5, -10)
     manager.set_primitive_rotation(wall_a, 90.0, 0.0, 0.0)
     manager.set_primitive_scale(wall_a, 20, 0.5, 3)
 
-    wall_d = manager.create_primitive('Cube', 'red_brick', 0, 1.5, 10)
+    wall_d = manager.create_primitive('python_wall_b', 'Cube', 'red_brick', 0, 1.5, 10)
     manager.set_primitive_rotation(wall_d, -90.0, 0.0, 0.0)
     manager.set_primitive_scale(wall_d, 20, 0.5, 3)
 
-    wall_b = manager.create_primitive('Cube', 'red_brick', 10, 1.5, 0)
+    wall_b = manager.create_primitive('python_wall_c', 'Cube', 'red_brick', 10, 1.5, 0)
     manager.set_primitive_rotation(wall_b, 90.0, 0.0, 90.0)
     manager.set_primitive_scale(wall_b, 20, 0.5, 3)
 
-    wall_c = manager.create_primitive('Cube', 'red_brick', -10, 1.5, 0)
+    wall_c = manager.create_primitive('python_wall_d', 'Cube', 'red_brick', -10, 1.5, 0)
     manager.set_primitive_rotation(wall_c, 90.0, 0.0, -90.0)
     manager.set_primitive_scale(wall_c, 20, 0.5, 3)
 

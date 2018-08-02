@@ -50,16 +50,18 @@ pyengine_set_mesh_scale(PyObject *self, PyObject *args) {
 
 static PyObject*
 pyengine_create_primitive(PyObject *self, PyObject *args) {
+    char* primitive_name;
     char* primitive_type;
     char* texture_name;
     float x, y, z;
-    if (!PyArg_ParseTuple(args, "ssfff", &primitive_type, &texture_name, &x, &y, &z)) {
+    if (!PyArg_ParseTuple(args, "sssfff", &primitive_name, &primitive_type, &texture_name, &x, &y, &z)) {
         return NULL;
     }
+    std::string str_primitive_name(primitive_name);
     std::string str_primitive_type(primitive_type);
     std::string str_texture_name(texture_name);
-    //("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
     unsigned int instance_id = storage->instances.new_primitive_instance(
+        str_primitive_name,
         str_primitive_type, 
         str_texture_name, 
         glm::vec3(x, y, z)

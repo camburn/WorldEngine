@@ -321,18 +321,18 @@ int main(int argc, char *argv[]) {
     state.update_state();
     InstanceManager instances{state, texture_manager};
 
-    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
-    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
-    unsigned int floor_index = instances.new_primitive_instance("Plane", "wooden_floor", glm::vec3(0, 0, 0));
-    instances.new_primitive_instance("Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
+    instances.new_primitive_instance("Cube1", "Cube", "wooden_crate", glm::vec3(-1, 0.5, -1));
+    instances.new_primitive_instance("Cube2", "Cube", "wooden_crate", glm::vec3(-2, 0.5, 0));
+    unsigned int floor_index = instances.new_primitive_instance("Floor", "Plane", "wooden_floor", glm::vec3(0, 0, 0));
+    instances.new_primitive_instance("Cube3", "Cube", "wooden_crate", glm::vec3(-1, 1.5, -2));
     unsigned int light_index = instances.new_primitive_instance(
-        "Cube", glm::vec3(0,5,0), glm::vec3(1,1,1), false
+        "direction_light", "Cube", glm::vec3(0,5,0), glm::vec3(1,1,1), false
     );
     instances.update_instance_scale(light_index, glm::vec3(0.25, 0.25, 0.25));
     instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
     unsigned int point_light_index = instances.new_primitive_instance(
-        "Cube", glm::vec3(2,2,2), glm::vec3(1,1,1), false
+        "point_light", "Cube", glm::vec3(2,2,2), glm::vec3(1,1,1), false
     );
     instances.update_instance_scale(point_light_index, glm::vec3(0.25, 0.25, 0.25));
 
