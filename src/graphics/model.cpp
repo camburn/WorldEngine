@@ -94,10 +94,26 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         // TODO: Handle all texture types
+
+        aiColor3D ambient (0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_AMBIENT, ambient);
+
+        aiColor3D color (0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+
+        aiColor3D specular (0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_SPECULAR, specular);
+
+        aiColor3D emissive (0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive);
+
+        float opacity = 0.0f;
+        material->Get(AI_MATKEY_OPACITY, opacity);
+
         // Diffuse Maps
         vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        // Texture Maps
+        // Specular Maps
         vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 

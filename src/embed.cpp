@@ -343,6 +343,8 @@ int main(int argc, char *argv[]) {
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
+    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(3, 0, 3));
+
     assign_managers(state, instances);
 
     int num_lines = 1;
