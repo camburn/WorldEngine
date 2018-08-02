@@ -34,7 +34,7 @@ int window_width = 1920;
 int window_height = 1080;
 
 void camera_settings(bool *p_open) {
-    const float   f32_zero = 0.0f, f32_one = 25.0f;
+    const float f32_zero = 0.0f, f32_one = 25.0f;
 
     if (!ImGui::Begin("Settings", p_open))
 	{

@@ -66,6 +66,10 @@ std::string Instance::get_type() {
     return name;
 }
 
+std::string Instance::get_name() {
+    return name;
+}
+
 glm::mat4 Instance::get_model_matrix() {
     if (invalid_model_matrix) {
         model = glm::mat4(1.0f);
@@ -104,9 +108,11 @@ PrimitiveInstance::PrimitiveInstance(
     glm::vec3 rot,
     glm::vec3 scale,
     GLuint program,
+    std::string type,
     std::string name
 ): 
     Instance(glm::vec3(0.25, 0.25, 0.25), pos, rot, scale, name, use_shading),
+    type(type),
     mesh_id(mesh_id),
     mesh_array_size(mesh_array_size),
     tex_id(tex_id) {
@@ -121,10 +127,12 @@ PrimitiveInstance::PrimitiveInstance(
     glm::vec3 rot,
     glm::vec3 scale,
     GLuint program,
+    std::string type,
     std::string name,
     bool use_shading = true
 ): 
     Instance(uniform_color, pos, rot, scale, name, use_shading),
+    type(type),
     mesh_id(mesh_id),
     mesh_array_size(mesh_array_size),
     program(program) {
@@ -184,6 +192,7 @@ InstanceManager::InstanceManager(State &state, TextureManager &texture_manager)
 }
 
 unsigned int InstanceManager::new_primitive_instance(
+        std::string name,
         std::string type, 
         std::string texture_name, 
         glm::vec3 position
@@ -197,13 +206,15 @@ unsigned int InstanceManager::new_primitive_instance(
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1),
         program,
-        type
+        type,
+        name
     )); 
     
     return instances.size() - 1;
 }
 
 unsigned int InstanceManager::new_primitive_instance(
+        std::string name,
         std::string type, 
         glm::vec3 position, 
         glm::vec3 color,
@@ -219,6 +230,7 @@ unsigned int InstanceManager::new_primitive_instance(
         glm::vec3(1, 1, 1),
         program,
         type,
+        name,
         use_shading
     )); 
     
@@ -345,4 +357,43 @@ void InstanceManager::draw_depth_map() {
     }
     state.renderer.active().set_uniform("cube_matrix", false);
     // For instance - draw
+}
+
+glm::vec3 widget_vertex3(string name, glm::vec3 value) {
+    float output[3] {value.x, value.y, value.z};
+    ImGui::PushItemWidth(160);
+    ImGui::InputFloat3(name.c_str(), output);
+    ImGui::PopItemWidth();
+    return glm::vec3(output[0], output[1], output[2]);
+}
+
+void InstanceManager::draw_interface(bool* p_open) {
+    if (!ImGui::Begin("Instances", p_open, ImVec2(125, 200))) {
+        ImGui::End();
+        return;
+    }
+    int count = 0;
+    for (auto &prim: instances) {
+        std::string node_name = prim->get_name();
+        if (ImGui::TreeNode(node_name.c_str())) {
+            
+            glm::vec3 pos = prim->get_position();
+            glm::vec3 rot = prim->get_rotation();
+            glm::vec3 scale = prim->get_scale();
+
+            glm::vec3 new_value;
+            new_value = widget_vertex3("Position", pos);
+            if (new_value != pos) { prim->set_position(new_value); }
+
+            new_value = widget_vertex3("Rotation", rot);
+            if (new_value != rot) { prim->set_rotation(new_value); }
+
+            new_value = widget_vertex3("Scale", scale);
+            if (new_value != scale) { prim->set_scale(new_value); }
+
+            ImGui::TreePop();
+        }
+        count ++;
+    }
+    ImGui::End();
 }
