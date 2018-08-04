@@ -34,14 +34,22 @@ struct Texture {
     aiString path;
 };
 
+struct MeshMaterial {
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    glm::vec3 emissive;
+    float opacity;
+};
+
 class Mesh {
 public:
     vector<Vertex> vertices;
     vector<GLuint> indices;
     vector<Texture> textures;
 
-    Mesh(vector<Vertex> vertices, vector<GLuint> indices, 
-         vector<Texture> textures);
+    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures);
+    Mesh(MeshMaterial material, vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures);
     Mesh(int max_vertices, bool use_model_buffer=false, string name="Default");
     void Init();
     int UpdateModelMatrix(int start_bytes, glm::mat4 model_matrix);
@@ -50,6 +58,7 @@ public:
     int CreateUniformBlock(GLuint shader_id);
     int AppendData(vector<Vertex> vertices, vector<GLuint> indices);
     void Draw(GLuint shader);
+    MeshMaterial material;
 private:
     GLuint VAO, VBO, EBO, MBO, UBO;
     bool fixed = false;

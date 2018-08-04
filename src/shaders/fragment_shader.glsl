@@ -187,6 +187,6 @@ void main(){
     if (use_uniform_color) {
           color = (vec4(uniform_color, 1) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
     } else {
-        color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
+        color = (texture(texture_diffuse1, TexCoord) + vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
     }
 }

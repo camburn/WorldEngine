@@ -316,7 +316,7 @@ int main(int argc, char *argv[]) {
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
 
-    State state(renderer);
+    State state ( renderer );
     state.create_point_light(glm::vec3(1, 1, 2));
     state.update_state();
     InstanceManager instances{state, texture_manager};
@@ -343,7 +343,8 @@ int main(int argc, char *argv[]) {
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
-    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(3, 0, 3));
+    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 3));
+    instances.update_instance_scale(tree_a, glm::vec3(0.75f, 0.75f, 0.75f));
 
     assign_managers(state, instances);
 

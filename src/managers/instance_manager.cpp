@@ -204,7 +204,7 @@ MeshInstance::MeshInstance(
 }
 
 void MeshInstance::draw(State &state) {
-    model.Draw(state.renderer.active().get_shader_id());
+    model.Draw(state, state.renderer.active().get_shader_id());
 }
 
 

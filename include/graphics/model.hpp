@@ -15,15 +15,16 @@ using namespace std;
 #include <assimp/postprocess.h>
 #include "graphics/mesh.hpp"
 #include "graphics/buffers.hpp"
+//#include "managers/state_manager.hpp"
 
-
-//vector<Texture> textures_loaded;
+class State;
 
 class Model {
 public:
     Model();
     Model(std::string path, std::string filename);
     Model(const char* path, const char* filename);
+    void Draw(State &state, GLuint shader);
     void Draw(GLuint shader);
 private:
     vector<Mesh> meshes;

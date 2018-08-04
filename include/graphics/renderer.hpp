@@ -72,7 +72,7 @@ private:
     std::unordered_map<GLuint, Shader*> shader_id_map;
 };
 
-GLuint load_texture(string file, string path) ;
+GLuint load_texture(string file, string path);
 
 namespace primitives {
     GLuint cube_mesh();

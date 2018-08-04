@@ -28,7 +28,7 @@ void State::update_state() {
     renderer.active().set_uniform("lightPointPos", State::get_point_light(0).get_position());
     renderer.active().set_uniform("lightPos", light_pos);
     renderer.active().set_uniform("viewPos", view_pos);
-    renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
+    renderer.active().set_uniform("objectColor", glm::vec3(0.0f));
     renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
 
     renderer.active().set_uniform("pcf_samples", &pcf_samples, U_INT);

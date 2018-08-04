@@ -24,10 +24,32 @@ A mesh also has a material (per mesh) that has the following attributes:
  - shininess
 */
 
-Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures) {
-    this->vertices = vertices;
-    this->indices = indices;
-    this->textures = textures;
+Mesh::Mesh(
+    vector<Vertex> vertices,
+    vector<GLuint> indices,
+    vector<Texture> textures
+    ) : 
+        material(material),
+        vertices(vertices),
+        indices(indices),
+        textures(textures) 
+    {
+    this->SetupMesh();
+    this->BufferData();
+    this->fixed = true;
+}
+
+Mesh::Mesh(
+    MeshMaterial material,
+    vector<Vertex> vertices,
+    vector<GLuint> indices,
+    vector<Texture> textures
+    ) : 
+        material(material),
+        vertices(vertices),
+        indices(indices),
+        textures(textures)
+    {
     this->SetupMesh();
     this->BufferData();
     this->fixed = true;
