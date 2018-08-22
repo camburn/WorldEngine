@@ -18,7 +18,9 @@ Model::Model(const char* path, const char* filename) {
 void Model::Draw(State &state, GLuint shader) {
 //void Model::Draw(GLuint shader) {
     for (Mesh mesh: meshes) {
-        state.renderer.active().set_uniform("objectColor", mesh.material.ambient);
+        if (state.renderer.active().get_shader_name().compare("default") == 0) {
+            state.renderer.active().set_uniform("objectColor", mesh.material.ambient);
+        }
         mesh.Draw(shader);
     }
 }

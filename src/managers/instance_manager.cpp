@@ -92,6 +92,23 @@ bool Instance::get_shading_status() {
     return use_shading;
 }
 
+bool Instance::get_render_status() {
+    return render_enabled;
+}
+
+void Instance::set_texture_status(bool status) {
+    use_texture = status;
+}
+
+void Instance::set_shading_status(bool status) {
+    use_shading = status;
+}
+
+void Instance::set_render_status(bool status) {
+    render_enabled = status;
+}
+
+
 glm::vec3 Instance::get_uniform_color() {
     return uniform_color;
 }
@@ -198,9 +215,11 @@ MeshInstance::MeshInstance(
         bool use_shading
     ): 
         Instance(glm::vec3(0.25, 0.25, 0.25), position, rotation, scale, name, use_shading),
-        model(path, filename) {
-            use_shading = true;
-            use_texture = true;
+        model(path, filename) 
+    {
+        
+        use_shading = true;
+        use_texture = true;
 }
 
 void MeshInstance::draw(State &state) {
@@ -324,6 +343,9 @@ void InstanceManager::draw() {
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
+        if (!prim->get_render_status()) {
+            continue;
+        }
         glm::mat4 mvp = prim->get_mvp_matrix(model_view_projection);
         glm::mat3 normal_mat = prim->get_normal_matrix();
         state.renderer.pre_draw();
@@ -360,6 +382,9 @@ void InstanceManager::draw_depth_map() {
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
+        if (!prim->get_render_status()) {
+            continue;
+        }
         state.renderer.active().set_uniform("model", prim->get_model_matrix());
         prim->draw(state);
     }
@@ -385,6 +410,9 @@ void InstanceManager::draw_depth_map() {
         }
         
         for (auto &prim: instances) {
+            if (!prim->get_render_status()) {
+                continue;
+            }
             state.renderer.active().set_uniform("model", prim->get_model_matrix());
             prim->draw(state);
         }
@@ -429,5 +457,90 @@ void InstanceManager::draw_interface(bool* p_open) {
         }
         count ++;
     }
+    ImGui::End();
+}
+
+void InstanceManager::draw_instance_window(bool* p_open) {
+    if (!ImGui::Begin("Instances", p_open, ImVec2(600, 500))) {
+        ImGui::End();
+        return;
+    }
+
+    static int line = 50;
+    char text_input_buffer[50];
+    bool goto_line = ImGui::Button("Search");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    goto_line |= ImGui::InputText("##Line", text_input_buffer, 0, 0);
+    ImGui::PopItemWidth();
+
+    static int selected = -1;
+    { // Selection bar
+        ImGui::BeginChild("InstanceSelection", ImVec2(200, 0), false);
+        int counter = 0;
+        for (auto &prim: instances) {
+            std::string node_name = prim->get_name();
+            if (ImGui::Selectable(node_name.c_str(), selected == counter)) {
+                selected = counter;
+            }
+            counter ++;
+        }
+        ImGui::EndChild();
+    }
+    ImGui::SameLine();
+    { // Instance data
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        ImGui::BeginChild("InstanceDetails", ImVec2(0,0), true); 
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Menu"))
+            {
+                //ShowExampleMenuFile();
+                // Insert menu functions here
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        ImGui::Columns(2);
+        // Instance data here
+        if (selected > -1) {
+            auto &instance = instances[selected];
+
+            ImGui::Text(instance->get_name().c_str());
+
+            glm::vec3 pos = instance->get_position();
+            glm::vec3 rot = instance->get_rotation();
+            glm::vec3 scale = instance->get_scale();
+
+            glm::vec3 new_value;
+            new_value = widget_vertex3("Position", pos);
+            if (new_value != pos) { instance->set_position(new_value); }
+
+            new_value = widget_vertex3("Rotation", rot);
+            if (new_value != rot) { instance->set_rotation(new_value); }
+
+            new_value = widget_vertex3("Scale", scale);
+            if (new_value != scale) { instance->set_scale(new_value); }
+            ImGui::NextColumn();
+            ImGui::Text("Test");
+            bool texture_status = instance->get_texture_status();
+            ImGui::Checkbox("Texture Status", &texture_status);
+            instance->set_texture_status(texture_status);
+            bool shader_status = instance->get_shading_status();
+            ImGui::Checkbox("Shader Status", &shader_status);
+            instance->set_shading_status(shader_status);
+            bool render_status = instance->get_render_status();
+            ImGui::Checkbox("Render Status", &render_status);
+            instance->set_render_status(render_status);
+
+        } else {
+            // Nothing is selected
+        }
+        // End instance data
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+    }
+
+    //ImGui::TreePop();
     ImGui::End();
 }

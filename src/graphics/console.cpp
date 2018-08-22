@@ -378,7 +378,7 @@ void MenuParts(bool* p_open, State &state, InstanceManager &instance_manager) {
         state.light_settings(&show_settings);
     }
     if (show_instances) {
-        instance_manager.draw_interface(&show_instances);
+        instance_manager.draw_instance_window(&show_instances);
     }
 }
 

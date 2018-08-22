@@ -10,6 +10,31 @@ GLuint vertice_count2;
 GLuint EBO;
 
 
+/* -- EXAMPLE DRAWING -- 
+
+// In Setup
+LoadShapeFile("./assets/shapefiles/Australia.shp");
+
+// In Main Loop
+// ========= SHAPE DRAWING =========
+{
+    glUseProgram(simple_program);
+    glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
+    glm::mat4 plane_model = glm::mat4(1.0f);
+    rotated_view = getView();
+
+    glm::mat4 mvp = Projection * rotated_view * plane_model;
+    // Load camera to OpenGL
+    renderer.active().set_uniform("MVP", mvp);
+
+    draw_shapes();
+}
+// ========= END SHAPE DRAWING =========
+frame_section("Shape Drawing", glfwGetTime());
+
+*/
+
+
 template<typename Iter>
 Iter removeDuplicates(Iter begin,Iter end)
 {

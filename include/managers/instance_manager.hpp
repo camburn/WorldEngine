@@ -74,6 +74,11 @@ public:
 
     bool get_texture_status();
     bool get_shading_status();
+    bool get_render_status();
+
+    void set_texture_status(bool status);
+    void set_shading_status(bool status);
+    void set_render_status(bool status);
 
     std::string get_type();
     std::string get_name();
@@ -87,6 +92,7 @@ protected:
     glm::vec3 uniform_color;
     bool use_shading;
     bool use_texture;
+    bool render_enabled = true;
 
     glm::vec3 position = glm::vec3(1.0f);
     glm::vec3 rotation = glm::vec3(1.0f);
@@ -149,6 +155,10 @@ public:
 
 private:
     Model model;
+    // A mesh instance can comprise of one or more meshes
+    vector<Mesh> meshes;
+    // Each mesh has its own material
+    vector<Material> materials;
 };
 
 
@@ -173,6 +183,7 @@ public:
     glm::vec3 get_instance_position(unsigned int instance_id);
 
     void draw_interface(bool* p_open);
+    void InstanceManager::draw_instance_window(bool* p_open);
      
 private:
     State &state;

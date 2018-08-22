@@ -299,14 +299,11 @@ int main(int argc, char *argv[]) {
     }
     UpdateMatrixBuffer();
 
-    LoadShapeFile("./assets/shapefiles/Australia.shp");
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui_ImplGlfwGL3_Init(window, true);
 
-    //io.Fonts->AddFontDefault();
     io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
 
     // Register Key callbacks
@@ -336,15 +333,18 @@ int main(int argc, char *argv[]) {
     );
     instances.update_instance_scale(point_light_index, glm::vec3(0.25, 0.25, 0.25));
 
-    //MeshManager meshes {state, texture_manager};
     unsigned int nano = instances.new_mesh_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
     instances.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
 
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
-    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 3));
+    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 5));
     instances.update_instance_scale(tree_a, glm::vec3(0.75f, 0.75f, 0.75f));
+
+    unsigned int cerberus = instances.new_mesh_instance("cerberus.fbx", "./assets/meshes/cerberus/", glm::vec3(2, 2, 0));
+    instances.update_instance_scale(cerberus, glm::vec3(0.015f, 0.015f, 0.015f));
+    instances.update_instance_rotation(cerberus, glm::vec3(-90.0f, 0, 90));
 
     assign_managers(state, instances);
 
@@ -398,6 +398,7 @@ int main(int argc, char *argv[]) {
     float last_frame_time = glfwGetTime();
 
     do {
+        frame_section("Swap Buffer", glfwGetTime());
         float current_frame_time = glfwGetTime();
         float delta_time = current_frame_time - last_frame_time;
         last_frame_time = current_frame_time;
@@ -473,23 +474,8 @@ int main(int argc, char *argv[]) {
         instances.draw();
         frame_section("Instance Drawing", glfwGetTime());
 
-        // ========= MODEL DRAWING =========
+        // ========= END MODEL DRAWING =========
 
-        // ========= SHAPE DRAWING =========
-        {
-            glUseProgram(simple_program);
-            glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
-            glm::mat4 plane_model = glm::mat4(1.0f);
-            rotated_view = getView();
-
-            glm::mat4 mvp = Projection * rotated_view * plane_model;
-            // Load camera to OpenGL
-            renderer.active().set_uniform("MVP", mvp);
-
-            draw_shapes();
-        }
-        // ========= END SHAPE DRAWING =========
-        frame_section("Shape Drawing", glfwGetTime());
         // ========= SPRITE DRAWING =========
         {
             renderer.activate("sprite");
@@ -549,6 +535,7 @@ int main(int argc, char *argv[]) {
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         }
         // ========= END INTERFACE DRAWING =========
+        frame_section("Interface Drawing", glfwGetTime());
 
         glfwSwapBuffers(window);
     } 

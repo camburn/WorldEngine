@@ -21,6 +21,9 @@ public:
     GLuint get_shader_id() {
         return shader_id;
     }
+    std::string get_shader_name() {
+        return name;
+    }
     void set_uniform(std::string name, glm::mat4 value);
     void set_uniform(std::string name, glm::mat3 value);
     void set_uniform(std::string name, glm::vec4 value);
