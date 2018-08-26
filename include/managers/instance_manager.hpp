@@ -183,7 +183,7 @@ public:
     glm::vec3 get_instance_position(unsigned int instance_id);
 
     void draw_interface(bool* p_open);
-    void InstanceManager::draw_instance_window(bool* p_open);
+    void draw_instance_window(bool* p_open);
      
 private:
     State &state;

@@ -1,5 +1,8 @@
 #include "graphics/buffers.hpp"
 
+#define SSBO_BINDING_UNIFORMS 1
+#define SSBO_DEFAULT_SIZE 4096*1024  //4MB
+
 GLuint BufferMeshDataVNT(const GLfloat *mesh_data, int size) {
 	// Create our VAO
 	GLuint VertexArrayID;
@@ -199,4 +202,22 @@ TextureBuffer DepthCubeMapBuffer(GLuint width=1024, GLuint height=1024) {
 
 	TextureBuffer texture_buffer {depthMapFBO, depthMap};
     return texture_buffer;
+}
+
+GLuint _create_ssbo(int size) {
+    GLuint ssbo_id;
+    glGenBuffers(1, &ssbo_id);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_UNIFORMS, ssbo_id);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    return ssbo_id;
+};
+
+GLuint create_ssbo() {
+    return _create_ssbo(SSBO_DEFAULT_SIZE);
+}
+
+GLuint create_ssbo(int size) {
+    return _create_ssbo(size);
 }

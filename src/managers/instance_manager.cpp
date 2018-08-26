@@ -41,12 +41,12 @@ void Material::set_shininess(float shininess) {
 
 
 Instance::Instance(
-        vec3 uniform_color = glm::vec3(1,1,1),
-        glm::vec3 pos = glm::vec3(0,0,0),
-        glm::vec3 rot = glm::vec3(0,0,0),
-        glm::vec3 scale = glm::vec3(1,1,1),
-        std::string name = std::string("Default"),
-        bool use_shading = true 
+        vec3 uniform_color,
+        glm::vec3 pos,
+        glm::vec3 rot,
+        glm::vec3 scale,
+        std::string name,
+        bool use_shading
     ): 
         uniform_color(uniform_color),
         position(pos),

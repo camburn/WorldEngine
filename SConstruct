@@ -5,7 +5,10 @@ import platform
 import re
 import yaml
 
-env = Environment(TARGET_ARCH='x86')
+env = Environment(
+    TARGET_ARCH='x86_64',
+    CXX="clang++"
+)
 mode = ARGUMENTS.get('target', 'debug')
 
 def env_substitute_constructor(loader, node):
@@ -36,7 +39,8 @@ else:
 
 env.Append(
     CXXFLAGS=data['compile_flags'],
-    LINKFLAGS=data['link_flags']
+    LINKFLAGS=data['link_flags'],
+    ENV={'TERM': os.environ['TERM']}
 )
 if mode == 'debug':
     print('Building Debug Version')
@@ -51,5 +55,5 @@ env.Program(
     Glob('extern/imgui/*.cpp') + Glob('build/*.cpp') + Glob('build/**/*.cpp') + Glob('build/graphics/**/*.cpp'),
     CPPPATH=data['include_dirs'],
     LIBS=data['libs'],
-    LIBPATH= data['lib_paths']
+    LIBPATH=data['lib_paths']
 )

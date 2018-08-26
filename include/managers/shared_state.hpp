@@ -5,6 +5,15 @@
 #ifndef SHARED_STATE_H
 #define SHARED_STATE_H
 
+/*
+Idea is the following:
+> frame_start
+> set all uniform state
+> Buffer all state
+> Render frame
+> frame_end
+*/
+
 class InstanceUniforms {
 public:
     glm::mat4 model_matrix;
@@ -20,7 +29,7 @@ public:
 class SharedState {
 public:
     SharedState();
-    
+
 private:
     struct Common {
         // Camera
@@ -30,8 +39,6 @@ private:
         float far_plane;
         
         // Lights
-        
-
         // Direction Light
         glm::mat4 light_direction_projection_matrix;
         glm::mat4 light_direction_view_matrix;
@@ -48,12 +55,17 @@ private:
         unsigned int point_shadow_cube_map_sampler_id;
         unsigned int pcf_samples;
         float shadow_map_bias;
-        float cube_mape_bias;
+        float cube_map_bias;
 
         // Debug flags
         bool debug_draw_normals;
         bool debug_draw_texcoords;
         bool debug_draw_lighting;
+
+        // Arrays
+
+        // Only the last array can be dynamic size in OpenGL
+        std::vector<InstanceUniforms> instance_uniforms;
     };
 
     struct DepthMapState {

@@ -12,6 +12,8 @@ State::State(Renderer &state_renderer, glm::mat4 &proj_mat, glm::mat4 &view_mat)
 
 void State::update_state() {
     renderer.activate("default");
+    // Set world state
+    
     renderer.active().set_uniform(
         "debug_draw_normals", 
         DebugGetFlag("render:draw_normals")
