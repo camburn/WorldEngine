@@ -11,9 +11,28 @@ State::State(Renderer &state_renderer, glm::mat4 &proj_mat, glm::mat4 &view_mat)
 }
 
 void State::update_state() {
+
+    state.common.perspective_matrix = projection_matrix;
+    state.common.view_matrix = view_matrix;
+    //state.common.view_pers_matrix = projection_matrix ;
+
+    state.common.light_point_pos = get_point_light(0).get_position();
+    state.common.light_direction_pos = light_pos;
+    //state.common.light_direction_
+    state.common.pcf_samples = (float)pcf_samples;
+    state.common.shadow_map_bias = shadow_map_bias;
+    state.common.cube_map_bias = cube_map_bias;
+
+    state.common.debug_draw_normals = (float)DebugGetFlag("render:draw_normals");
+    state.common.debug_draw_texcoords = (float)DebugGetFlag("render:disable_lighting");
+    state.common.debug_draw_lighting = (float)DebugGetFlag("render:draw_texcoords");
+    //state.common. = (float)use_point_shadow;
+
+
+
     renderer.activate("default");
     // Set world state
-    
+
     renderer.active().set_uniform(
         "debug_draw_normals", 
         DebugGetFlag("render:draw_normals")

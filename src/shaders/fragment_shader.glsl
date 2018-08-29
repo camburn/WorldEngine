@@ -1,4 +1,4 @@
-#version 330 core
+#version 430
 
 struct PointLight {
     vec3 position;
@@ -31,6 +31,46 @@ struct Material {
     sampler2D specular;
 };
 
+struct InstanceUniforms {
+    mat4 model_matrix;
+    mat4 normal_matrix;
+    mat4 mvp_matrix;
+    vec3 object_color;
+    float diffuse_texture_sampler_id;
+    float use_shadows;
+    float use_point_shadow;
+    float use_direction_shadow;
+};
+
+layout(std430, binding=1) buffer shader_uniforms {
+    mat4 perspective_matrix;
+    mat4 view_matrix;
+    vec3 view_pers_matrix;
+    float far_plane;
+    
+    mat4 light_direction_projection_matrix;
+    mat4 light_direction_view_matrix;
+    mat4 light_direction_vp_matrix; // view pers matrix
+    vec3 light_pos;
+    vec3 light_color;
+
+    vec3 light_point_pos;
+    vec3 light_point_color;
+
+    float direction_shadow_map_sampler_id;
+    float point_shadow_cube_map_sampler_id;
+    float pcf_samples;
+    float shadow_map_bias;
+    float cube_map_bias;
+
+    float debug_draw_normals;
+    float debug_draw_texcoords;
+    float debug_draw_lighting;
+
+    // Arrays
+    InstanceUniforms instance_uniforms[];
+};
+
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos; // In world space
@@ -43,30 +83,6 @@ uniform Material material;
 uniform sampler2D texture_diffuse1;
 uniform sampler2D shadow_map;
 uniform samplerCube shadow_cube_map;
-uniform vec3 objectColor;
-uniform vec3 lightColor;
-uniform vec3 lightPos;
-uniform vec3 lightPointPos;
-uniform vec3 viewPos;
-
-uniform bool debug_draw_texcoords = false;
-uniform bool debug_draw_normals = false;
-uniform bool debug_disable_lighting = false;
-
-uniform bool use_point_shadow = true;
-uniform bool use_direction_shadow = true;
-uniform bool use_shadows = false;
-
-uniform bool use_uniform_color = false;
-uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
-
-uniform int pcf_samples = 1;
-uniform float shadow_map_bias = 0.00005f;
-uniform float cube_map_bias = 0.05f;
-
-uniform float ambience_strength = 0.2f;
-
-uniform float far_plane;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
     vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;

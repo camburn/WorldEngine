@@ -20,15 +20,13 @@ public:
     glm::mat4 normal_matrix;
     glm::mat4 mvp_matrix;  // model view perpective matrix
     glm::vec3 object_color;
-    unsigned int diffuse_texture_sampler_id;
-    bool use_shadows;
-    bool use_point_shadow;
-    bool use_direction_shadow;
+    float diffuse_texture_sampler_id;
+    float use_shadows;
+    float use_point_shadow;
+    float use_direction_shadow;
 };
 
 class SharedState {
-public:
-    SharedState();
 
 private:
     struct Common {
@@ -43,24 +41,24 @@ private:
         glm::mat4 light_direction_projection_matrix;
         glm::mat4 light_direction_view_matrix;
         glm::mat4 light_direction_vp_matrix;  // view perspective matrix
-        glm::vec3 light_pos;
-        glm::vec3 light_color;
+        glm::vec3 light_direction_pos;
+        glm::vec3 light_direction_color;
 
         // Point Light
         glm::vec3 light_point_pos;
         glm::vec3 light_point_color;
 
         // Shadows
-        unsigned int direction_shadow_map_sampler_id;
-        unsigned int point_shadow_cube_map_sampler_id;
-        unsigned int pcf_samples;
+        float direction_shadow_map_sampler_id;
+        float point_shadow_cube_map_sampler_id;
+        float pcf_samples;
         float shadow_map_bias;
         float cube_map_bias;
 
         // Debug flags
-        bool debug_draw_normals;
-        bool debug_draw_texcoords;
-        bool debug_draw_lighting;
+        float debug_draw_normals;
+        float debug_draw_texcoords;
+        float debug_draw_lighting;
 
         // Arrays
 
@@ -76,8 +74,10 @@ private:
         glm::mat4 light_cube_matrix[8];
     };
 
+public:
+    SharedState() {};
     Common common;
-    std::vector<InstanceUniforms> uniforms;
+
 };
 
 #endif

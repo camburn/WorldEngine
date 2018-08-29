@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "graphics/renderer.hpp"
 #include "graphics/debug.hpp"
-
+#include "managers/shared_state.hpp"
 
 #ifndef STATE_H
 #define STATE_H
@@ -106,6 +106,7 @@ public:
     bool use_direction_shadow = true;
 
 private:
+    SharedState state;
     int pcf_samples = 1;
     float shadow_map_bias = 0.0005f;
     float cube_map_bias = 0.05f;
