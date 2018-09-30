@@ -5,10 +5,8 @@ import platform
 import re
 import yaml
 
-env = Environment(
-    TARGET_ARCH='x86_64',
-    CXX="clang++"
-)
+env = Environment()
+
 mode = ARGUMENTS.get('target', 'debug')
 
 def env_substitute_constructor(loader, node):
@@ -21,13 +19,20 @@ yaml.add_implicit_resolver("!env_substitute", pattern)
 yaml.add_constructor('!env_substitute', env_substitute_constructor)
 
 if platform.system() == 'Windows':
-    with open('config/windows.yaml', 'r') as f:
+    env.Append(
+        TARGET_ARCH='x86_64'
+    )
+    with open('config/windows_x64.yaml', 'r') as f:
         try:
             data = yaml.load(f.read())
         except KeyError as err:
             print("Required build environment variable missing", err)
             sys.exit(1)
 elif platform.system() == 'Linux':
+    env.Append(
+        TARGET_ARCH='x86_64',
+        CXX="clang++"
+    )
     with open('config/linux.yaml', 'r') as f:
         try:
             data = yaml.load(f.read())
@@ -52,7 +57,7 @@ if mode == 'debug':
 env.VariantDir('build', 'src', duplicate=0)
 env.Program(
     'bin/WorldEngine',
-    Glob('extern/imgui/*.cpp') + Glob('build/*.cpp') + Glob('build/**/*.cpp') + Glob('build/graphics/**/*.cpp'),
+    Glob('extern/glfw-3.2.1/src/*.c') + Glob('extern/imgui/*.cpp') + Glob('build/*.cpp') + Glob('build/**/*.cpp') + Glob('build/graphics/**/*.cpp'),
     CPPPATH=data['include_dirs'],
     LIBS=data['libs'],
     LIBPATH=data['lib_paths']

@@ -20,7 +20,7 @@ include_dirs:
  - extern/imgui/
  - $(EXTERNAL_LIBS)
  - $(EXTERNAL_LIBS)/assimp-4.0.1/include
- - $(EXTERNAL_LIBS)/freetype/include/freetype2
+ - $(EXTERNAL_LIBS)/freetype/include
  - $(EXTERNAL_LIBS)/glew-2.0.0/include
  - $(EXTERNAL_LIBS)/glfw-3.2.1.bin.WIN32/include
  - $(EXTERNAL_LIBS)/glm
@@ -50,7 +50,7 @@ lib_paths:
  - $(WIN_KIT_DIR)/Windows Kits/10/Lib/10.0.14393.0/um/x86/
  - $(EXTERNAL_LIBS)/glfw-3.2.1.bin.WIN32/lib-vc2015/
  - $(EXTERNAL_LIBS)/glew-2.0.0/lib/Release/Win32/
- - $(EXTERNAL_LIBS)/soil/lib/
- - $(EXTERNAL_LIBS)/freetype/lib/
+ - $(EXTERNAL_LIBS)/soil/lib/x86/
+ - $(EXTERNAL_LIBS)/freetype/win32/
  - $(EXTERNAL_LIBS)/assimp-4.0.1/lib/
  - $(EXTERNAL_LIBS)/shapelib-1.4.0/

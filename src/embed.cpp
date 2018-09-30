@@ -24,7 +24,6 @@ Python function calls that can be called from C.
 #include "graphics/console.hpp"
 #include "graphics/model.hpp"
 #include "graphics/debug.hpp"
-#include "graphics/shapefile_loader.hpp"
 #include "graphics/planes.hpp"
 #include "graphics/renderer.hpp"
 #include "tools/profiler.hpp"
