@@ -12,51 +12,37 @@ State::State(Renderer &state_renderer, glm::mat4 &proj_mat, glm::mat4 &view_mat)
 
 void State::update_state() {
 
-    state.common.perspective_matrix = projection_matrix;
-    state.common.view_matrix = view_matrix;
-    //state.common.view_pers_matrix = projection_matrix ;
+    state.perspective_matrix = projection_matrix;
+    state.view_matrix = view_matrix;
 
-    state.common.light_point_pos = get_point_light(0).get_position();
-    state.common.light_direction_pos = light_pos;
-    //state.common.light_direction_
-    state.common.pcf_samples = (float)pcf_samples;
-    state.common.shadow_map_bias = shadow_map_bias;
-    state.common.cube_map_bias = cube_map_bias;
+    state.light_point_pos = get_point_light(0).get_position();
+    state.light_point_color = glm::vec3(1.0f);
+    state.light_direction_pos = light_pos;
+    state.light_direction_color = glm::vec3(1.0f);
+    state.view_pos = view_pos;
 
-    state.common.debug_draw_normals = (float)DebugGetFlag("render:draw_normals");
-    state.common.debug_draw_texcoords = (float)DebugGetFlag("render:disable_lighting");
-    state.common.debug_draw_lighting = (float)DebugGetFlag("render:draw_texcoords");
-    //state.common. = (float)use_point_shadow;
+    state.pcf_samples = pcf_samples;
+    state.shadow_map_bias = shadow_map_bias;
+    state.cube_map_bias = cube_map_bias;
+    state.debug_draw_normals = (unsigned int)DebugGetFlag("render:draw_normals");
+    state.debug_draw_texcoords = (unsigned int)DebugGetFlag("render:disable_lighting");
+    state.debug_draw_lighting = (unsigned int)DebugGetFlag("render:draw_texcoords");
 
+    state.use_point_shadows = (unsigned int)use_point_shadow;
+    state.use_direction_shadow = (unsigned int)use_direction_shadow;
 
+    renderer.update_uniforms(state);
 
     renderer.activate("default");
     // Set world state
 
-    renderer.active().set_uniform(
-        "debug_draw_normals", 
-        DebugGetFlag("render:draw_normals")
-    );
-    renderer.active().set_uniform(
-        "debug_draw_texcoords", 
-        DebugGetFlag("render:draw_normals")
-    );
-    renderer.active().set_uniform(
-        "debug_disable_lighting", 
-        DebugGetFlag("render:draw_normals")
-    );
-
-    renderer.active().set_uniform("lightPointPos", State::get_point_light(0).get_position());
-    renderer.active().set_uniform("lightPos", light_pos);
-    renderer.active().set_uniform("viewPos", view_pos);
     renderer.active().set_uniform("objectColor", glm::vec3(0.0f));
-    renderer.active().set_uniform("lightColor", glm::vec3(1.0f));
 
-    renderer.active().set_uniform("pcf_samples", &pcf_samples, U_INT);
-    renderer.active().set_uniform("shadow_map_bias", &shadow_map_bias, U_FLOAT);
-    renderer.active().set_uniform("cube_map_bias", &cube_map_bias, U_FLOAT);
-    renderer.active().set_uniform("use_point_shadow", &use_point_shadow, U_BOOL);
-    renderer.active().set_uniform("use_direction_shadow", &use_direction_shadow, U_BOOL);
+    //renderer.active().set_uniform("pcf_samples", &pcf_samples, U_INT);
+    //renderer.active().set_uniform("shadow_map_bias", &shadow_map_bias, U_FLOAT);
+    //renderer.active().set_uniform("cube_map_bias", &cube_map_bias, U_FLOAT);
+    //renderer.active().set_uniform("use_point_shadow", &use_point_shadow, U_BOOL);
+    //renderer.active().set_uniform("use_direction_shadow", &use_direction_shadow, U_BOOL);
 }
 
 void State::set_light_pos(glm::vec3 pos) {
@@ -186,6 +172,7 @@ void Light::update_position(glm::vec3 new_pos) {
 void State::light_settings(bool* p_open) {
     const float pos_interval = 1.0f;
     const ImS32 s32_one = 1;
+    const ImU32 u32_one = 1;
     const float bias_interval = 0.00005f;
     const float cube_bias_interval = 0.005f;
     if (!ImGui::Begin("Settings", p_open))
@@ -196,8 +183,8 @@ void State::light_settings(bool* p_open) {
     if (ImGui::TreeNode("Direction Light Settings")) {
         ImGui::Checkbox("Cast Shadows", &use_direction_shadow);
         ImGui::Checkbox("Animate", &animate_direction_light);
-        ImGui::InputScalar("PCF Samples",     ImGuiDataType_S32,    &pcf_samples, true ? &s32_one : NULL, NULL, "%u");
-        ImGui::InputScalar("Bias",   ImGuiDataType_Float,  &shadow_map_bias, true ? &bias_interval : NULL);
+        ImGui::InputScalar("PCF Samples", ImGuiDataType_U32, &pcf_samples, true ? &u32_one : NULL, NULL, "%u");
+        ImGui::InputScalar("Bias", ImGuiDataType_Float, &shadow_map_bias, true ? &bias_interval : NULL);
         float X = light_pos.x;
         float Y = light_pos.y;
         float Z = light_pos.z;

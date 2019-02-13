@@ -29,9 +29,9 @@ if platform.system() == 'Windows':
             print("Required build environment variable missing", err)
             sys.exit(1)
 elif platform.system() == 'Linux':
+    env['CXX'] = "clang++"
     env.Append(
-        TARGET_ARCH='x86_64',
-        CXX="clang++"
+        TARGET_ARCH='x86_64'
     )
     with open('config/linux.yaml', 'r') as f:
         try:

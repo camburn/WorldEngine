@@ -322,6 +322,7 @@ static bool show_plane_info = false;
 static bool show_profiler = false;
 static bool show_demo_window = false;
 static bool show_buffers = false;
+static bool show_ssbo_state = false;
 static bool show_settings = false;
 static bool show_instances = false;
 float mouse_world_pos_x = 0.0f;
@@ -345,6 +346,7 @@ void ShowMainMenu(bool* p_open) {
         }
         if (ImGui::BeginMenu("Debug")) {
             ImGui::MenuItem("Profiler", NULL, &show_profiler);
+            ImGui::MenuItem("SSBO State", NULL, &show_ssbo_state);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Settings")) {
@@ -372,6 +374,9 @@ void MenuParts(bool* p_open, State &state, InstanceManager &instance_manager) {
     }
     if (show_buffers) {
         opengl::draw_buffers(&show_buffers);
+    }
+    if (show_ssbo_state) {
+        opengl::draw_ssbo_state(&show_ssbo_state);
     }
     if (show_settings) {
         camera_settings(&show_settings);

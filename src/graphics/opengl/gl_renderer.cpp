@@ -6,6 +6,7 @@ GLuint shadow_map_buffer_id;
 GLuint shadow_map_texture_id;
 GLuint shadow_cube_buffer_id;
 GLuint shadow_cube_texture_id;
+GLuint ssbo_id;
 GLuint depth_map_width = 4096;
 GLuint depth_map_height = 4096;
 int width = 1920;
@@ -74,6 +75,15 @@ void create_common_buffers() {
     TextureBuffer texture_data = DepthCubeMapBuffer(1024, 1024);
     shadow_cube_buffer_id = texture_data.framebuffer;
     shadow_cube_texture_id = texture_data.texture_id;
+    ssbo_id = create_ssbo();
+}
+
+void update_uniforms(float uniform_data[], int uniform_size) {
+    update_ssbo(uniform_data, uniform_size);
+}
+
+void update_uniforms(SharedState &state) {
+    update_ssbo(state);
 }
 
 void activate_common_buffers() {
@@ -82,6 +92,7 @@ void activate_common_buffers() {
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
+    activate_ssbo();
 }
 
 void activate_buffer_cube_shadow_map() {
@@ -90,6 +101,13 @@ void activate_buffer_cube_shadow_map() {
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_cube_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
+}
+
+SharedState output;
+void finish_frame() {
+    output._padding_0 = 22;
+    read_ssbo(&output);
+    int test = 0;
 }
 
 GLFWwindow* get_window() {
@@ -120,6 +138,10 @@ void APIENTRY glDebugOutput(GLenum source,
     if (id == 41) {return;} // Recompiling fragment shader for program 3
     if (id == 42) {return;} // multisampled FBO 0->1
     if (id == 47) {return;} // FS compile took 6.315 ms and stalled the GPU
+
+    // FIXME: this requires fixing
+    if (id == 34) {return;} // Using a blit copy to avoid stalling on glBufferSubData(64, 128) (0kb) to a busy (0-65536) / valid (0-192) buffer object.
+    if (id == 26) {return;} // As above
 
     // TODO: This error message needs to be investigated in Intel GPUs
     if (blit_stall_message) { return; }
@@ -301,12 +323,39 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     return programID;
 }
 
+void draw_ssbo_state(bool* p_open) {
+    if (!ImGui::Begin("SSBO State", p_open))
+    {
+        ImGui::End();
+        return;
+    }
+    ImGui::Text("SSBO State");
+    //SharedState output
+
+
+    ImGui::Text("Direction Shadow : %u", output.pcf_samples);
+    ImGui::Text("Direction Shadow : %f", output.shadow_map_bias);
+
+    ImGui::Text("Direction Shadow: %u", output.use_direction_shadow);
+    ImGui::Text("Point Shadows: %u", output.use_point_shadows);
+
+    ImGui::Text("Debug Normals: %u", output.debug_draw_normals);
+    ImGui::Text("Debug Lighting: %u", output.debug_draw_lighting);
+    ImGui::Text("Debug TexCoords: %u", output.debug_draw_texcoords);
+
+    ImGui::Text("Padding 0: %i", output._padding_0);
+    ImGui::Text("Padding 1: %i", output._padding_1);
+    // ImGui::Text("Padding 2: %i", output._padding_2);
+
+    ImGui::End();
+}
+
 void draw_buffers(bool* p_open) {
     if (!ImGui::Begin("Planes", p_open))
-	{
-		ImGui::End();
-		return;
-	}
+    {
+        ImGui::End();
+        return;
+    }
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
         glActiveTexture(GL_TEXTURE1);

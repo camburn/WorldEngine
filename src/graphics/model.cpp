@@ -32,9 +32,9 @@ int Model::loadModel(const char* path, const char* filename) {
     const aiScene* scene = import.ReadFile(_path + _filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     // NOTE: Consider adding aiProcess_GenNormals on models without normals
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        const char* error_msg = "ERROR:ASSIMP:: In load model\n";
+        const char* error_msg = "ERROR:ASSIMP:: In load model:: ";
         fprintf(stderr, "%s", error_msg);
-        fprintf(stderr, "%s", import.GetErrorString());
+        fprintf(stderr, "%s\n", import.GetErrorString());
         return -1;
     }
     this->directory = _path;

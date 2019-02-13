@@ -17,6 +17,7 @@ using namespace std;
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "managers/data_models.hpp"
 
 class TextureBuffer{
 public:
@@ -32,4 +33,10 @@ void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, 
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 TextureBuffer DepthMapBuffer(GLuint width, GLuint height);
 TextureBuffer DepthCubeMapBuffer(GLuint width, GLuint height);
+void activate_ssbo();
+GLuint create_ssbo();
+GLuint create_ssbo(int size);
+void read_ssbo(SharedState *read_state);
+void update_ssbo(float uniform_data[], int uniform_size);
+void update_ssbo(SharedState state);
 #endif

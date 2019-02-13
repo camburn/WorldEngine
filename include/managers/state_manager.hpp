@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "graphics/renderer.hpp"
 #include "graphics/debug.hpp"
-#include "managers/shared_state.hpp"
+#include "managers/data_models.hpp"
 
 #ifndef STATE_H
 #define STATE_H
@@ -107,8 +107,8 @@ public:
 
 private:
     SharedState state;
-    int pcf_samples = 1;
-    float shadow_map_bias = 0.0005f;
+    unsigned int pcf_samples = 1;
+    float shadow_map_bias = 0.00005f;
     float cube_map_bias = 0.05f;
     GLuint program_id = -1;
     bool invalid_model_view = true;

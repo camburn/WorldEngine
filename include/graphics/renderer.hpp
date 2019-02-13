@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "managers/data_models.hpp"
 #include "graphics/cube.hpp"
 
 #include "graphics/model.hpp"
@@ -63,9 +64,12 @@ public:
     void activate(GLuint id);
     void activate_buffer_cube_shadow_map();
     void pre_draw();
+    void finish_frame();
     GLuint get_shader_id(string name);
     Shader& get_shader(string name);
-    
+    void update_uniforms(float uniform_data[], int uniform_size);
+    void update_uniforms(SharedState &state);
+
 private:
     Shader *ptr_active_shader;
     std::unordered_map<string, Shader> shader_map;

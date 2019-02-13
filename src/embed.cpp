@@ -53,40 +53,19 @@ glm::mat4 rotated_view {1.0f};
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
     if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-        std::cout << "Toggling Draw Normals - " << std::endl;
-        if (debug_draw_normals) {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-            debug_draw_normals = true;
-        }
+        std::cout << "Toggling Draw Normals - ";
+        std::string result = DebugFlagToggle("render:draw_normals");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_T && action == GLFW_PRESS) {
         std::cout << "Toggling Draw Texure Coordinates - " << std::endl;
-        if (debug_draw_texcoords) {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-            debug_draw_texcoords = true;
-        }
+        std::string result = DebugFlagToggle("render:draw_texcoords");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
         std::cout << "Toggling Draw Lighting - " << std::endl;
-        if (debug_disable_lighting) {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-            debug_disable_lighting = true;
-        }
+        std::string result = DebugFlagToggle("render:disable_lighting");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
         std::cout << "Toggling Camera" << std::endl;
@@ -338,8 +317,8 @@ int main(int argc, char *argv[]) {
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
-    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 5));
-    instances.update_instance_scale(tree_a, glm::vec3(0.75f, 0.75f, 0.75f));
+    //unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 5));
+    //instances.update_instance_scale(tree_a, glm::vec3(0.75f, 0.75f, 0.75f));
 
     unsigned int cerberus = instances.new_mesh_instance("cerberus.fbx", "./assets/meshes/cerberus/", glm::vec3(2, 2, 0));
     instances.update_instance_scale(cerberus, glm::vec3(0.015f, 0.015f, 0.015f));
@@ -504,6 +483,7 @@ int main(int argc, char *argv[]) {
             UpdateMatrixBuffer();
             DrawPlanes(sprite_program);
         }
+        renderer.finish_frame();
         // ========= END SPRITE DRAWING =========
         frame_section("Sprite Drawing", glfwGetTime());
         // ========= DEBUG DRAWING =========
