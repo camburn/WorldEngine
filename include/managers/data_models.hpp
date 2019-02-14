@@ -6,14 +6,40 @@
 #ifndef DATA_MODELS_H
 #define DATA_MODELS_H
 
-/*
-Idea is the following:
-> frame_start
-> set all uniform state
-> Buffer all state
-> Render frame
-> frame_end
-*/
+#define MAX_POINT_LIGHTS 10
+
+class PointLightModel {
+public:
+    glm::vec3 position {1.0f};
+
+    glm::vec3 ambience {0.05f};
+    glm::vec3 diffuse {0.8f};
+    glm::vec3 specular {1.0f};
+
+    GLfloat constant {1.0f};
+    GLfloat linear {0.09f};
+    GLfloat quadratic {0.032f};
+
+    GLuint _padding_0 {99};
+};
+
+class DirectionLightModel {
+public:
+    glm::vec3 direction {0.2f, -1.0f, -0.3f};
+    glm::vec3 ambient {0.05f};
+    glm::vec3 diffuse {0.4f};
+    glm::vec3 specular {0.5f};
+};
+
+class Material {
+public:
+    glm::vec3 base_color {1};
+    GLfloat shininess {32.0f};
+    GLuint diffuse_set {1};
+    GLuint specular_set {0};
+    GLint diffuse_texture {0};
+    //GLint specular_texture {0};
+};
 
 class InstanceUniforms {
 public:
@@ -29,7 +55,6 @@ public:
 };
 
 class SharedState {
-
 public:
 
     // **Warning** This structure must match the shader version exactly
@@ -73,6 +98,10 @@ public:
     GLuint _padding_1 {99};
 
     // Arrays
+    GLuint point_light_count {0};
+
+    DirectionLightModel direction_light;
+    PointLightModel point_lights[MAX_POINT_LIGHTS];
 
     // Only the last array can be dynamic size in OpenGL
     //std::vector<InstanceUniforms> instance_uniforms;

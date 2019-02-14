@@ -105,9 +105,7 @@ void activate_buffer_cube_shadow_map() {
 
 SharedState output;
 void finish_frame() {
-    output._padding_0 = 22;
     read_ssbo(&output);
-    int test = 0;
 }
 
 GLFWwindow* get_window() {
@@ -332,11 +330,22 @@ void draw_ssbo_state(bool* p_open) {
     ImGui::Text("SSBO State");
     //SharedState output
 
+    ImGui::Text("Point Shadows: %u", output.point_light_count);
 
     ImGui::Text("Direction Shadow : %u", output.pcf_samples);
-    ImGui::Text("Direction Shadow : %f", output.shadow_map_bias);
+    ImGui::Text("Direction map bias : %f", output.shadow_map_bias);
+    ImGui::Text("Direction Shadow Enabled: %u", output.use_direction_shadow);
+    ImGui::Text("Direction Diffuse: r:%f g:%f b:%f",
+        output.direction_light.diffuse.x,
+        output.direction_light.diffuse.y,
+        output.direction_light.diffuse.z
+    );
+    ImGui::Text("Direction Ambient: r:%f g:%f b:%f",
+        output.direction_light.ambient.x,
+        output.direction_light.ambient.y,
+        output.direction_light.ambient.z
+    );
 
-    ImGui::Text("Direction Shadow: %u", output.use_direction_shadow);
     ImGui::Text("Point Shadows: %u", output.use_point_shadows);
 
     ImGui::Text("Debug Normals: %u", output.debug_draw_normals);

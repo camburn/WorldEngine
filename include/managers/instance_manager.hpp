@@ -11,6 +11,8 @@
 #include "state_manager.hpp"
 #include "texture_manager.hpp"
 
+#include "managers/data_models.hpp"
+
 #ifndef PRIMITIVE_H
 #define PRIMITIVE_H
 #define NULL_TEXTURE 0
@@ -25,20 +27,20 @@ public:
     GLuint specular_texture_sampler_id;
 };
 
-class Material {
+class MaterialOld {
 
 public:
-    Material();
-    Material(
+    MaterialOld();
+    MaterialOld(
         glm::vec3 base_color,
         GLuint diffuse_texture_sampler_id,
         GLuint specular_texture_sampler_id
     );
-    Material(
+    MaterialOld(
         glm::vec3 base_color,
         GLuint diffuse_texture_sampler_id
     );
-    Material(
+    MaterialOld(
         glm::vec3 base_color
     );
     MaterialData get_data();

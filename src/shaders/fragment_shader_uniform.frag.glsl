@@ -1,23 +1,31 @@
 #version 430
 
+#define MAX_POINT_LIGHTS 10
+
+in vec2 TexCoord;
+in vec3 Normal;
+in vec3 FragPos; // In world space
+in vec4 FragPosLightSpace;
+
+out vec4 color;
+
 struct PointLight {
     vec3 position;
-
-    float constant;
-    float linear;
-    float quadratic;
 
     vec3 ambience;
     vec3 diffuse;
     vec3 specular;
 
-    float far_plane;
+    float constant;
+    float linear;
+    float quadratic;
+
+    uint _padding;
 };
 
 struct DirectionLight {
-    vec3 position;
-
-    vec3 ambience;
+    vec3 direction;
+    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
@@ -25,10 +33,10 @@ struct DirectionLight {
 struct Material {
     vec3 base_color;
     float shininess;
-    bool diffuse_set;
-    bool specular_set;
+    uint diffuse_set;
+    uint specular_set;
     sampler2D diffuse;
-    sampler2D specular;
+    //sampler2D specular;
 };
 
 struct InstanceUniforms {
@@ -41,7 +49,7 @@ struct InstanceUniforms {
     float i_use_point_shadow;
     float i_use_direction_shadow;
 
-    float _padding[1];
+    float _padding;
 };
 
 layout(std430, binding=3) buffer shader_uniforms {
@@ -80,42 +88,30 @@ layout(std430, binding=3) buffer shader_uniforms {
     uint _padding_0;
     uint _padding_1;
 
+    uint point_light_count;
+
+    DirectionLight direction_light;
+
     // Arrays
+    
+    PointLight point_lights[MAX_POINT_LIGHTS];
     //InstanceUniforms instance_uniforms[];
 };
 
-in vec2 TexCoord;
-in vec3 Normal;
-in vec3 FragPos; // In world space
-in vec4 FragPosLightSpace;
-
-out vec4 color;
-
-uniform Material material;
-
-uniform sampler2D texture_diffuse1;
 uniform sampler2D shadow_map;
 uniform samplerCube shadow_cube_map;
 uniform vec3 objectColor;
 
-//uniform bool debug_draw_texcoords = false;
-//uniform bool debug_draw_normals = false;
-//uniform bool debug_disable_lighting = false;
-
-//uniform bool use_point_shadow = true;
-//uniform bool use_direction_shadow = true;
 uniform bool use_shadows = false;
 
 uniform bool use_uniform_color = false;
-uniform vec3 uniform_color = vec3( 1.0f, 1.0f, 1.0f);
+uniform vec3 uniform_color = vec3( 1.0, 1.0, 1.0);
 
-//uniform int pcf_samples = 1;
-//uniform float shadow_map_bias = 0.00005f;
-//uniform float cube_map_bias = 0.05f;
+uniform float ambience_strength = 0.2;
 
-uniform float ambience_strength = 0.2f;
+uniform float far_plane = 25.0;
 
-uniform float far_plane;
+uniform Material material;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir) {
     vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -157,8 +153,23 @@ float ShadowCalculation(vec3 fragPos) {
     return 0.0f;
 }
 
-vec3 calc_dir_light() {
-    return vec3(1.0f);
+vec3 calc_dir_light(DirectionLight light, vec3 normal, vec3 view_dir) {
+    vec3 light_direction = normalize(-light.direction);
+    // Calculate diffuse impact by getting dot product between lightDir and the surface normal
+    float diff = max(dot(normal, light_direction), 0.0);
+    // Calc light direction vewctor and reflect vector
+    vec3 reflectDir = reflect(-light_direction, normal);
+    // Calculate Specular component
+    float spec = pow(max(dot(view_dir, reflectDir), 0.0), material.shininess);
+
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
+    vec3 specular = vec3(0.0);
+    if (material.specular_set == 1) {
+        //specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
+    }
+    //return (ambient * diffuse * specular);
+    return (ambient * diffuse);
 }
 
 vec3 calc_point_light(PointLight light, vec3 frag_pos, vec3 normal, vec3 view_dir) {
@@ -178,7 +189,11 @@ vec3 calc_point_light(PointLight light, vec3 frag_pos, vec3 normal, vec3 view_di
     // Combine
     vec3 ambient = light.ambience * vec3(texture(material.diffuse, TexCoord));
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
+    vec3 specular = vec3(1.0);
+    if (material.specular_set == 1) {
+        //specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
+    }
+
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
@@ -187,38 +202,56 @@ vec3 calc_point_light(PointLight light, vec3 frag_pos, vec3 normal, vec3 view_di
 
 void main(){
 
-    //color = vec4(s_use_point_shadows, s_use_direction_shadow, 0, 1);
-    //return;
-
     if (!use_shadows && use_uniform_color) {
         color = vec4(uniform_color, 1);
         _padding_0 = 0;
+        return;
+    }
+    if (s_debug_draw_lighting == 1) {
+        color = (texture(material.diffuse, TexCoord) * vec4(objectColor, 1.0));
+        _padding_1 = 1;
+        return;
+    }
+    if (s_debug_draw_texcoords == 1) {
+        color = vec4(TexCoord, 0.0, 1.0);
+        _padding_1 = 2;
+        return;
+    }
+    if (s_debug_draw_normals == 1) {
+        color = vec4(Normal, 1.0);
+        _padding_1 = 3;
         return;
     }
 
     float specularStrength = 0.5f;
     float shininess = 32.0f;
 
-    //Direction vector from light to fragment
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(s_light_direction_pos - FragPos);
-    // Calculate diffuse impact by getting dot product between lightDir and the surface normal
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * s_light_direction_color;
-    // Calc light direction vewctor and reflect vector
-    vec3 viewDir = normalize(s_view_pos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    // Calculate Specular component
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    vec3 specular = specularStrength * spec * s_light_direction_color;
+    vec3 view_dir = normalize(s_view_pos - FragPos);
+    vec3 normal = normalize(Normal);
+    vec3 light_direction = normalize(s_light_direction_pos - FragPos);
 
-    float direction_shadow = ShadowCalculation(FragPosLightSpace, lightDir);
+    vec3 light_result = calc_dir_light(direction_light, normal, view_dir);
+    color = vec4(light_result, 1);
+    for (int i = 0; i > point_light_count; i++) {
+        PointLight point_light = point_lights[i];
+        light_result += calc_point_light(point_light, normal, FragPos, view_dir);
+    }
+
+    float direction_shadow = ShadowCalculation(FragPosLightSpace, light_direction);
     float point_shadow = ShadowCalculation(FragPos);
-
-    uint use_point_shadow = 1;
-    uint use_direction_shadow = 1;
     
-    vec3 light_final;
+    if (s_use_point_shadows == 0) {
+        point_shadow = 0.0;
+    }
+    if (s_use_direction_shadow == 0) {
+        direction_shadow = 0.0;
+    }
+
+    light_result += (1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0));
+    //color = vec4(light_result, 1);
+    //color = vec4((1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0)), 0, , 1);
+    //color = vec4(light_result, 1);
+    /*
     if (use_point_shadow == 1 &&
         use_direction_shadow == 1) {
         light_final = (ambience_strength + (1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0))
@@ -236,25 +269,13 @@ void main(){
         light_final = vec3(1.0);
         _padding_0 = 4;
     }
-
-    if (s_debug_draw_lighting == 1) {
-        color = (texture(texture_diffuse1, TexCoord) * vec4(objectColor, 1.0));
-        _padding_1 = 1;
-        return;
-    }
-    if (s_debug_draw_texcoords == 1) {
-        color = vec4(TexCoord, 0.0, 1.0);
-        _padding_1 = 2;
-        return;
-    }
-    if (s_debug_draw_normals == 1) {
-        color = vec4(Normal, 1.0);
-        _padding_1 = 3;
-        return;
-    }
+    */
+    
+    /*
     if (use_uniform_color) {
           color = (vec4(uniform_color, 1) * vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
     } else {
         color = (texture(texture_diffuse1, TexCoord) + vec4(objectColor, 1.0)) * vec4(light_final, 1.0);
     }
+    */
 }
