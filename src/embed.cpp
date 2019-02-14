@@ -3,7 +3,6 @@ This is an example C application that has an embedded python interpreter.
 It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
-
 #include <Python.h>
 #include <stdlib.h>
 #define GLEW_STATIC

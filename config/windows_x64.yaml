@@ -38,10 +38,10 @@ libs:
  - glfw3.lib
  - libglew32.lib
  - SOIL.lib
- - freetype.lib
  - assimp-vc140-mt.lib
- - IrrXMLd.lib
- - zlibstaticd.lib
+# - freetype.lib
+# - IrrXMLd.lib
+# - zlibstaticd.lib
 
 lib_paths:
  - D:/python36-x64/libs/

@@ -239,7 +239,7 @@ void update_ssbo(float uniform_data[], int uniform_size) {
 void update_ssbo(SharedState state) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
     //GLvoid *ptr_ssbo_map = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(state), &state, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(state), &state, GL_DYNAMIC_READ);
     //memcpy(ptr_ssbo_map, &state, sizeof(state));
     //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
