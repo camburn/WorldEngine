@@ -6,11 +6,11 @@ They then make available this data via names.
 #include "managers/instance_manager.hpp"
 
 
-Material::Material() : data(
+MaterialOld::MaterialOld() : data(
     MaterialData{glm::vec3(1,1,1), 32.0f, false, false, 0, 0}
 ) {}
 
-Material::Material(
+MaterialOld::MaterialOld(
     glm::vec3 base_color,
     GLuint diffuse_texture_sampler_id,
     GLuint specular_texture_sampler_id
@@ -18,24 +18,24 @@ Material::Material(
     MaterialData{base_color, 32.0f, true, true, diffuse_texture_sampler_id, specular_texture_sampler_id}
 ) {}
 
-Material::Material(
+MaterialOld::MaterialOld(
     glm::vec3 base_color,
     GLuint diffuse_texture_sampler_id
 ) : data(
     MaterialData{base_color, 32.0f, true, false, diffuse_texture_sampler_id, 0}
 ) {}
 
-Material::Material(
+MaterialOld::MaterialOld(
     glm::vec3 base_color
 ) : data(
     MaterialData{base_color, 32.0f, false, false, 0, 0}
 ) {}
 
-MaterialData Material::get_data() {
+MaterialData MaterialOld::get_data() {
     return data;
 }
 
-void Material::set_shininess(float shininess) {
+void MaterialOld::set_shininess(float shininess) {
     data.shininess = shininess;
 }
 
@@ -352,17 +352,25 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
-        int texture_sampler_id = 0;
-        int shadow_sampler_id = 1;
-        int cube_sampler_id = 2;
-        state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
-        state.renderer.active().set_uniform("shadow_map", &shadow_sampler_id, U_INT);
-        state.renderer.active().set_uniform("shadow_cube_map", &cube_sampler_id, U_INT);
+        GLint shadow_sampler_id = 1;
+        GLint cube_sampler_id = 2;
+        //state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_map", shadow_sampler_id);
+        state.renderer.active().set_uniform("shadow_cube_map", cube_sampler_id);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
-        float far_plane = 25.0f;
-        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
+        GLfloat far_plane = 25.0f;
+        state.renderer.active().set_uniform("far_plane", far_plane);
+
+        Material material;
+        material.diffuse_texture = 0;
+        state.renderer.active().set_uniform("material.base_color", glm::vec3(1.0f));
+        state.renderer.active().set_uniform("material.diffuse", material.diffuse_texture);
+        //state.renderer.active().set_uniform("material.specular", material.diffuse_texture);
+        state.renderer.active().set_uniform("material.shininess", material.shininess);
+        state.renderer.active().set_uniform("material.diffuse_set", (GLuint)1);
+        state.renderer.active().set_uniform("material.specular_set", (GLuint)0);
 
         prim->draw(state);
     }

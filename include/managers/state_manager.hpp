@@ -20,11 +20,13 @@ public:
 
     void update_position(glm::vec3 new_pos);
     glm::vec3 get_position() { return position; }
+    void update_color(glm::vec3 new_color) { light_color = new_color; }
+    glm::vec3 get_color() { return light_color; }
 
 protected:
 
     glm::vec3 position = glm::vec3(1.0f);
-    glm::vec3 light_color;
+    glm::vec3 light_color {0};
     float intensity;
 };
 
@@ -118,6 +120,7 @@ private:
 
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {3.0f, 10.0f, 3.0f};
+    glm::vec3 light_color {1.0f, 1.0f, 1.0f};
     
     DirectionLight direction_light;   // Currently only support 1 light
     

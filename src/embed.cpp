@@ -483,7 +483,7 @@ int main(int argc, char *argv[]) {
             UpdateMatrixBuffer();
             DrawPlanes(sprite_program);
         }
-        renderer.finish_frame();
+        
         // ========= END SPRITE DRAWING =========
         frame_section("Sprite Drawing", glfwGetTime());
         // ========= DEBUG DRAWING =========
@@ -517,6 +517,7 @@ int main(int argc, char *argv[]) {
         frame_section("Interface Drawing", glfwGetTime());
 
         glfwSwapBuffers(window);
+        renderer.finish_frame();
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);
