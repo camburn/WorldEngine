@@ -68,7 +68,7 @@ public:
     GLuint get_shader_id(string name);
     Shader& get_shader(string name);
     void update_uniforms(float uniform_data[], int uniform_size);
-    void update_uniforms(SharedState &state);
+    void update_uniforms(SharedState &state, LightState &light_state);
 
 private:
     Shader *ptr_active_shader;

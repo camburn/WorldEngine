@@ -52,6 +52,10 @@ struct InstanceUniforms {
     float _padding;
 };
 
+layout(std430, binding=4) buffer light_data {
+    PointLight point_lights[MAX_POINT_LIGHTS];
+};
+
 layout(std430, binding=3) buffer shader_uniforms {
 
     uint s_use_point_shadows;
@@ -91,12 +95,10 @@ layout(std430, binding=3) buffer shader_uniforms {
     uint point_light_count;
 
     DirectionLight direction_light;
-
-    // Arrays
-    
-    PointLight point_lights[MAX_POINT_LIGHTS];
     //InstanceUniforms instance_uniforms[];
 };
+
+
 
 uniform sampler2D shadow_map;
 uniform samplerCube shadow_cube_map;
@@ -164,7 +166,7 @@ vec3 calc_dir_light(DirectionLight light, vec3 normal, vec3 view_dir) {
 
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
-    vec3 specular = vec3(0.0);
+    vec3 specular = vec3(1.0);
     if (material.specular_set == 1) {
         //specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
     }
@@ -231,12 +233,12 @@ void main(){
     vec3 light_direction = normalize(s_light_direction_pos - FragPos);
 
     vec3 light_result = calc_dir_light(direction_light, normal, view_dir);
-    color = vec4(light_result, 1);
+    
     for (int i = 0; i > point_light_count; i++) {
         PointLight point_light = point_lights[i];
         light_result += calc_point_light(point_light, normal, FragPos, view_dir);
     }
-
+    //light_result = vec3(texture(material.diffuse, TexCoord));
     float direction_shadow = ShadowCalculation(FragPosLightSpace, light_direction);
     float point_shadow = ShadowCalculation(FragPos);
     
@@ -247,7 +249,9 @@ void main(){
         direction_shadow = 0.0;
     }
 
-    light_result += (1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0));
+    //light_result += (1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0));
+
+    color = vec4(light_result, 1);
     //color = vec4(light_result, 1);
     //color = vec4((1.0 - clamp(direction_shadow + point_shadow, 0.0, 1.0)), 0, , 1);
     //color = vec4(light_result, 1);

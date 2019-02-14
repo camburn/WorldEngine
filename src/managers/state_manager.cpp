@@ -31,16 +31,16 @@ void State::update_state() {
     state.use_point_shadows = (unsigned int)use_point_shadow;
     state.use_direction_shadow = (unsigned int)use_direction_shadow;
 
-    state.direction_light.ambient = glm::vec3(1, 1, 1);
-    state.direction_light.diffuse = glm::vec3(1, 1, 1);
+    state.direction_light.ambient = glm::vec3(0.5, 0.5, 0.5);
+    state.direction_light.diffuse = glm::vec3(0.7, 0.0, 0.0);
 
     PointLightModel point_light_a;
+    light_state.point_lights[0] = point_light_a;
     state.point_light_count = 1;
-    state.point_lights[0] = point_light_a;
 
     state.direction_light.ambient = glm::vec3(1.0f);
 
-    renderer.update_uniforms(state);
+    renderer.update_uniforms(state, light_state);
 
     renderer.activate("default");
     // Set world state

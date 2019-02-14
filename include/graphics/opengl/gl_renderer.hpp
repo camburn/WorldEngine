@@ -2,6 +2,7 @@
  */
 #include <string>
 #include <iostream>
+#include <unordered_map>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -28,8 +29,7 @@ void activate_buffer_cube_shadow_map();
 void clear_buffers();
 void bind_depth_map();
 void finish_frame();
-void update_uniforms(float uniform_data[], int uniform_size);
-void update_uniforms(SharedState &state);
+void update_uniforms(SharedState &state, LightState &light_state);
 
 void draw_buffers(bool* p_open);
 void draw_ssbo_state(bool* p_open);

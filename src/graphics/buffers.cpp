@@ -1,6 +1,6 @@
 #include "graphics/buffers.hpp"
 
-#define SSBO_BINDING_UNIFORMS 3
+
 #define SSBO_DEFAULT_SIZE 4096*1024  //4MB
 
 GLuint BufferMeshDataVNT(const GLfloat *mesh_data, int size) {
@@ -204,52 +204,43 @@ TextureBuffer DepthCubeMapBuffer(GLuint width=1024, GLuint height=1024) {
     return texture_buffer;
 }
 
-static GLuint ssbo_id = -1;
+//static GLuint ssbo_id = -1;
+//static GLuint ssbo_lights_id = -1;
 
-void activate_ssbo() {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_UNIFORMS, ssbo_id);
+void activate_ssbo(const GLuint &id, const GLuint bind_number) {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bind_number, id);
 }
 
-GLuint _create_ssbo(int size) {
-    glGenBuffers(1, &ssbo_id);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
+GLuint _create_ssbo(int size, GLuint &id, const GLuint bind_number) {
+    glGenBuffers(1, &id);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
     glBufferData(GL_SHADER_STORAGE_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_UNIFORMS, ssbo_id);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bind_number, id);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    return ssbo_id;
+    return id;
 };
 
-GLuint create_ssbo() {
-    return _create_ssbo(SSBO_DEFAULT_SIZE);
+GLuint create_ssbo(GLuint &id, const GLuint &bind_number) {
+    return _create_ssbo(SSBO_DEFAULT_SIZE, id, bind_number);
 }
 
-GLuint create_ssbo(int size) {
-    return _create_ssbo(size);
-}
-
-void update_ssbo(float uniform_data[], int uniform_size) {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
-    GLvoid *ptr_ssbo_map = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    memcpy(ptr_ssbo_map, &uniform_data, uniform_size);
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void update_ssbo(SharedState state) {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
-    //GLvoid *ptr_ssbo_map = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+void update_ssbo(const GLuint &id, SharedState &state) {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(state), &state, GL_DYNAMIC_READ);
-    //memcpy(ptr_ssbo_map, &state, sizeof(state));
-    //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void read_ssbo(SharedState *read_state) {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_id);
+void update_ssbo(const GLuint &id, LightState &state) {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(state), &state, GL_DYNAMIC_READ);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void read_ssbo(const GLuint &id, SharedState *read_state) {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
     SharedState *ptr_ssbo_map = (SharedState *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
     memcpy(read_state, ptr_ssbo_map, sizeof(SharedState));
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    //read_state = &data;
 }

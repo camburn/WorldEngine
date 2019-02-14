@@ -109,6 +109,7 @@ public:
 
 private:
     SharedState state;
+    LightState light_state;
     unsigned int pcf_samples = 1;
     float shadow_map_bias = 0.00005f;
     float cube_map_bias = 0.05f;

@@ -2,11 +2,15 @@
 
 namespace opengl {
 
+#define SSBO_BINDING_UNIFORMS 3
+#define SSBO_BINDING_LIGHTS 4
+
 GLuint shadow_map_buffer_id;
 GLuint shadow_map_texture_id;
 GLuint shadow_cube_buffer_id;
 GLuint shadow_cube_texture_id;
 GLuint ssbo_id;
+GLuint ssbo_light_id;
 GLuint depth_map_width = 4096;
 GLuint depth_map_height = 4096;
 int width = 1920;
@@ -75,15 +79,13 @@ void create_common_buffers() {
     TextureBuffer texture_data = DepthCubeMapBuffer(1024, 1024);
     shadow_cube_buffer_id = texture_data.framebuffer;
     shadow_cube_texture_id = texture_data.texture_id;
-    ssbo_id = create_ssbo();
+    create_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
+    create_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
 }
 
-void update_uniforms(float uniform_data[], int uniform_size) {
-    update_ssbo(uniform_data, uniform_size);
-}
-
-void update_uniforms(SharedState &state) {
-    update_ssbo(state);
+void update_uniforms(SharedState &state, LightState &light_state) {
+    update_ssbo(ssbo_id, state);
+    update_ssbo(ssbo_light_id, light_state);
 }
 
 void activate_common_buffers() {
@@ -92,7 +94,8 @@ void activate_common_buffers() {
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
-    activate_ssbo();
+    activate_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
+    activate_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
 }
 
 void activate_buffer_cube_shadow_map() {
@@ -105,11 +108,21 @@ void activate_buffer_cube_shadow_map() {
 
 SharedState output;
 void finish_frame() {
-    read_ssbo(&output);
+    read_ssbo(ssbo_id, &output);
 }
 
 GLFWwindow* get_window() {
     return window;
+}
+
+std::unordered_map<GLuint, bool> log_once_map;
+
+bool logged_before(GLuint id) {
+    if (log_once_map.count(id) == 1) {
+        return true;
+    }
+    log_once_map.emplace(id, true);
+    return false;
 }
 
 void APIENTRY glDebugOutput(GLenum source,
@@ -144,6 +157,10 @@ void APIENTRY glDebugOutput(GLenum source,
     // TODO: This error message needs to be investigated in Intel GPUs
     if (blit_stall_message) { return; }
     if (id == 53) { blit_stall_message = true; }
+
+    if (logged_before(id)) {
+        return;
+    }
 
     // MESA Specific debug message, does not have a fixed id number
     if (source == GL_DEBUG_SOURCE_SHADER_COMPILER && severity == GL_DEBUG_SEVERITY_NOTIFICATION)

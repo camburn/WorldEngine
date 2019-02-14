@@ -33,10 +33,9 @@ void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, 
 GLuint BufferTextureDataFromFile(string path, string directory = "./assets/textures");
 TextureBuffer DepthMapBuffer(GLuint width, GLuint height);
 TextureBuffer DepthCubeMapBuffer(GLuint width, GLuint height);
-void activate_ssbo();
-GLuint create_ssbo();
-GLuint create_ssbo(int size);
-void read_ssbo(SharedState *read_state);
-void update_ssbo(float uniform_data[], int uniform_size);
-void update_ssbo(SharedState state);
+void activate_ssbo(const GLuint &id, const GLuint bind_number);
+GLuint create_ssbo(GLuint &id, const GLuint &bind_number);
+void read_ssbo(const GLuint &id, SharedState *read_state);
+void update_ssbo(const GLuint &id, LightState &state);
+void update_ssbo(const GLuint &id, SharedState &state);
 #endif

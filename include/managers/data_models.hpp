@@ -101,8 +101,7 @@ public:
     GLuint point_light_count {0};
 
     DirectionLightModel direction_light;
-    PointLightModel point_lights[MAX_POINT_LIGHTS];
-
+    
     // Only the last array can be dynamic size in OpenGL
     //std::vector<InstanceUniforms> instance_uniforms;
     //};
@@ -118,4 +117,8 @@ public:
     SharedState() {};
 };
 
+class LightState {
+public:
+    PointLightModel point_lights[MAX_POINT_LIGHTS];
+};
 #endif

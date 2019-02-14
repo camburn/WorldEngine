@@ -6,7 +6,7 @@ compile_flags:
 
 debug_compile_flags:
  - '/DEBUG'
- - '/Z7'
+ - '/Zi'
 
 link_flags:
  - '/NODEFAULTLIB:libcmt.lib'
@@ -39,9 +39,6 @@ libs:
  - libglew32.lib
  - SOIL.lib
  - assimp-vc140-mt.lib
-# - freetype.lib
-# - IrrXMLd.lib
-# - zlibstaticd.lib
 
 lib_paths:
  - D:/python36-x64/libs/

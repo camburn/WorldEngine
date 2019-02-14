@@ -60,12 +60,9 @@ void Renderer::finish_frame() {
     opengl::finish_frame();
 }
 
-void Renderer::update_uniforms(float uniform_data[], int uniform_size) {
-    opengl::update_uniforms(uniform_data, uniform_size);
-}
+void Renderer::update_uniforms(SharedState &state, LightState &light_state) {
+    opengl::update_uniforms(state, light_state);
 
-void Renderer::update_uniforms(SharedState &state) {
-    opengl::update_uniforms(state);
 }
 
 void Renderer::LoadShaders(
