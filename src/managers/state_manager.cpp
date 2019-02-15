@@ -15,30 +15,31 @@ void State::update_state() {
     state.perspective_matrix = projection_matrix;
     state.view_matrix = view_matrix;
 
-    state.light_point_pos = get_point_light(0).get_position();
-    state.light_point_color = glm::vec3(1.0f);
-    state.light_direction_pos = light_pos;
-    state.light_direction_color = light_color;
-    state.view_pos = view_pos;
+    state.light_point_pos = glm::vec4(get_point_light(0).get_position(), 1);
+    state.light_point_color = glm::vec4(1.0f);
+    state.light_direction_pos = glm::vec4(light_pos, 1);
+    state.light_direction_color = glm::vec4(light_color, 1);
+    state.view_pos = glm::vec4(view_pos, 1);
 
-    state.pcf_samples = pcf_samples;
-    state.shadow_map_bias = shadow_map_bias;
-    state.cube_map_bias = cube_map_bias;
-    state.debug_draw_normals = (unsigned int)DebugGetFlag("render:draw_normals");
-    state.debug_draw_texcoords = (unsigned int)DebugGetFlag("render:disable_lighting");
-    state.debug_draw_lighting = (unsigned int)DebugGetFlag("render:draw_texcoords");
+    state.shadow_flags.z = pcf_samples;
+    state.map_config.x = shadow_map_bias;
+    state.map_config.y = cube_map_bias;
+    state.debug_flags.x = (unsigned int)DebugGetFlag("render:draw_normals");
+    state.debug_flags.y = (unsigned int)DebugGetFlag("render:disable_lighting");
+    state.debug_flags.z = (unsigned int)DebugGetFlag("render:draw_texcoords");
 
-    state.use_point_shadows = (unsigned int)use_point_shadow;
-    state.use_direction_shadow = (unsigned int)use_direction_shadow;
+    state.shadow_flags.x = (unsigned int)use_point_shadow;
+    state.shadow_flags.y = (unsigned int)use_direction_shadow;
 
-    state.direction_light.ambient = glm::vec3(0.5, 0.5, 0.5);
-    state.direction_light.diffuse = glm::vec3(0.7, 0.0, 0.0);
+    state.direction_light.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
+    state.direction_light.diffuse = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
 
     PointLightModel point_light_a;
+    point_light_a.position = glm::vec4(get_point_light(0).get_position(), 1);
     light_state.point_lights[0] = point_light_a;
-    state.point_light_count = 1;
+    state.state_flags.z = 1; // No of point lights
 
-    state.direction_light.ambient = glm::vec3(1.0f);
+    state.direction_light.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
 
     renderer.update_uniforms(state, light_state);
 

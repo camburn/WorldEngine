@@ -15,11 +15,12 @@ out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos; // In World Space
 out vec4 FragPosLightSpace;
+out vec4 PositionB;
 
 void main(){
     TexCoord = texCoord;
     Normal = NormalMat * normal;
-    FragPos = vec3(Model * vec4(position, 1.0f));
+    FragPos = vec3(Model * vec4(position, 1.0));
     FragPosLightSpace = light_matrix * vec4(FragPos, 1.0);
     // More efficient way (precalculate MVP)
     gl_Position = MVP * vec4(position, 1);

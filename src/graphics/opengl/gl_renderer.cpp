@@ -2,8 +2,8 @@
 
 namespace opengl {
 
-#define SSBO_BINDING_UNIFORMS 3
-#define SSBO_BINDING_LIGHTS 4
+const GLuint SSBO_BINDING_UNIFORMS = 3;
+const GLuint SSBO_BINDING_LIGHTS = 4;
 
 GLuint shadow_map_buffer_id;
 GLuint shadow_map_texture_id;
@@ -347,11 +347,11 @@ void draw_ssbo_state(bool* p_open) {
     ImGui::Text("SSBO State");
     //SharedState output
 
-    ImGui::Text("Point Shadows: %u", output.point_light_count);
+    ImGui::Text("Point Shadows: %u", output.state_flags.z);
 
-    ImGui::Text("Direction Shadow : %u", output.pcf_samples);
-    ImGui::Text("Direction map bias : %f", output.shadow_map_bias);
-    ImGui::Text("Direction Shadow Enabled: %u", output.use_direction_shadow);
+    ImGui::Text("Direction Shadow : %u", output.shadow_flags.z);
+    ImGui::Text("Direction map bias : %f", output.map_config.x);
+    ImGui::Text("Direction Shadow Enabled: %u", output.shadow_flags.x);
     ImGui::Text("Direction Diffuse: r:%f g:%f b:%f",
         output.direction_light.diffuse.x,
         output.direction_light.diffuse.y,
@@ -363,14 +363,14 @@ void draw_ssbo_state(bool* p_open) {
         output.direction_light.ambient.z
     );
 
-    ImGui::Text("Point Shadows: %u", output.use_point_shadows);
+    ImGui::Text("Point Shadows: %u", output.shadow_flags.x);
 
-    ImGui::Text("Debug Normals: %u", output.debug_draw_normals);
-    ImGui::Text("Debug Lighting: %u", output.debug_draw_lighting);
-    ImGui::Text("Debug TexCoords: %u", output.debug_draw_texcoords);
+    ImGui::Text("Debug Normals: %u", output.debug_flags.x);
+    ImGui::Text("Debug Lighting: %u", output.debug_flags.y);
+    ImGui::Text("Debug TexCoords: %u", output.debug_flags.z);
 
-    ImGui::Text("Padding 0: %i", output._padding_0);
-    ImGui::Text("Padding 1: %i", output._padding_1);
+    ImGui::Text("Render Flags: %i", output.state_flags.x);
+    ImGui::Text("Debug Flags: %i", output.state_flags.y);
     // ImGui::Text("Padding 2: %i", output._padding_2);
 
     ImGui::End();
