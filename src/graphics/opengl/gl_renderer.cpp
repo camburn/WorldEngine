@@ -108,7 +108,7 @@ void activate_buffer_cube_shadow_map() {
 
 SharedState output;
 void finish_frame() {
-    read_ssbo(ssbo_id, &output);
+    //read_ssbo(ssbo_id, &output);
 }
 
 GLFWwindow* get_window() {
@@ -269,7 +269,7 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     glUseProgram(programID);
     // Set sampler units
     // TODO: This should happen in a smarter way
-    GLint texture_sampler_id = glGetUniformLocation(programID, "texture_diffuse1");
+    GLint texture_sampler_id = glGetUniformLocation(programID, "material.diffuse");
     GLint shadow_sampler_id = glGetUniformLocation(programID, "shadow_map");
     GLint shadow_cube_sampler_id = glGetUniformLocation(programID, "shadow_cube_map");
 
@@ -384,7 +384,7 @@ void draw_buffers(bool* p_open) {
     }
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE3);
         ImGui::Image((void*)(shadow_map_texture_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
         ImGui::TreePop();
     }
@@ -398,7 +398,7 @@ void draw_buffers(bool* p_open) {
 }
 
 void bind_depth_map () {
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, shadow_map_texture_id);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_cube_texture_id);

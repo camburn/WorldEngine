@@ -41,20 +41,6 @@ protected:
 class PointLight : public Light {
 public:
 
-    struct Data {
-        vec3 position;
-
-        float constant;
-        float linear;
-        float quadratic;
-
-        vec3 ambience;
-        vec3 diffuse;
-        vec3 specular;
-
-        float far_plane;
-    };
-
     PointLight() : Light() {
         cube_map.reserve(cube_sides);
     }
@@ -67,6 +53,14 @@ public:
     std::vector<glm::mat4> get_cube_map();
     const int cube_sides {6};
     float get_far_plane() {return far_plane;}
+
+    float constant {1.0f};
+    float linear {0.09f};
+    float quadratic {0.032f};
+
+    vec3 ambience {0.05f};
+    //vec3 diffuse {0.8f};
+    vec3 specular {1.0f};
 
 protected:
     std::vector<glm::mat4> cube_map;
@@ -112,7 +106,7 @@ private:
     LightState light_state;
     unsigned int pcf_samples = 1;
     float shadow_map_bias = 0.00005f;
-    float cube_map_bias = 0.05f;
+    float cube_map_bias = 0.12f;
     GLuint program_id = -1;
     bool invalid_model_view = true;
     glm::mat4 cached_model_view {1.0f};

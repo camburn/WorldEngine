@@ -15,8 +15,8 @@ void State::update_state() {
     state.perspective_matrix = projection_matrix;
     state.view_matrix = view_matrix;
 
-    state.light_point_pos = glm::vec4(get_point_light(0).get_position(), 1);
-    state.light_point_color = glm::vec4(1.0f);
+    state.light_point_pos = glm::vec4(get_point_light(0).get_position(), 1.0f);
+    state.light_point_color = glm::vec4(get_point_light(0).get_color(), 1.0f);
     state.light_direction_pos = glm::vec4(light_pos, 1);
     state.light_direction_color = glm::vec4(light_color, 1);
     state.view_pos = glm::vec4(view_pos, 1);
@@ -25,8 +25,9 @@ void State::update_state() {
     state.map_config.x = shadow_map_bias;
     state.map_config.y = cube_map_bias;
     state.debug_flags.x = (unsigned int)DebugGetFlag("render:draw_normals");
-    state.debug_flags.y = (unsigned int)DebugGetFlag("render:disable_lighting");
-    state.debug_flags.z = (unsigned int)DebugGetFlag("render:draw_texcoords");
+    state.debug_flags.y = (unsigned int)DebugGetFlag("render:draw_texcoords");
+    state.debug_flags.z = (unsigned int)DebugGetFlag("render:disable_lighting");
+    state.debug_flags.w = (unsigned int)DebugGetFlag("render:draw_specular");;
 
     state.shadow_flags.x = (unsigned int)use_point_shadow;
     state.shadow_flags.y = (unsigned int)use_direction_shadow;
@@ -36,6 +37,12 @@ void State::update_state() {
 
     PointLightModel point_light_a;
     point_light_a.position = glm::vec4(get_point_light(0).get_position(), 1);
+    point_light_a.diffuse = glm::vec4(get_point_light(0).get_color(), 1.0f);
+    point_light_a.ambience = glm::vec4(get_point_light(0).ambience, 1.0f);
+    point_light_a.specular = glm::vec4(get_point_light(0).specular, 1.0f);
+    point_light_a.attributes.x = get_point_light(0).constant;
+    point_light_a.attributes.y = get_point_light(0).linear;
+    point_light_a.attributes.z = get_point_light(0).quadratic;
     light_state.point_lights[0] = point_light_a;
     state.state_flags.z = 1; // No of point lights
 
@@ -46,7 +53,7 @@ void State::update_state() {
     renderer.activate("default");
     // Set world state
 
-    renderer.active().set_uniform("objectColor", glm::vec3(0.0f));
+    renderer.active().set_uniform("objectColor", glm::vec3(1.0f));
 }
 
 void State::set_light_pos(glm::vec3 pos) {
@@ -212,14 +219,18 @@ void State::light_settings(bool* p_open) {
     }
     if (ImGui::TreeNode("Point Light Settings")) {
         ImGui::Checkbox("Cast Shadows", &use_point_shadow);
+        ImGui::PushItemWidth(120);
         ImGui::InputScalar("Bias", ImGuiDataType_Float, &cube_map_bias, true ? &cube_bias_interval : NULL);
+        ImGui::InputScalar("Constant", ImGuiDataType_Float, &point_lights[0].constant, true ? &cube_bias_interval : NULL);
+        ImGui::InputScalar("Linear", ImGuiDataType_Float, &point_lights[0].linear, true ? &cube_bias_interval : NULL);
+        ImGui::InputScalar("Quadratic", ImGuiDataType_Float, &point_lights[0].quadratic, true ? &cube_bias_interval : NULL);
         glm::vec3 pos = point_lights[0].get_position();
         float X = pos.x;
         float Y = pos.y;
         float Z = pos.z;
-        ImGui::InputScalar("X", ImGuiDataType_Float, &X, true ? &pos_interval : NULL);
-        ImGui::InputScalar("Y", ImGuiDataType_Float, &Y, true ? &pos_interval : NULL);
-        ImGui::InputScalar("Z", ImGuiDataType_Float, &Z, true ? &pos_interval : NULL);
+        ImGui::InputScalar("X", ImGuiDataType_Float, &X, true ? &pos_interval : NULL); ImGui::SameLine();
+        ImGui::InputScalar("Y", ImGuiDataType_Float, &Y, true ? &pos_interval : NULL); ImGui::SameLine();
+        ImGui::InputScalar("Z", ImGuiDataType_Float, &Z, true ? &pos_interval : NULL); 
         if (X != pos.x || Y != pos.y || Z != pos.z){
             update_point_light(0, glm::vec3(X, Y, Z));
         }
@@ -227,8 +238,8 @@ void State::light_settings(bool* p_open) {
         float R = point_light_color.r;
         float G = point_light_color.g;
         float B = point_light_color.b;
-        ImGui::InputScalar("R", ImGuiDataType_Float, &R, true ? &light_interval : NULL);
-        ImGui::InputScalar("G", ImGuiDataType_Float, &G, true ? &light_interval : NULL);
+        ImGui::InputScalar("R", ImGuiDataType_Float, &R, true ? &light_interval : NULL); ImGui::SameLine();
+        ImGui::InputScalar("G", ImGuiDataType_Float, &G, true ? &light_interval : NULL); ImGui::SameLine();
         ImGui::InputScalar("B", ImGuiDataType_Float, &B, true ? &light_interval : NULL);
         if (R != point_light_color.r || G != point_light_color.g || B != point_light_color.b){
             point_lights[0].update_color(glm::vec3(R, G, B));

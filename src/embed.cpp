@@ -51,6 +51,11 @@ glm::mat4 rotated_view {1.0f};
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
+    if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+        std::cout << "Toggling Draw Specular - ";
+        std::string result = DebugFlagToggle("render:draw_specular");
+        std::cout << result << std::endl;
+    }
     if (key == GLFW_KEY_N && action == GLFW_PRESS) {
         std::cout << "Toggling Draw Normals - ";
         std::string result = DebugFlagToggle("render:draw_normals");
@@ -306,7 +311,7 @@ int main(int argc, char *argv[]) {
     instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
     unsigned int point_light_index = instances.new_primitive_instance(
-        "point_light", "Cube", glm::vec3(2,2,2), glm::vec3(1,1,1), false
+        "point_light", "Cube", glm::vec3(2,2,2), glm::vec3(0.8f), false
     );
     instances.update_instance_scale(point_light_index, glm::vec3(0.25, 0.25, 0.25));
 

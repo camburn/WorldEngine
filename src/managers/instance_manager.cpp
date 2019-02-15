@@ -352,7 +352,7 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
-        GLint shadow_sampler_id = 1;
+        GLint shadow_sampler_id = 3;
         GLint cube_sampler_id = 2;
         //state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
         state.renderer.active().set_uniform("shadow_map", shadow_sampler_id);
@@ -365,12 +365,14 @@ void InstanceManager::draw() {
 
         Material material;
         material.diffuse_texture = 0;
+        material.specular_texture = 1;
         state.renderer.active().set_uniform("material.base_color", glm::vec3(1.0f));
-        state.renderer.active().set_uniform("material.diffuse", material.diffuse_texture);
+        state.renderer.active().set_uniform("material.texture_diffuse1", material.diffuse_texture);
+        state.renderer.active().set_uniform("material.texture_specular1", material.specular_texture);
         //state.renderer.active().set_uniform("material.specular", material.diffuse_texture);
         state.renderer.active().set_uniform("material.shininess", material.shininess);
         state.renderer.active().set_uniform("material.diffuse_set", (GLuint)1);
-        state.renderer.active().set_uniform("material.specular_set", (GLuint)0);
+        state.renderer.active().set_uniform("material.specular_set", (GLuint)1);
 
         prim->draw(state);
     }
