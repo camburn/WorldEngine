@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "graphics/renderer.hpp"
 #include "graphics/debug.hpp"
-
+#include "managers/data_models.hpp"
 
 #ifndef STATE_H
 #define STATE_H
@@ -20,11 +20,13 @@ public:
 
     void update_position(glm::vec3 new_pos);
     glm::vec3 get_position() { return position; }
+    void update_color(glm::vec3 new_color) { light_color = new_color; }
+    glm::vec3 get_color() { return light_color; }
 
 protected:
 
     glm::vec3 position = glm::vec3(1.0f);
-    glm::vec3 light_color;
+    glm::vec3 light_color {0};
     float intensity;
 };
 
@@ -39,20 +41,6 @@ protected:
 class PointLight : public Light {
 public:
 
-    struct Data {
-        vec3 position;
-
-        float constant;
-        float linear;
-        float quadratic;
-
-        vec3 ambience;
-        vec3 diffuse;
-        vec3 specular;
-
-        float far_plane;
-    };
-
     PointLight() : Light() {
         cube_map.reserve(cube_sides);
     }
@@ -65,6 +53,14 @@ public:
     std::vector<glm::mat4> get_cube_map();
     const int cube_sides {6};
     float get_far_plane() {return far_plane;}
+
+    float constant {1.0f};
+    float linear {0.09f};
+    float quadratic {0.032f};
+
+    vec3 ambience {0.05f};
+    //vec3 diffuse {0.8f};
+    vec3 specular {1.0f};
 
 protected:
     std::vector<glm::mat4> cube_map;
@@ -106,9 +102,11 @@ public:
     bool use_direction_shadow = true;
 
 private:
-    int pcf_samples = 1;
-    float shadow_map_bias = 0.0005f;
-    float cube_map_bias = 0.05f;
+    SharedState state;
+    LightState light_state;
+    unsigned int pcf_samples = 1;
+    float shadow_map_bias = 0.00005f;
+    float cube_map_bias = 0.12f;
     GLuint program_id = -1;
     bool invalid_model_view = true;
     glm::mat4 cached_model_view {1.0f};
@@ -117,6 +115,7 @@ private:
 
     glm::vec3 view_pos {1.0f};
     glm::vec3 light_pos {3.0f, 10.0f, 3.0f};
+    glm::vec3 light_color {1.0f, 1.0f, 1.0f};
     
     DirectionLight direction_light;   // Currently only support 1 light
     

@@ -27,7 +27,8 @@ std::vector<vec3> line_data;
 std::map<std::string, bool> flags = {
     { "render:draw_normals", false },
     { "render:draw_texcoords", false },
-    { "render:disable_lighting", false }
+    { "render:disable_lighting", false },
+    { "render:draw_specular", false }
 };
 
 void BufferData() {

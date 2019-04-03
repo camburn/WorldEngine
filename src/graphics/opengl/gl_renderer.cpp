@@ -2,10 +2,15 @@
 
 namespace opengl {
 
+const GLuint SSBO_BINDING_UNIFORMS = 3;
+const GLuint SSBO_BINDING_LIGHTS = 4;
+
 GLuint shadow_map_buffer_id;
 GLuint shadow_map_texture_id;
 GLuint shadow_cube_buffer_id;
 GLuint shadow_cube_texture_id;
+GLuint ssbo_id;
+GLuint ssbo_light_id;
 GLuint depth_map_width = 4096;
 GLuint depth_map_height = 4096;
 int width = 1920;
@@ -20,7 +25,7 @@ void init() {
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     //Disable legacy OpenGL
@@ -74,6 +79,13 @@ void create_common_buffers() {
     TextureBuffer texture_data = DepthCubeMapBuffer(1024, 1024);
     shadow_cube_buffer_id = texture_data.framebuffer;
     shadow_cube_texture_id = texture_data.texture_id;
+    create_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
+    create_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
+}
+
+void update_uniforms(SharedState &state, LightState &light_state) {
+    update_ssbo(ssbo_id, state);
+    update_ssbo(ssbo_light_id, light_state);
 }
 
 void activate_common_buffers() {
@@ -82,6 +94,8 @@ void activate_common_buffers() {
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_buffer_id);
     glClear(GL_DEPTH_BUFFER_BIT);
     //glCullFace(GL_FRONT);
+    activate_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
+    activate_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
 }
 
 void activate_buffer_cube_shadow_map() {
@@ -92,8 +106,23 @@ void activate_buffer_cube_shadow_map() {
     //glCullFace(GL_FRONT);
 }
 
+SharedState output;
+void finish_frame() {
+    //read_ssbo(ssbo_id, &output);
+}
+
 GLFWwindow* get_window() {
     return window;
+}
+
+std::unordered_map<GLuint, bool> log_once_map;
+
+bool logged_before(GLuint id) {
+    if (log_once_map.count(id) == 1) {
+        return true;
+    }
+    log_once_map.emplace(id, true);
+    return false;
 }
 
 void APIENTRY glDebugOutput(GLenum source,
@@ -121,9 +150,17 @@ void APIENTRY glDebugOutput(GLenum source,
     if (id == 42) {return;} // multisampled FBO 0->1
     if (id == 47) {return;} // FS compile took 6.315 ms and stalled the GPU
 
+    // FIXME: this requires fixing
+    if (id == 34) {return;} // Using a blit copy to avoid stalling on glBufferSubData(64, 128) (0kb) to a busy (0-65536) / valid (0-192) buffer object.
+    if (id == 26) {return;} // As above
+
     // TODO: This error message needs to be investigated in Intel GPUs
     if (blit_stall_message) { return; }
     if (id == 53) { blit_stall_message = true; }
+
+    if (logged_before(id)) {
+        return;
+    }
 
     // MESA Specific debug message, does not have a fixed id number
     if (source == GL_DEBUG_SOURCE_SHADER_COMPILER && severity == GL_DEBUG_SEVERITY_NOTIFICATION)
@@ -232,7 +269,7 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     glUseProgram(programID);
     // Set sampler units
     // TODO: This should happen in a smarter way
-    GLint texture_sampler_id = glGetUniformLocation(programID, "texture_diffuse1");
+    GLint texture_sampler_id = glGetUniformLocation(programID, "material.diffuse");
     GLint shadow_sampler_id = glGetUniformLocation(programID, "shadow_map");
     GLint shadow_cube_sampler_id = glGetUniformLocation(programID, "shadow_cube_map");
 
@@ -301,15 +338,53 @@ GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_pa
     return programID;
 }
 
+void draw_ssbo_state(bool* p_open) {
+    if (!ImGui::Begin("SSBO State", p_open))
+    {
+        ImGui::End();
+        return;
+    }
+    ImGui::Text("SSBO State");
+    //SharedState output
+
+    ImGui::Text("Point Shadows: %u", output.state_flags.z);
+
+    ImGui::Text("Direction Shadow : %u", output.shadow_flags.z);
+    ImGui::Text("Direction map bias : %f", output.map_config.x);
+    ImGui::Text("Direction Shadow Enabled: %u", output.shadow_flags.x);
+    ImGui::Text("Direction Diffuse: r:%f g:%f b:%f",
+        output.direction_light.diffuse.x,
+        output.direction_light.diffuse.y,
+        output.direction_light.diffuse.z
+    );
+    ImGui::Text("Direction Ambient: r:%f g:%f b:%f",
+        output.direction_light.ambient.x,
+        output.direction_light.ambient.y,
+        output.direction_light.ambient.z
+    );
+
+    ImGui::Text("Point Shadows: %u", output.shadow_flags.x);
+
+    ImGui::Text("Debug Normals: %u", output.debug_flags.x);
+    ImGui::Text("Debug Lighting: %u", output.debug_flags.y);
+    ImGui::Text("Debug TexCoords: %u", output.debug_flags.z);
+
+    ImGui::Text("Render Flags: %i", output.state_flags.x);
+    ImGui::Text("Debug Flags: %i", output.state_flags.y);
+    // ImGui::Text("Padding 2: %i", output._padding_2);
+
+    ImGui::End();
+}
+
 void draw_buffers(bool* p_open) {
     if (!ImGui::Begin("Planes", p_open))
-	{
-		ImGui::End();
-		return;
-	}
+    {
+        ImGui::End();
+        return;
+    }
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE3);
         ImGui::Image((void*)(shadow_map_texture_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
         ImGui::TreePop();
     }
@@ -323,7 +398,7 @@ void draw_buffers(bool* p_open) {
 }
 
 void bind_depth_map () {
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, shadow_map_texture_id);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_cube_texture_id);

@@ -6,13 +6,47 @@ They then make available this data via names.
 #include "managers/instance_manager.hpp"
 
 
+MaterialOld::MaterialOld() : data(
+    MaterialData{glm::vec3(1,1,1), 32.0f, false, false, 0, 0}
+) {}
+
+MaterialOld::MaterialOld(
+    glm::vec3 base_color,
+    GLuint diffuse_texture_sampler_id,
+    GLuint specular_texture_sampler_id
+) : data(
+    MaterialData{base_color, 32.0f, true, true, diffuse_texture_sampler_id, specular_texture_sampler_id}
+) {}
+
+MaterialOld::MaterialOld(
+    glm::vec3 base_color,
+    GLuint diffuse_texture_sampler_id
+) : data(
+    MaterialData{base_color, 32.0f, true, false, diffuse_texture_sampler_id, 0}
+) {}
+
+MaterialOld::MaterialOld(
+    glm::vec3 base_color
+) : data(
+    MaterialData{base_color, 32.0f, false, false, 0, 0}
+) {}
+
+MaterialData MaterialOld::get_data() {
+    return data;
+}
+
+void MaterialOld::set_shininess(float shininess) {
+    data.shininess = shininess;
+}
+
+
 Instance::Instance(
-        vec3 uniform_color = glm::vec3(1,1,1),
-        glm::vec3 pos = glm::vec3(0,0,0),
-        glm::vec3 rot = glm::vec3(0,0,0),
-        glm::vec3 scale = glm::vec3(1,1,1),
-        std::string name = std::string("Default"),
-        bool use_shading = true 
+        vec3 uniform_color,
+        glm::vec3 pos,
+        glm::vec3 rot,
+        glm::vec3 scale,
+        std::string name,
+        bool use_shading
     ): 
         uniform_color(uniform_color),
         position(pos),
@@ -57,6 +91,23 @@ bool Instance::get_texture_status() {
 bool Instance::get_shading_status() {
     return use_shading;
 }
+
+bool Instance::get_render_status() {
+    return render_enabled;
+}
+
+void Instance::set_texture_status(bool status) {
+    use_texture = status;
+}
+
+void Instance::set_shading_status(bool status) {
+    use_shading = status;
+}
+
+void Instance::set_render_status(bool status) {
+    render_enabled = status;
+}
+
 
 glm::vec3 Instance::get_uniform_color() {
     return uniform_color;
@@ -164,13 +215,15 @@ MeshInstance::MeshInstance(
         bool use_shading
     ): 
         Instance(glm::vec3(0.25, 0.25, 0.25), position, rotation, scale, name, use_shading),
-        model(path, filename) {
-            use_shading = true;
-            use_texture = true;
+        model(path, filename) 
+    {
+        
+        use_shading = true;
+        use_texture = true;
 }
 
 void MeshInstance::draw(State &state) {
-    model.Draw(state.renderer.active().get_shader_id());
+    model.Draw(state, state.renderer.active().get_shader_id());
 }
 
 
@@ -290,23 +343,36 @@ void InstanceManager::draw() {
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
+        if (!prim->get_render_status()) {
+            continue;
+        }
         glm::mat4 mvp = prim->get_mvp_matrix(model_view_projection);
         glm::mat3 normal_mat = prim->get_normal_matrix();
         state.renderer.pre_draw();
         state.renderer.active().set_uniform("MVP", mvp);
         state.renderer.active().set_uniform("NormalMat", normal_mat);
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
-        int texture_sampler_id = 0;
-        int shadow_sampler_id = 1;
-        int cube_sampler_id = 2;
-        state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
-        state.renderer.active().set_uniform("shadow_map", &shadow_sampler_id, U_INT);
-        state.renderer.active().set_uniform("shadow_cube_map", &cube_sampler_id, U_INT);
+        GLint shadow_sampler_id = 3;
+        GLint cube_sampler_id = 2;
+        //state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
+        state.renderer.active().set_uniform("shadow_map", shadow_sampler_id);
+        state.renderer.active().set_uniform("shadow_cube_map", cube_sampler_id);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());
-        float far_plane = 25.0f;
-        state.renderer.active().set_uniform("far_plane", &far_plane, U_FLOAT);
+        GLfloat far_plane = 25.0f;
+        state.renderer.active().set_uniform("far_plane", far_plane);
+
+        Material material;
+        material.diffuse_texture = 0;
+        material.specular_texture = 1;
+        state.renderer.active().set_uniform("material.base_color", glm::vec3(1.0f));
+        state.renderer.active().set_uniform("material.texture_diffuse1", material.diffuse_texture);
+        state.renderer.active().set_uniform("material.texture_specular1", material.specular_texture);
+        //state.renderer.active().set_uniform("material.specular", material.diffuse_texture);
+        state.renderer.active().set_uniform("material.shininess", material.shininess);
+        state.renderer.active().set_uniform("material.diffuse_set", (GLuint)1);
+        state.renderer.active().set_uniform("material.specular_set", (GLuint)1);
 
         prim->draw(state);
     }
@@ -326,6 +392,9 @@ void InstanceManager::draw_depth_map() {
     glm::mat4 light_mat = state.generate_light_matrix();
     state.renderer.active().set_uniform("light_matrix", light_mat);
     for (auto &prim: instances) {
+        if (!prim->get_render_status()) {
+            continue;
+        }
         state.renderer.active().set_uniform("model", prim->get_model_matrix());
         prim->draw(state);
     }
@@ -351,6 +420,9 @@ void InstanceManager::draw_depth_map() {
         }
         
         for (auto &prim: instances) {
+            if (!prim->get_render_status()) {
+                continue;
+            }
             state.renderer.active().set_uniform("model", prim->get_model_matrix());
             prim->draw(state);
         }
@@ -395,5 +467,90 @@ void InstanceManager::draw_interface(bool* p_open) {
         }
         count ++;
     }
+    ImGui::End();
+}
+
+void InstanceManager::draw_instance_window(bool* p_open) {
+    if (!ImGui::Begin("Instances", p_open, ImVec2(600, 500))) {
+        ImGui::End();
+        return;
+    }
+
+    static int line = 50;
+    char text_input_buffer[50];
+    bool goto_line = ImGui::Button("Search");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    goto_line |= ImGui::InputText("##Line", text_input_buffer, 0, 0);
+    ImGui::PopItemWidth();
+
+    static int selected = -1;
+    { // Selection bar
+        ImGui::BeginChild("InstanceSelection", ImVec2(200, 0), false);
+        int counter = 0;
+        for (auto &prim: instances) {
+            std::string node_name = prim->get_name();
+            if (ImGui::Selectable(node_name.c_str(), selected == counter)) {
+                selected = counter;
+            }
+            counter ++;
+        }
+        ImGui::EndChild();
+    }
+    ImGui::SameLine();
+    { // Instance data
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        ImGui::BeginChild("InstanceDetails", ImVec2(0,0), true); 
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Menu"))
+            {
+                //ShowExampleMenuFile();
+                // Insert menu functions here
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        ImGui::Columns(2);
+        // Instance data here
+        if (selected > -1) {
+            auto &instance = instances[selected];
+
+            ImGui::Text(instance->get_name().c_str());
+
+            glm::vec3 pos = instance->get_position();
+            glm::vec3 rot = instance->get_rotation();
+            glm::vec3 scale = instance->get_scale();
+
+            glm::vec3 new_value;
+            new_value = widget_vertex3("Position", pos);
+            if (new_value != pos) { instance->set_position(new_value); }
+
+            new_value = widget_vertex3("Rotation", rot);
+            if (new_value != rot) { instance->set_rotation(new_value); }
+
+            new_value = widget_vertex3("Scale", scale);
+            if (new_value != scale) { instance->set_scale(new_value); }
+            ImGui::NextColumn();
+            ImGui::Text("Test");
+            bool texture_status = instance->get_texture_status();
+            ImGui::Checkbox("Texture Status", &texture_status);
+            instance->set_texture_status(texture_status);
+            bool shader_status = instance->get_shading_status();
+            ImGui::Checkbox("Shader Status", &shader_status);
+            instance->set_shading_status(shader_status);
+            bool render_status = instance->get_render_status();
+            ImGui::Checkbox("Render Status", &render_status);
+            instance->set_render_status(render_status);
+
+        } else {
+            // Nothing is selected
+        }
+        // End instance data
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+    }
+
+    //ImGui::TreePop();
     ImGui::End();
 }

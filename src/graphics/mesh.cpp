@@ -24,10 +24,32 @@ A mesh also has a material (per mesh) that has the following attributes:
  - shininess
 */
 
-Mesh::Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures) {
-    this->vertices = vertices;
-    this->indices = indices;
-    this->textures = textures;
+Mesh::Mesh(
+    vector<Vertex> vertices,
+    vector<GLuint> indices,
+    vector<Texture> textures
+    ) : 
+        material(material),
+        vertices(vertices),
+        indices(indices),
+        textures(textures) 
+    {
+    this->SetupMesh();
+    this->BufferData();
+    this->fixed = true;
+}
+
+Mesh::Mesh(
+    MeshMaterial material,
+    vector<Vertex> vertices,
+    vector<GLuint> indices,
+    vector<Texture> textures
+    ) : 
+        material(material),
+        vertices(vertices),
+        indices(indices),
+        textures(textures)
+    {
     this->SetupMesh();
     this->BufferData();
     this->fixed = true;
@@ -182,6 +204,7 @@ int Mesh::AppendData(vector<Vertex> vertices, vector<GLuint> indices) {
 void Mesh::Draw(GLuint shader) {
     GLuint diffuseNr = 1;
     GLuint specularNr = 1;
+    string base_texture_path = "material.";
     for (GLuint i = 0; i < this->textures.size(); i++) {
         // Each bound texture requires its own texture unit
         glActiveTexture(GL_TEXTURE0 + i); // Activate the correct texture unit
@@ -196,13 +219,16 @@ void Mesh::Draw(GLuint shader) {
             ss << specularNr++;
         }
         number = ss.str();
-        GLint tex_loc = glGetUniformLocation(shader, (name + number).c_str());
+        string location_name = base_texture_path + name + number;
+        GLint tex_loc = glGetUniformLocation(shader, location_name.c_str());
         if (tex_loc != -1) {
+            if (i == 0) glActiveTexture(GL_TEXTURE0);
+            if (i == 1) glActiveTexture(GL_TEXTURE1);
             glUniform1i(tex_loc, i);
             glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
         }
     }
-    glActiveTexture(GL_TEXTURE0);
+    //glActiveTexture(GL_TEXTURE0);
     //Draw the mesh
     if (this->use_model_buffer) {
         GLuint n = glGetUniformLocation(shader, "use_model_buffer");

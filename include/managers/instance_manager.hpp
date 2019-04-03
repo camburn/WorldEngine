@@ -11,9 +11,45 @@
 #include "state_manager.hpp"
 #include "texture_manager.hpp"
 
+#include "managers/data_models.hpp"
+
 #ifndef PRIMITIVE_H
 #define PRIMITIVE_H
 #define NULL_TEXTURE 0
+
+class MaterialData{
+public:
+    glm::vec3 base_color;
+    float shininess;
+    bool diffuse_set;
+    bool specular_set;
+    GLuint diffuse_texture_sampler_id;
+    GLuint specular_texture_sampler_id;
+};
+
+class MaterialOld {
+
+public:
+    MaterialOld();
+    MaterialOld(
+        glm::vec3 base_color,
+        GLuint diffuse_texture_sampler_id,
+        GLuint specular_texture_sampler_id
+    );
+    MaterialOld(
+        glm::vec3 base_color,
+        GLuint diffuse_texture_sampler_id
+    );
+    MaterialOld(
+        glm::vec3 base_color
+    );
+    MaterialData get_data();
+    void set_shininess(float shininess);
+
+protected:
+    MaterialData data;
+    
+};
 
 class Instance{
 public:
@@ -40,6 +76,11 @@ public:
 
     bool get_texture_status();
     bool get_shading_status();
+    bool get_render_status();
+
+    void set_texture_status(bool status);
+    void set_shading_status(bool status);
+    void set_render_status(bool status);
 
     std::string get_type();
     std::string get_name();
@@ -53,6 +94,7 @@ protected:
     glm::vec3 uniform_color;
     bool use_shading;
     bool use_texture;
+    bool render_enabled = true;
 
     glm::vec3 position = glm::vec3(1.0f);
     glm::vec3 rotation = glm::vec3(1.0f);
@@ -115,6 +157,10 @@ public:
 
 private:
     Model model;
+    // A mesh instance can comprise of one or more meshes
+    vector<Mesh> meshes;
+    // Each mesh has its own material
+    vector<Material> materials;
 };
 
 
@@ -139,6 +185,7 @@ public:
     glm::vec3 get_instance_position(unsigned int instance_id);
 
     void draw_interface(bool* p_open);
+    void draw_instance_window(bool* p_open);
      
 private:
     State &state;

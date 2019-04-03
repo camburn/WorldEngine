@@ -56,6 +56,15 @@ void Renderer::pre_draw() {
     opengl::bind_depth_map();
 }
 
+void Renderer::finish_frame() {
+    opengl::finish_frame();
+}
+
+void Renderer::update_uniforms(SharedState &state, LightState &light_state) {
+    opengl::update_uniforms(state, light_state);
+
+}
+
 void Renderer::LoadShaders(
         GLuint *programID,
         GLuint *depth_program,
@@ -68,8 +77,8 @@ void Renderer::LoadShaders(
         "default", 
         Shader(
             "default",
-            "./src/shaders/vertex_shader.glsl",
-            "./src/shaders/fragment_shader.glsl"
+            "./src/shaders/vertex_shader_uniform.vert.glsl",
+            "./src/shaders/fragment_shader_uniform.frag.glsl"
         )
     );
     *programID = shader_map["default"].get_shader_id();

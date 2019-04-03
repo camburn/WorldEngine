@@ -3,7 +3,6 @@ This is an example C application that has an embedded python interpreter.
 It provides C function calls that be called from Python and
 Python function calls that can be called from C.
 */
-
 #include <Python.h>
 #include <stdlib.h>
 #define GLEW_STATIC
@@ -24,7 +23,6 @@ Python function calls that can be called from C.
 #include "graphics/console.hpp"
 #include "graphics/model.hpp"
 #include "graphics/debug.hpp"
-#include "graphics/shapefile_loader.hpp"
 #include "graphics/planes.hpp"
 #include "graphics/renderer.hpp"
 #include "tools/profiler.hpp"
@@ -53,41 +51,25 @@ glm::mat4 rotated_view {1.0f};
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Key checking
+    if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+        std::cout << "Toggling Draw Specular - ";
+        std::string result = DebugFlagToggle("render:draw_specular");
+        std::cout << result << std::endl;
+    }
     if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-        std::cout << "Toggling Draw Normals - " << std::endl;
-        if (debug_draw_normals) {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-            debug_draw_normals = true;
-        }
+        std::cout << "Toggling Draw Normals - ";
+        std::string result = DebugFlagToggle("render:draw_normals");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_T && action == GLFW_PRESS) {
         std::cout << "Toggling Draw Texure Coordinates - " << std::endl;
-        if (debug_draw_texcoords) {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-            debug_draw_texcoords = true;
-        }
+        std::string result = DebugFlagToggle("render:draw_texcoords");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
         std::cout << "Toggling Draw Lighting - " << std::endl;
-        if (debug_disable_lighting) {
-            std::cout << "On" << std::endl;
-            disable_debugs();
-        }
-        else {
-            std::cout << "Off" << std::endl;
-            disable_debugs();
-            debug_disable_lighting = true;
-        }
+        std::string result = DebugFlagToggle("render:disable_lighting");
+        std::cout << result << std::endl;
     }
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
         std::cout << "Toggling Camera" << std::endl;
@@ -299,14 +281,11 @@ int main(int argc, char *argv[]) {
     }
     UpdateMatrixBuffer();
 
-    LoadShapeFile("./assets/shapefiles/Australia.shp");
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui_ImplGlfwGL3_Init(window, true);
 
-    //io.Fonts->AddFontDefault();
     io.Fonts->AddFontFromFileTTF("assets/fonts/calibri.ttf", 15.0f);
 
     // Register Key callbacks
@@ -316,7 +295,7 @@ int main(int argc, char *argv[]) {
     glfwSetWindowSizeCallback(window, resizeCallback);
     glfwSetScrollCallback(window, scrollCallback);
 
-    State state(renderer);
+    State state ( renderer );
     state.create_point_light(glm::vec3(1, 1, 2));
     state.update_state();
     InstanceManager instances{state, texture_manager};
@@ -332,18 +311,22 @@ int main(int argc, char *argv[]) {
     instances.update_instance_scale(floor_index, glm::vec3(10, 10, 10));
     
     unsigned int point_light_index = instances.new_primitive_instance(
-        "point_light", "Cube", glm::vec3(2,2,2), glm::vec3(1,1,1), false
+        "point_light", "Cube", glm::vec3(2,2,2), glm::vec3(0.8f), false
     );
     instances.update_instance_scale(point_light_index, glm::vec3(0.25, 0.25, 0.25));
 
-    //MeshManager meshes {state, texture_manager};
     unsigned int nano = instances.new_mesh_instance("nanosuit.obj", "./assets/meshes/", glm::vec3(2, 0, -4));
     instances.update_instance_scale(nano, glm::vec3(0.2, 0.2, 0.2));
 
     unsigned int warr = instances.new_mesh_instance("warrior.fbx", "./assets/meshes/", glm::vec3(0, 0, 0));
     instances.update_instance_rotation(warr, glm::vec3(-90.0f, 0, 0));
 
-    unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(3, 0, 3));
+    //unsigned int tree_a = instances.new_mesh_instance("tree-open.obj", "./assets/meshes/nature/trees/", glm::vec3(-3, 0, 5));
+    //instances.update_instance_scale(tree_a, glm::vec3(0.75f, 0.75f, 0.75f));
+
+    unsigned int cerberus = instances.new_mesh_instance("cerberus.fbx", "./assets/meshes/cerberus/", glm::vec3(2, 2, 0));
+    instances.update_instance_scale(cerberus, glm::vec3(0.015f, 0.015f, 0.015f));
+    instances.update_instance_rotation(cerberus, glm::vec3(-90.0f, 0, 90));
 
     assign_managers(state, instances);
 
@@ -397,6 +380,7 @@ int main(int argc, char *argv[]) {
     float last_frame_time = glfwGetTime();
 
     do {
+        frame_section("Swap Buffer", glfwGetTime());
         float current_frame_time = glfwGetTime();
         float delta_time = current_frame_time - last_frame_time;
         last_frame_time = current_frame_time;
@@ -472,23 +456,8 @@ int main(int argc, char *argv[]) {
         instances.draw();
         frame_section("Instance Drawing", glfwGetTime());
 
-        // ========= MODEL DRAWING =========
+        // ========= END MODEL DRAWING =========
 
-        // ========= SHAPE DRAWING =========
-        {
-            glUseProgram(simple_program);
-            glUniform1i(glGetUniformLocation(simple_program, "use_uniform_color"), false);
-            glm::mat4 plane_model = glm::mat4(1.0f);
-            rotated_view = getView();
-
-            glm::mat4 mvp = Projection * rotated_view * plane_model;
-            // Load camera to OpenGL
-            renderer.active().set_uniform("MVP", mvp);
-
-            draw_shapes();
-        }
-        // ========= END SHAPE DRAWING =========
-        frame_section("Shape Drawing", glfwGetTime());
         // ========= SPRITE DRAWING =========
         {
             renderer.activate("sprite");
@@ -518,6 +487,7 @@ int main(int argc, char *argv[]) {
             UpdateMatrixBuffer();
             DrawPlanes(sprite_program);
         }
+        
         // ========= END SPRITE DRAWING =========
         frame_section("Sprite Drawing", glfwGetTime());
         // ========= DEBUG DRAWING =========
@@ -548,8 +518,10 @@ int main(int argc, char *argv[]) {
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         }
         // ========= END INTERFACE DRAWING =========
+        frame_section("Interface Drawing", glfwGetTime());
 
         glfwSwapBuffers(window);
+        renderer.finish_frame();
     } 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0);

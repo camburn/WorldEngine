@@ -10,8 +10,8 @@ link_flags:
  - -Wall
  
 debug_link_flags:
- - -export-dynamic
  - -Xlinker
+ - -export-dynamic
 
 include_dirs:
  - include/

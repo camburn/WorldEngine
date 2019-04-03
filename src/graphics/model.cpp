@@ -1,3 +1,4 @@
+#include "managers/state_manager.hpp"
 #include "graphics/model.hpp"
 
 // TODO: Each Mesh should have its own model matrix
@@ -14,9 +15,13 @@ Model::Model(const char* path, const char* filename) {
     this->loadModel(path, filename);
 }
 
-void Model::Draw(GLuint shader) {
-    for (GLuint i = 0; i < this->meshes.size(); i++) {
-        this->meshes[i].Draw(shader);
+void Model::Draw(State &state, GLuint shader) {
+//void Model::Draw(GLuint shader) {
+    for (Mesh mesh: meshes) {
+        if (state.renderer.active().get_shader_name().compare("default") == 0) {
+            state.renderer.active().set_uniform("objectColor", mesh.material.ambient);
+        }
+        mesh.Draw(shader);
     }
 }
 
@@ -27,9 +32,9 @@ int Model::loadModel(const char* path, const char* filename) {
     const aiScene* scene = import.ReadFile(_path + _filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     // NOTE: Consider adding aiProcess_GenNormals on models without normals
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        const char* error_msg = "ERROR:ASSIMP:: In load model\n";
+        const char* error_msg = "ERROR:ASSIMP:: In load model:: ";
         fprintf(stderr, "%s", error_msg);
-        fprintf(stderr, "%s", import.GetErrorString());
+        fprintf(stderr, "%s\n", import.GetErrorString());
         return -1;
     }
     this->directory = _path;
@@ -90,25 +95,31 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
             indices.push_back(face.mIndices[j]);
         }
     }
+
+    MeshMaterial mesh_material;
     // Process Materials
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         // TODO: Handle all texture types
-
         aiColor3D ambient (0.0f, 0.0f, 0.0f);
         material->Get(AI_MATKEY_COLOR_AMBIENT, ambient);
+        mesh_material.ambient = glm::vec3(ambient.r, ambient.g, ambient.b);
 
-        aiColor3D color (0.0f, 0.0f, 0.0f);
-        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+        aiColor3D diffuse (0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+        mesh_material.diffuse = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
 
         aiColor3D specular (0.0f, 0.0f, 0.0f);
         material->Get(AI_MATKEY_COLOR_SPECULAR, specular);
+        mesh_material.specular = glm::vec3(specular.r, specular.g, specular.b);
 
         aiColor3D emissive (0.0f, 0.0f, 0.0f);
         material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive);
+        mesh_material.emissive = glm::vec3(emissive.r, emissive.g, emissive.b);
 
         float opacity = 0.0f;
         material->Get(AI_MATKEY_OPACITY, opacity);
+        mesh_material.opacity = opacity;
 
         // Diffuse Maps
         vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
@@ -118,7 +129,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
     }
-    return Mesh(vertices, indices, textures);
+    return Mesh(mesh_material, vertices, indices, textures);
 }
 
 vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName) {

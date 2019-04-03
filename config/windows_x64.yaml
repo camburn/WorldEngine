@@ -1,0 +1,50 @@
+---
+
+compile_flags:
+ - '/EHsc'
+ - '/MT'
+
+debug_compile_flags:
+ - '/DEBUG'
+ - '/Zi'
+
+link_flags:
+ - '/NODEFAULTLIB:libcmt.lib'
+ - '/LTCG'
+
+debug_link_flags:
+ - '/DEBUG'
+
+include_dirs:
+ - include/
+ - extern/imgui/
+ - $(EXTERNAL_LIBS)
+ - $(EXTERNAL_LIBS)/assimp-4.1.0-sdk/include
+ - $(EXTERNAL_LIBS)/freetype/include
+ - $(EXTERNAL_LIBS)/glew-2.1.0/include
+ - $(EXTERNAL_LIBS)/glfw-3.2.1/include
+ - $(EXTERNAL_LIBS)/glm
+ - $(PYTHON_PATH)/include
+ - $(EXTERNAL_LIBS)/soil/include
+
+libs:
+ - python36.lib
+ - python36_d.lib
+ - User32.lib
+ - Gdi32.lib
+ - OpenGL32.lib
+ - kernel32.lib
+ - shell32.lib
+ - glfw3.lib
+ - libglew32.lib
+ - SOIL.lib
+ - assimp-vc140-mt.lib
+
+lib_paths:
+ - D:/python36-x64/libs/
+ - $(WIN_KIT_DIR)/Windows Kits/10/Lib/10.0.14393.0/um/x64/
+ - $(EXTERNAL_LIBS)/glfw-3.2.1/lib/
+ - $(EXTERNAL_LIBS)/glew-2.1.0/build/lib/
+ - $(EXTERNAL_LIBS)/soil/lib/x64/Release/
+ - $(EXTERNAL_LIBS)/freetype/win64/
+ - $(EXTERNAL_LIBS)/assimp-4.1.0-sdk/lib/x64/
