@@ -1,0 +1,25 @@
+---
+
+compile_flags:
+ - -Wall
+ - -Werror
+ - -std=c++17
+
+debug_compile_flags:
+ - -g
+
+link_flags:
+ - -Wall
+ 
+debug_link_flags:
+ - -export-dynamic
+ - -Xlinker
+
+include_dirs:
+ - include/
+ - include/event
+
+libs:
+ - dl
+
+lib_paths:

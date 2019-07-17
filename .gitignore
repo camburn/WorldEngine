@@ -13,3 +13,4 @@ Release
 imgui.ini
 .sconsign.dblite
 bin
+*.gch
