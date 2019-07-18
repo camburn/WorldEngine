@@ -20,14 +20,14 @@ yaml.add_constructor('!env_substitute', env_substitute_constructor)
 if platform.system() == 'Windows':
     with open('config/windows.yaml', 'r') as f:
         try:
-            data = yaml.load(f.read())
+            data = yaml.safe_load(f.read())
         except KeyError as err:
             print("Required build environment variable missing", err)
             sys.exit(1)
 elif platform.system() == 'Linux':
     with open('config/linux.yaml', 'r') as f:
         try:
-            data = yaml.load(f.read())
+            data = yaml.safe_load(f.read())
         except KeyError as err:
             print("Required build environment variable missing", err)
             sys.exit(1)

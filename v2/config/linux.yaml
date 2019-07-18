@@ -3,7 +3,9 @@
 compile_flags:
  - -Wall
  - -Werror
+ - -Winvalid-pch
  - -std=c++17
+   # - -H
 
 debug_compile_flags:
  - -g
@@ -18,8 +20,11 @@ debug_link_flags:
 include_dirs:
  - include/
  - include/event
+ - extern/spdlog/include
 
 libs:
  - dl
+ - glfw
+ - GL
 
 lib_paths:

@@ -1,3 +1,4 @@
+#include "engine.hpp"
 #include "bus.hpp"
 
 
@@ -59,11 +60,12 @@ void register_callback(callback_prototype func, int filter) {
 
 void subscribe(std::string name) {
     // Create a subscription to all events, subcriptions can be checked with bus::get
-    subscriptions[name] = SubBuffer{name};
+    subscribe(name, -1);
 }
 
 void subscribe(std::string name, int filter) {
     // Create a filtered subscription, subcriptions can be checked with bus::get
+    ENGINE_INFO("Subscribed to event queue: '{0}'", name);
     subscriptions[name] = SubBuffer{name, filter};
 }
 
