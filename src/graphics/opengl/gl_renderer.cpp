@@ -9,6 +9,7 @@ GLuint shadow_map_buffer_id;
 GLuint shadow_map_texture_id;
 GLuint shadow_cube_buffer_id;
 GLuint shadow_cube_texture_id;
+GLuint jitter_map_id;
 GLuint ssbo_id;
 GLuint ssbo_light_id;
 GLuint depth_map_width = 4096;
@@ -81,6 +82,7 @@ void create_common_buffers() {
     shadow_cube_texture_id = texture_data.texture_id;
     create_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
     create_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
+    jitter_map_id = create_jitter_lookup(16, 8, 8);
 }
 
 void update_uniforms(SharedState &state, LightState &light_state) {
@@ -96,6 +98,7 @@ void activate_common_buffers() {
     //glCullFace(GL_FRONT);
     activate_ssbo(ssbo_id, SSBO_BINDING_UNIFORMS);
     activate_ssbo(ssbo_light_id, SSBO_BINDING_LIGHTS);
+    bind_jitter_map(jitter_map_id);
 }
 
 void activate_buffer_cube_shadow_map() {
@@ -385,7 +388,7 @@ void draw_buffers(bool* p_open) {
     ImGui::Text("Plane Data");
     if (ImGui::TreeNode("Shadow Map Buffer")) {
         glActiveTexture(GL_TEXTURE3);
-        ImGui::Image((void*)(shadow_map_texture_id), ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        ImGui::Image(&shadow_map_texture_id, ImVec2(512, 512), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Cube Map Buffer")) {
@@ -403,6 +406,58 @@ void bind_depth_map () {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_cube_texture_id);
     glActiveTexture(GL_TEXTURE0);
+}
+
+void bind_jitter_map(GLuint map_id) {
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_3D, map_id);
+}
+
+GLuint create_jitter_lookup(int size, int samples_u, int samples_v) {
+	signed char * data = new signed char[size * size * samples_u * samples_v * 4 / 2];
+
+	for (int i = 0; i<size; i++) {
+		for (int j = 0; j<size; j++) {
+			float rot_offset = ((float)rand() / RAND_MAX - 1) * 2 * 3.1415926f;
+			for (int k = 0; k<samples_u*samples_v/2; k++) {
+
+				int x, y;
+				glm::vec4 v;
+
+				x = k % (samples_u / 2);
+				y = (samples_v - 1) - k / (samples_u / 2);
+
+				// generate points on a regular samples_u x samples_v rectangular grid
+				v.x = (float)(x * 2 + 0.5f) / samples_u;
+				v.y = (float)(y + 0.5f) / samples_v;
+				v.z = (float)(x * 2 + 1 + 0.5f) / samples_u;
+				v.w = v.y;
+				
+				// jitter position
+				v[0] += ((float)rand() * 2 / RAND_MAX - 1) * (0.5f / samples_u);
+				v[1] += ((float)rand() * 2 / RAND_MAX - 1) * (0.5f / samples_v);
+				v[2] += ((float)rand() * 2 / RAND_MAX - 1) * (0.5f / samples_u);
+				v[3] += ((float)rand() * 2 / RAND_MAX - 1) * (0.5f / samples_v);
+
+				// warp to disk
+				glm::vec4 d;
+				d[0] = sqrtf(v[1]) * cosf(2 * 3.1415926f * v[0]);
+				d[1] = sqrtf(v[1]) * sinf(2 * 3.1415926f * v[0]);
+				d[2] = sqrtf(v[3]) * cosf(2 * 3.1415926f * v[2]);
+				d[3] = sqrtf(v[3]) * sinf(2 * 3.1415926f * v[2]);
+
+				data[(k * size * size + j * size + i) * 4 + 0] = (signed char)(d[0] * 127);
+				data[(k * size * size + j * size + i) * 4 + 1] = (signed char)(d[1] * 127);
+				data[(k * size * size + j * size + i) * 4 + 2] = (signed char)(d[2] * 127);
+				data[(k * size * size + j * size + i) * 4 + 3] = (signed char)(d[3] * 127);
+			}
+		}
+	}
+
+    GLuint texture_id = TextureBuffer3D(data, size, samples_u * samples_v / 2);
+
+	delete [] data;
+    return texture_id;
 }
 
 } // end namespace

@@ -2,6 +2,12 @@
 
 #define MAX_POINT_LIGHTS 10
 
+#define SAMPLECOUNT 64
+#define SAMPLECOUNT_FLOAT 64.0
+#define SAMPLECOUNT_D2 32
+#define SAMPLECOUNT_D2_FLOAT 32.0
+#define INV_SAMPLECOUNT (1.0 / SAMPLECOUNT_FLOAT)
+
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 TestNormal;
@@ -35,6 +41,12 @@ struct Material {
     uint specular_set;
     sampler2D texture_diffuse1;
     sampler2D texture_specular1;
+};
+
+struct LightResult {
+    vec3 ambient;
+    vec3 specular;
+    vec3 diffuse;
 };
 
 struct InstanceUniforms {
@@ -103,11 +115,12 @@ layout(std430, binding=3) buffer shader_uniforms {
     //InstanceUniforms instance_uniforms[];
 };
 
-
-
 uniform sampler2D shadow_map;
 uniform samplerCube shadow_cube_map;
+uniform sampler3D shadow_jitter_map;
 uniform vec3 objectColor;
+
+uniform float jitter_scale = 32.0;
 
 uniform bool use_shadows = false;
 
@@ -120,8 +133,29 @@ uniform float far_plane = 25.0;
 
 uniform Material material;
 
-float DirectionShadowCalculation(vec4 fragPosLightSpace) {
-    vec3 proj_coords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+const vec3 sampling_disk[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);
+
+vec2 poissonDisk[4] = vec2[](
+  vec2( -0.94201624, -0.39906216 ),
+  vec2( 0.94558609, -0.76890725 ),
+  vec2( -0.094184101, -0.92938870 ),
+  vec2( 0.34495938, 0.29387760 )
+);
+
+const int pcf_samples = 20;
+
+float DirectionShadowCalculation(vec4 frag_pos_light_space) {
+
+    vec3 frag_to_light = frag_pos_light_space.xyz - s_light_direction_pos.xyz;
+
+    vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     if (proj_coords.z > 1.0) { return 0.0; }
     proj_coords = proj_coords * 0.5 + 0.5;
     // Shadow biasing to remove shadow acne
@@ -129,7 +163,7 @@ float DirectionShadowCalculation(vec4 fragPosLightSpace) {
     vec3 light_direction = direction_light.direction.xyz;
     //float bias = clamp(s_map_config.x * tan(acos(dot(Normal, light_direction))), 0.0, 0.01);
 
-    float closest_depth = texture(shadow_map, proj_coords.xy).r;
+    //float closest_depth = texture(shadow_map, proj_coords.xy).r;
     float current_depth = proj_coords.z;
     //closest_depth = closest_depth * -2 / (25.0f - 1.0f) - (25.0f + 1.0f)/(25.0f - 1.0f);
     
@@ -139,6 +173,19 @@ float DirectionShadowCalculation(vec4 fragPosLightSpace) {
     //float shadow = current_depth - bias > closest_depth  ? 1.0 : 0.0;
     
     float shadow = 0.0;
+
+    //float view_distance = length(light.position.xyz - frag_pos);
+    float disk_radius = 0.05;
+    for (int i = 0; i < pcf_samples; ++i) {
+        float closest_depth = texture(shadow_map, proj_coords.xy + sampling_disk[i].xy * disk_radius).r;
+        closest_depth *= far_plane;
+        if(current_depth - s_map_config.x > closest_depth){
+            shadow += 1.0;
+        }
+    }
+    shadow /= float(pcf_samples);
+    /*
+    float shadow = 0.0;
     int s_pcf_samples = int(s_shadow_flags.z);
     vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
     for (int x = -s_pcf_samples; x <= s_pcf_samples; ++x) {
@@ -147,28 +194,34 @@ float DirectionShadowCalculation(vec4 fragPosLightSpace) {
             shadow += current_depth - bias > pcf_depth ? 0.5f : 0.0f;
         }
     }
+    */
     
+    return shadow * 5;
+}
+
+float PointShadowCalculation(PointLight light, vec3 frag_pos) {
+
+    // get vector between fragment position and light position
+    vec3 frag_to_light = frag_pos - s_light_point_pos.xyz;
+
+    float current_depth = length(frag_to_light);
+    // test for shadows
+    float shadow = 0.0;
+
+    float view_distance = length(light.position.xyz - frag_pos);
+    float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
+    for (int i = 0; i < pcf_samples; ++i) {
+        float closest_depth = texture(shadow_cube_map, frag_to_light + sampling_disk[i] * disk_radius).r;
+        closest_depth *= far_plane;
+        if(current_depth - s_map_config.y > closest_depth){
+            shadow += 1.0;
+        }
+    }
+    shadow /= float(pcf_samples);
     return shadow;
 }
 
-float ShadowCalculation(vec3 fragPos) {
-    // get vector between fragment position and light position
-    vec3 fragToLight = fragPos - s_light_point_pos.xyz;
-    // ise the fragment to light vector to sample from the depth map
-    float closest_depth = texture(shadow_cube_map, fragToLight).r;
-    // it is currently in linear range between [0,1], let's re-transform it back to original depth value
-    closest_depth *= far_plane;
-    // now get current linear depth as the length between the fragment and light position
-    float current_depth = length(fragToLight);
-    // test for shadows
-    //float shadow = currentDepth - cube_map_bias > closestDepth ? 1.0 : 0.0;
-    if (closest_depth + s_map_config.y < current_depth) {
-        return 0.5f;
-    }
-    return 0.0f;
-}
-
-vec3 calc_dir_light(DirectionLight light, vec3 normal, vec3 view_dir) {
+LightResult calc_dir_light(DirectionLight light, vec3 normal, vec3 view_dir) {
     vec3 light_direction = normalize(-light.direction.xyz);
     // Calculate diffuse impact by getting dot product between lightDir and the surface normal
     float diff = max(dot(normal, light_direction), 0.0);
@@ -183,12 +236,16 @@ vec3 calc_dir_light(DirectionLight light, vec3 normal, vec3 view_dir) {
     if (material.specular_set == 1) {
         specular = light.specular.xyz * spec * vec3(texture(material.texture_specular1, TexCoord));
     }
-    
-    return (ambient * diffuse * specular);
+    LightResult result;
+    result.ambient = ambient;
+    result.diffuse = diffuse;
+    result.specular = specular;
+    return result;
+    //return (ambient * diffuse * specular);
     //return (ambient + diffuse);
 }
 
-vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir) {
+LightResult calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir) {
     vec3 light_dir = normalize(light.position.xyz - frag_pos);
     // Diffuse shading
     float diff = max(dot(normal, light_dir), 0.0);
@@ -212,7 +269,12 @@ vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_di
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
-    return (ambient + diffuse + specular);
+    //return (ambient + diffuse + specular);
+    LightResult result;
+    result.ambient = ambient;
+    result.diffuse = diffuse;
+    result.specular = specular;
+    return result;
 }
 
 void main(){
@@ -260,20 +322,26 @@ void main(){
     }
     */
 
-    vec3 light_result = vec3(0.0);
+    LightResult p_result;
     float point_shadow = 0.0;
     if (s_shadow_flags.x == 1) {
-        light_result += calc_point_light(point_lights[0], normal, FragPos, view_dir);
-        point_shadow = ShadowCalculation(FragPos);
+        p_result = calc_point_light(point_lights[0], normal, FragPos, view_dir);
+        point_shadow = PointShadowCalculation(point_lights[0], FragPos);
     }
+    LightResult d_result;
     float direction_shadow = 0.0;
     if (s_shadow_flags.y == 1) {
-        light_result += calc_dir_light(direction_light, normal, view_dir);
+        d_result = calc_dir_light(direction_light, normal, view_dir);
         direction_shadow = DirectionShadowCalculation(FragPosLightSpace);
         
     }
 
-    light_result -= (clamp(direction_shadow + point_shadow, 0.0, 1.0) / 2);
+    vec3 tex_color = texture(material.texture_diffuse1, TexCoord).rgb;
+    vec3 lighting = (p_result.ambient + (1.0 - point_shadow) * (
+        p_result.diffuse + p_result.specular)) * tex_color;
 
-    color = vec4(light_result, 1);
+    vec3 dir_lighting = (d_result.ambient + (1.0 - direction_shadow) * (
+        d_result.diffuse + d_result.specular)) * tex_color;  
+    
+    color = vec4(dir_lighting + lighting, 1);
 }

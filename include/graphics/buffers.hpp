@@ -35,6 +35,7 @@ TextureBuffer DepthMapBuffer(GLuint width, GLuint height);
 TextureBuffer DepthCubeMapBuffer(GLuint width, GLuint height);
 void activate_ssbo(const GLuint &id, const GLuint bind_number);
 GLuint create_ssbo(GLuint &id, const GLuint &bind_number);
+GLuint TextureBuffer3D(signed char * data, int size, int depth);
 void read_ssbo(const GLuint &id, SharedState *read_state);
 void update_ssbo(const GLuint &id, LightState &state);
 void update_ssbo(const GLuint &id, SharedState &state);

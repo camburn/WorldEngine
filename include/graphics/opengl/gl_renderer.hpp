@@ -37,5 +37,7 @@ void draw_ssbo_state(bool* p_open);
 GLuint LoadShader(const char* file_path, GLuint ShaderID);
 GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_path);
 GLuint BuildGlProgram(const char* vertex_file_path, const char* fragment_file_path, const char* geometry_file_path);
+void bind_jitter_map(GLuint map_id);
+GLuint create_jitter_lookup(int size, int samples_u, int samples_v);
 
 }

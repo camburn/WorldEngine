@@ -354,9 +354,11 @@ void InstanceManager::draw() {
         state.renderer.active().set_uniform("Model", prim->get_model_matrix());
         GLint shadow_sampler_id = 3;
         GLint cube_sampler_id = 2;
-        //state.renderer.active().set_uniform("texture_diffuse1", &texture_sampler_id, U_INT);
+        GLint jitter_sampler_id = 5;
+        
         state.renderer.active().set_uniform("shadow_map", shadow_sampler_id);
         state.renderer.active().set_uniform("shadow_cube_map", cube_sampler_id);
+        state.renderer.active().set_uniform("shadow_jitter_map", jitter_sampler_id);
         state.renderer.active().set_uniform("uniform_color", prim->get_uniform_color());
         state.renderer.active().set_uniform("use_uniform_color", !prim->get_texture_status());
         state.renderer.active().set_uniform("use_shadows", prim->get_shading_status());

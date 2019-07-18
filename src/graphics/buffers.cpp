@@ -118,6 +118,24 @@ void UpdateBufferData(vector<glm::vec3> vertices, vector<unsigned int> indices, 
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_DYNAMIC_DRAW);
 }
 
+GLuint TextureBuffer3D(signed char * data, int size, int depth) {
+    GLuint textureID;
+
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_3D, textureID);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA4, size, size, 
+        depth, 0, GL_RGBA, GL_BYTE, data);
+
+    glBindTexture(GL_TEXTURE_3D, 0);
+    return textureID;
+}
+
 GLuint BufferTextureDataFromFile(string file, string directory) {
     string filename = directory + file;
     replace(filename.begin(), filename.end(), '\\', '/');
