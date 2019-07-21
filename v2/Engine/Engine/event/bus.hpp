@@ -7,7 +7,7 @@
 #include <functional>
 #include <memory>
 
-#include "event.hpp"
+#include "Engine/event/event.hpp"
 
 namespace bus {
 
@@ -22,7 +22,7 @@ std::shared_ptr<Event> get(std::string name);
 
 template<class T>
 std::shared_ptr<T> get_event(std::shared_ptr<Event> &event) {
-    if (event != nullptr && event->get_type() == T::type) {
+    if (event != nullptr && event->get_type() == T::get_static_type()) {
         return std::dynamic_pointer_cast<T>(event);
     }
     return nullptr;

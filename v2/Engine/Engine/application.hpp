@@ -3,11 +3,10 @@
 #include <memory>
 #include <string>
 
-#include "event/event.hpp"
-#include "event/bus.hpp"
-#include "window.hpp"
-//#include "platform/linux_window.hpp"
-#include "layer_stack.hpp"
+#include "Engine/event/event.hpp"
+#include "Engine/event/bus.hpp"
+#include "Engine/window.hpp"
+#include "Engine/layer_stack.hpp"
 
 namespace engine{
 

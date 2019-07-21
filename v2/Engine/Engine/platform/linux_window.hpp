@@ -1,10 +1,12 @@
 #ifndef _LINUX_WINDOW_HPP
 #define _LINUX_WINDOW_HPP
 #include <string>
-#include "window.hpp"
 
 #include <GLFW/glfw3.h>
 
+#include "Engine/window.hpp"
+#include "Engine/event/bus.hpp"
+#include "Engine/event/event.hpp"
 
 namespace engine {
 

@@ -9,14 +9,20 @@ debug_compile_flags:
  - '/Z7'
 
 link_flags:
+
  
 debug_link_flags:
  - '/DEBUG'
 
 include_dirs:
- - include/
+ - Engine/
+ - extern/spdlog/include
+ - $(EXTERNAL_LIBS)/glfw-3.2.1/include
 
 libs:
+ - OpenGL32.lib
+ - glfw3.lib
 
 lib_paths:
- - $(WIN_KIT_DIR)/Windows Kits/10/Lib/10.0.14393.0/um/x86/
+ - $(WIN_KIT_DIR)/Windows Kits/10/Lib/10.0.14393.0/um/x64/
+ - $(EXTERNAL_LIBS)/glfw-3.2.1/lib/

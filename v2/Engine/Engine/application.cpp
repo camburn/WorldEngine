@@ -8,7 +8,7 @@ namespace engine {
 Application::Application() {
     Log::Init();
     ENGINE_INFO("Application Started");
-    bus::subscribe(channel, APPLICATION_EVENT);
+    bus::subscribe(channel, ENGINE_APPLICATION_EVENT);
 
     window = std::unique_ptr<Window>(Window::create());
 }
@@ -19,7 +19,6 @@ void Application::run() {
     while (running) {
         auto event = bus::get(channel);
         on_event(event);
-        //bus::publish(std::make_unique<ApplicationEvent>(QUIT));
 
         glClearColor(0.5, 0.5, 0.5, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -46,7 +45,7 @@ void Application::push_overlay(Layer* layer) {
 void Application::on_event(std::shared_ptr<Event> event) {
     if (event == nullptr) return;
 
-    if (event->get_type() == APPLICATION_EVENT) {
+    if (event->get_type() == ENGINE_APPLICATION_EVENT) {
         auto app_event = bus::get_event<ApplicationEvent>(event);
         if (app_event->data == QUIT) {
             running = false;

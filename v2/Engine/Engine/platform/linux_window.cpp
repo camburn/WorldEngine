@@ -1,5 +1,5 @@
 #include "engine.hpp"
-#include "platform/linux_window.hpp"
+#include "Engine/platform/linux_window.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -32,6 +32,16 @@ void LinuxWindow::init(int width, int height, std::string title) {
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
     glfwMakeContextCurrent(window);
+
+    glfwSetWindowCloseCallback(window, 
+        [](GLFWwindow* window){
+            //WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+            //WindowCloseEvent event;
+            //data.EventCallback(event);
+            ENGINE_INFO("Window Close Callback");
+            bus::publish(std::make_unique<ApplicationEvent>(QUIT));
+        }
+    );
 
 }
 
