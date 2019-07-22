@@ -14,7 +14,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["glfw"] = "extern/glfw/include"
 -- IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
--- IncludeDir["ImGui"] = "Hazel/vendor/imgui"
+IncludeDir["imgui"] = "extern/imgui"
 -- IncludeDir["glm"] = "Hazel/vendor/glm"
 
 group "Dependencies"
@@ -55,8 +55,8 @@ project "Engine"
         "extern/spdlog/include",
 		"%{prj.name}/",
 		"%{IncludeDir.glfw}",
+		"%{IncludeDir.imgui}",
 		-- "%{IncludeDir.Glad}",
-		-- "%{IncludeDir.ImGui}",
 		-- "%{IncludeDir.glm}"
 	}
 
@@ -64,7 +64,7 @@ project "Engine"
 	{ 
 		"GLFW",
 		-- "Glad",
-		-- "ImGui",
+		"imgui",
 	}
 
 	filter "system:linux"
@@ -91,7 +91,8 @@ project "Engine"
 
         defines
         {
-            "ENGINE_PLATFORM_LINUX"
+            "ENGINE_PLATFORM_LINUX",
+            "OPENGL_COMPATIBILITY"
         }
 
 

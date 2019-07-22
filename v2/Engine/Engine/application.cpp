@@ -5,12 +5,20 @@
 
 namespace engine {
 
+Application* Application::instance = nullptr;
+
 Application::Application() {
     Log::Init();
+    ENGINE_ASSERT(!instance, "Application already exists");
+    instance = this;
+
     ENGINE_INFO("Application Started");
     bus::subscribe(channel, ENGINE_APPLICATION_EVENT | ENGINE_KEY_EVENT);
 
     window = std::unique_ptr<Window>(Window::create());
+
+    interface_layer = new InterfaceLayer{};
+    push_overlay(interface_layer);
 }
 
 Application::~Application() {}
@@ -27,9 +35,14 @@ void Application::run() {
             layer->on_update();
         }
 
+        interface_layer->begin();
+        for (Layer* layer: layer_stack) {
+            layer->on_ui_render();
+        }
+        interface_layer->end();
+
         window->on_update();
     }
-
 };
 
 void Application::push_layer(Layer* layer) {

@@ -22,11 +22,15 @@ public:
     unsigned int get_height() override;
     const std::string name = "Linux Window";
 
+    void* get_native_window() const {return window;}
+
 private:
-    void init(int width, int height, std::string title);
+    void init(std::string title);
     void shutdown();
 
     GLFWwindow* window;
+    int width;
+    int height;
 };
 
 }

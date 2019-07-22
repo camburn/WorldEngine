@@ -13,15 +13,15 @@ Window* Window::create() {
     return new LinuxWindow();
 }
 
-LinuxWindow::LinuxWindow() {
-    init(500, 500, "test");
+LinuxWindow::LinuxWindow(): width(500), height(500) {
+    init("test");
 }
 
 LinuxWindow::~LinuxWindow() {
     shutdown();
 }
 
-void LinuxWindow::init(int width, int height, std::string title) {
+void LinuxWindow::init(std::string title) {
     ENGINE_INFO("Creating Linux Window: {2} - ({0}, {1})", width, height, title);
     if (!glfwInit()){
         ENGINE_ERROR("Failed to initialise GLFW in Linux Window");
@@ -63,11 +63,11 @@ void LinuxWindow::on_update() {
 }
 
 unsigned int LinuxWindow::get_width() {
-    return 0;
+    return width;
 }
 
 unsigned int LinuxWindow::get_height() {
-    return 0;
+    return height;
 }
 
 } // namespace

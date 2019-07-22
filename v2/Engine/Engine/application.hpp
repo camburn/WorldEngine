@@ -7,6 +7,7 @@
 #include "Engine/event/bus.hpp"
 #include "Engine/window.hpp"
 #include "Engine/layer_stack.hpp"
+#include "Engine/interface/interface.hpp"
 
 namespace engine{
 
@@ -28,14 +29,18 @@ public:
     void on_event(std::shared_ptr<Event> event);
 
     inline Window &get_window() { return *window; }
+    inline static Application &get() { return *instance; }
 
 private:
     std::unique_ptr<Window> window;
 
     LayerStack layer_stack;
+    InterfaceLayer *interface_layer;
 
     bool running = true;
     const std::string channel = "application";
+
+    static Application* instance;
 };
 
 
