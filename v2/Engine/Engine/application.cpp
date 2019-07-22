@@ -8,7 +8,7 @@ namespace engine {
 Application::Application() {
     Log::Init();
     ENGINE_INFO("Application Started");
-    bus::subscribe(channel, ENGINE_APPLICATION_EVENT);
+    bus::subscribe(channel, ENGINE_APPLICATION_EVENT | ENGINE_KEY_EVENT);
 
     window = std::unique_ptr<Window>(Window::create());
 }
@@ -49,6 +49,12 @@ void Application::on_event(std::shared_ptr<Event> event) {
         auto app_event = bus::get_event<ApplicationEvent>(event);
         if (app_event->data == QUIT) {
             running = false;
+        }
+    }
+    if (event->get_type() == ENGINE_KEY_EVENT) {
+        auto app_event = bus::get_event<KeyEvent>(event);
+        if (app_event->key == 256 & app_event->action == 1) {
+            bus::publish(std::make_unique<ApplicationEvent>(QUIT));
         }
     }
 }

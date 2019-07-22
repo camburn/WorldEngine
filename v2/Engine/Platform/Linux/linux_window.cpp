@@ -1,5 +1,5 @@
 #include "engine.hpp"
-#include "Engine/platform/linux_window.hpp"
+#include "linux_window.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -14,7 +14,6 @@ Window* Window::create() {
 }
 
 LinuxWindow::LinuxWindow() {
-    ENGINE_INFO("Linux Window Created");
     init(500, 500, "test");
 }
 
@@ -23,8 +22,10 @@ LinuxWindow::~LinuxWindow() {
 }
 
 void LinuxWindow::init(int width, int height, std::string title) {
+    ENGINE_INFO("Creating Linux Window: {2} - ({0}, {1})", width, height, title);
     if (!glfwInit()){
         ENGINE_ERROR("Failed to initialise GLFW in Linux Window");
+        return;
     }
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -35,14 +36,19 @@ void LinuxWindow::init(int width, int height, std::string title) {
 
     glfwSetWindowCloseCallback(window, 
         [](GLFWwindow* window){
-            //WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-            //WindowCloseEvent event;
-            //data.EventCallback(event);
             ENGINE_INFO("Window Close Callback");
             bus::publish(std::make_unique<ApplicationEvent>(QUIT));
         }
     );
 
+    glfwSetKeyCallback(window, 
+        [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            ENGINE_INFO("Key Pressed {0}, {1}", key, action);
+            bus::publish(std::make_unique<KeyEvent>(key, action));
+        }
+    );
+
+    ENGINE_INFO("Linux Window Callbacks set");
 }
 
 void LinuxWindow::shutdown() {

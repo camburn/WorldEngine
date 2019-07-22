@@ -22,25 +22,26 @@ group "Dependencies"
 	-- include "Hazel/vendor/Glad"
 	-- include "Hazel/vendor/imgui"
 
-group ""
 
 project "Engine"
 	location "./"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "./")
-	objdir ("build/" .. outputdir .. "./")
+	targetdir ("bin/")
+	objdir ("build/" .. outputdir .. "/")
 
 	pchheader "engine.hpp"
 	pchsource "%{prj.name}/engine.cpp"
 
 	files
 	{
-        "%{prj.name}/**.cpp",
-        "%{prj.name}/**.hpp",
+        "%{prj.name}/Engine/**.cpp",
+        "%{prj.name}/Engine/**.hpp",
+        "%{prj.name}/engine.hpp",
+        "%{prj.name}/engine.cpp",
+        "%{prj.name}/sandbox.cpp",
 		-- "%{prj.name}/vendor/glm/glm/**.hpp",
 		-- "%{prj.name}/vendor/glm/glm/**.inl",
 	}
@@ -64,18 +65,57 @@ project "Engine"
 		"GLFW",
 		-- "Glad",
 		-- "ImGui",
-		"opengl32.lib"
 	}
 
+	filter "system:linux"
+	    staticruntime "on"
+		systemversion "latest"
+
+        files
+        {
+            "%{prj.name}/Platform/Linux/**.h",
+            "%{prj.name}/Platform/Linux/**.cpp"
+        }
+
+        links
+        {
+            "Xrandr",
+            "Xi",
+            "GLEW",
+            "GLU",
+            "GL",
+            "X11",
+            "dl",
+            "pthread"
+        }
+
+        defines
+        {
+            "ENGINE_PLATFORM_LINUX"
+        }
+
+
+        
 	filter "system:windows"
 		systemversion "latest"
+	    staticruntime "off"
+
+        files
+        {
+            "%{prj.name}/Platform/Windows/**.h",
+            "%{prj.name}/Platform/Windows/**.cpp"
+        }
 
 		defines
 		{
-			-- "HZ_PLATFORM_WINDOWS",
-			-- "HZ_BUILD_DLL",
+			"ENGINE_PLATFORM_WINDOWS",
 			"GLFW_INCLUDE_NONE"
 		}
+
+        links 
+        { 
+            "opengl32.lib"
+        }
 
 	filter "configurations:Debug"
 		defines "ENGINE_DEBUG"

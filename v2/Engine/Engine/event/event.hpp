@@ -2,6 +2,7 @@
 #ifndef _EVENT_HPP
 #define _EVENT_HPP
 #include <string>
+#include "keys.hpp"
 
 enum EVENT_TYPE {
     ENGINE_EMPTY = 1 << 0, 
@@ -46,5 +47,15 @@ public:
     static EVENT_TYPE get_static_type() { return ENGINE_APPLICATION_EVENT; }
     virtual EVENT_TYPE get_type() const override { return get_static_type(); }
     //static const EVENT_TYPE type = APPLICATION_EVENT;
+};
+
+class KeyEvent: public Event {
+public:
+    KeyEvent(int key, int action):  key(key), action(action) {}
+    const int key;
+    const int action;
+
+    static EVENT_TYPE get_static_type() { return ENGINE_KEY_EVENT; }
+    virtual EVENT_TYPE get_type() const override { return get_static_type(); }
 };
 #endif
