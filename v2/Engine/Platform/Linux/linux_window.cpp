@@ -32,7 +32,9 @@ void LinuxWindow::init(std::string title) {
 
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
-    glfwMakeContextCurrent(window);
+    //glfwMakeContextCurrent(window);
+    context = new enginegl::OpenGLContext(window);
+    context->init();
 
     glfwSetWindowCloseCallback(window, 
         [](GLFWwindow* window){
@@ -43,12 +45,10 @@ void LinuxWindow::init(std::string title) {
 
     glfwSetKeyCallback(window, 
         [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            ENGINE_INFO("Key Pressed {0}, {1}", key, action);
+            ENGINE_TRACE("Key Pressed {0}, {1}", key, action);
             bus::publish(std::make_unique<KeyEvent>(key, action));
         }
     );
-
-    ENGINE_INFO("Linux Window Callbacks set");
 }
 
 void LinuxWindow::shutdown() {
@@ -59,7 +59,7 @@ void LinuxWindow::shutdown() {
 
 void LinuxWindow::on_update() {
     glfwPollEvents();
-    glfwSwapBuffers(window);
+    context->swap_buffers();
 }
 
 unsigned int LinuxWindow::get_width() {

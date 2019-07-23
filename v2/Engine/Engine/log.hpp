@@ -28,6 +28,7 @@ private:
 
 // Engine log macros
 #define ENGINE_TRACE(...)    ::engine::Log::GetEngineLogger()->trace(__VA_ARGS__)
+#define ENGINE_DEBUG(...)    ::engine::Log::GetEngineLogger()->debug(__VA_ARGS__)
 #define ENGINE_INFO(...)     ::engine::Log::GetEngineLogger()->info(__VA_ARGS__)
 #define ENGINE_WARN(...)     ::engine::Log::GetEngineLogger()->warn(__VA_ARGS__)
 #define ENGINE_ERROR(...)    ::engine::Log::GetEngineLogger()->error(__VA_ARGS__)

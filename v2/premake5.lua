@@ -13,13 +13,13 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["glfw"] = "extern/glfw/include"
--- IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
+IncludeDir["glad"] = "extern/glad/include"
 IncludeDir["imgui"] = "extern/imgui"
--- IncludeDir["glm"] = "Hazel/vendor/glm"
+IncludeDir["glm"] = "extern/glm/glm"
 
 group "Dependencies"
 	include "extern/"
-	-- include "Hazel/vendor/Glad"
+	-- include "extern/vendor/glad"
 	-- include "Hazel/vendor/imgui"
 
 
@@ -39,6 +39,10 @@ project "Engine"
 	{
         "%{prj.name}/Engine/**.cpp",
         "%{prj.name}/Engine/**.hpp",
+        "%{prj.name}/Tools/**.cpp",
+        "%{prj.name}/Tools/**.hpp",
+        "%{prj.name}/Platform/OpenGL/**.cpp",
+        "%{prj.name}/Platform/OpenGL/**.hpp",
         "%{prj.name}/engine.hpp",
         "%{prj.name}/engine.cpp",
         "%{prj.name}/sandbox.cpp",
@@ -48,22 +52,23 @@ project "Engine"
 
 	defines
 	{
+		"GLFW_INCLUDE_NONE"
 	}
 
 	includedirs
 	{
         "extern/spdlog/include",
-		"%{prj.name}/",
+		"%{prj.name}",
 		"%{IncludeDir.glfw}",
 		"%{IncludeDir.imgui}",
-		-- "%{IncludeDir.Glad}",
-		-- "%{IncludeDir.glm}"
+		"%{IncludeDir.glad}",
+		"%{IncludeDir.glm}"
 	}
 
 	links 
 	{ 
 		"GLFW",
-		-- "Glad",
+		"glad",
 		"imgui",
 	}
 
@@ -95,8 +100,6 @@ project "Engine"
             "OPENGL_COMPATIBILITY"
         }
 
-
-        
 	filter "system:windows"
 		systemversion "latest"
 	    staticruntime "off"
@@ -110,7 +113,6 @@ project "Engine"
 		defines
 		{
 			"ENGINE_PLATFORM_WINDOWS",
-			"GLFW_INCLUDE_NONE"
 		}
 
         links 
@@ -119,7 +121,7 @@ project "Engine"
         }
 
 	filter "configurations:Debug"
-		defines "ENGINE_DEBUG"
+		defines "ENGINE_DEBUG_ENABLED"
 		runtime "Debug"
 		symbols "on"
 

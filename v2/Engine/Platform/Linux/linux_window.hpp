@@ -8,6 +8,8 @@
 #include "Engine/event/bus.hpp"
 #include "Engine/event/event.hpp"
 
+#include "Platform/OpenGL/opengl_context.hpp"
+
 namespace engine {
 
 class LinuxWindow: public Window {
@@ -28,6 +30,7 @@ private:
     void init(std::string title);
     void shutdown();
 
+    GraphicsContext* context;
     GLFWwindow* window;
     int width;
     int height;
