@@ -73,6 +73,8 @@ void Application::run() {
     auto index_buffer = IndexBuffer::create(indices, sizeof(indices));
     // END OpenGL Test
 
+    glBindVertexArray(0);
+
     while (running) {
         auto event = bus::get(channel);
         on_event(event);
@@ -93,9 +95,11 @@ void Application::run() {
 
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
+        #ifdef OPENGL_COMPATIBILITY
         glUseProgram(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        #endif
 
         for (Layer* layer: layer_stack) {
             layer->on_update();
@@ -132,7 +136,7 @@ void Application::on_event(std::shared_ptr<Event> event) {
     }
     if (event->get_type() == ENGINE_KEY_EVENT) {
         auto app_event = bus::get_event<KeyEvent>(event);
-        if (app_event->key == 256 & app_event->action == 1) {
+        if ((app_event->key == 256) & (app_event->action == 1)) {
             bus::publish(std::make_unique<ApplicationEvent>(QUIT));
         }
     }

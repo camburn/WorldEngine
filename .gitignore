@@ -17,3 +17,7 @@ bin-int
 *.gch
 *.make
 Makefile
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln

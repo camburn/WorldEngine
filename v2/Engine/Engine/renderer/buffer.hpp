@@ -1,3 +1,5 @@
+#ifndef _BUFFER_HPP
+#define _BUFFER_HPP
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -115,3 +117,4 @@ public:
 
 
 }  // namespace
+#endif

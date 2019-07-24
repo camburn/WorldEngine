@@ -3,7 +3,7 @@
 
 #include "Engine/renderer/context.hpp"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace enginegl {
 

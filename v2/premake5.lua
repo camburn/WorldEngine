@@ -15,7 +15,7 @@ IncludeDir = {}
 IncludeDir["glfw"] = "extern/glfw/include"
 IncludeDir["glad"] = "extern/glad/include"
 IncludeDir["imgui"] = "extern/imgui"
-IncludeDir["glm"] = "extern/glm/glm"
+IncludeDir["glm"] = "extern/glm"
 
 group "Dependencies"
 	include "extern/"
@@ -113,6 +113,7 @@ project "Engine"
 		defines
 		{
 			"ENGINE_PLATFORM_WINDOWS",
+			"_CRT_SECURE_NO_WARNINGS"
 		}
 
         links 
