@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include "Platform/OpenGL/shader_loader.hpp"
+#include "Engine/renderer/buffer.hpp"
 
 namespace engine {
 
@@ -43,8 +44,8 @@ void Application::run() {
     glBindVertexArray(vertex_array);
     #endif
 
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    //glGenBuffers(1, &vertex_buffer);
+    //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 
     float vertices[3 * 3] = {
         -0.5f, -0.5f, 0.0f,
@@ -52,16 +53,24 @@ void Application::run() {
         0.0f,  0.5f, 0.0f
     };
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    BufferLayout layout {
+        {ShaderDataType::Float3, "position"}
+    };
+    auto buffer = VertexBuffer::create(vertices, sizeof(vertices));
+    buffer->set_layout(layout);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    //glGenBuffers(1, &index_buffer);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    
 
     unsigned int indices[3] = { 0, 1, 2 };
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    auto index_buffer = IndexBuffer::create(indices, sizeof(indices));
     // END OpenGL Test
 
     while (running) {
@@ -74,12 +83,14 @@ void Application::run() {
         glUseProgram(shader_id);
 
         #ifdef OPENGL_COMPATIBILITY
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+        //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        buffer->bind();
+        index_buffer->bind();
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
         #else
         glBindVertexArray(vertex_array);
         #endif
-        
+
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
         glUseProgram(0);
