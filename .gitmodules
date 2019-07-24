@@ -1,9 +1,6 @@
 [submodule "spdlog"]
 	path = v2/extern/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "glfw"]
-	path = v2/extern/glfw
-	url = https://github.com/glfw/glfw.git
 [submodule "imgui"]
 	path = v2/extern/imgui
 	url = https://github.com/ocornut/imgui.git
