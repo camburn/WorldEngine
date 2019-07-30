@@ -4,8 +4,6 @@
 
 namespace enginegl {
 
-
-
 OpenGLVertexBuffer::OpenGLVertexBuffer(float *vertices, uint32_t size) {
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);

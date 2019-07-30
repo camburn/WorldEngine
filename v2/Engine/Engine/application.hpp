@@ -42,10 +42,6 @@ private:
 
     static Application* instance;
 
-    unsigned int shader_id;
-    unsigned int vertex_array;
-    unsigned int vertex_buffer;
-    unsigned int index_buffer;
 };
 
 

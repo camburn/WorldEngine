@@ -12,4 +12,4 @@ IndexBuffer* IndexBuffer::create(uint32_t* indices, uint32_t count) {
     return new enginegl::OpenGLIndexBuffer(indices, count);
 }
 
-}
+} //namespace

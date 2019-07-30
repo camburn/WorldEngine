@@ -3,8 +3,11 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include "Platform/OpenGL/shader_loader.hpp"
+
+#include "Engine/renderer/shader.hpp"
 #include "Engine/renderer/buffer.hpp"
+#include "Engine/renderer/vertex_array.hpp"
+
 
 namespace engine {
 
@@ -25,9 +28,6 @@ Application::Application() {
 }
 
 Application::~Application() {
-    glDeleteBuffers(1, &vertex_array);
-    glDeleteBuffers(1, &vertex_buffer);
-    glDeleteBuffers(1, &index_buffer);
 
 }
 
@@ -36,16 +36,11 @@ void Application::run() {
     // 1. Load shaders
     std::string vs_file = "./shaders/vertex.glsl";
     std::string fs_file = "./shaders/fragment.glsl";
-    shader_id = enginegl::build_program(vs_file, fs_file);
+    Shader shader{vs_file, fs_file};
     // 2. Generate Buffers
 
-    #ifndef OPENGL_COMPATIBILITY
-    glGenVertexArrays(1, &vertex_array);
-    glBindVertexArray(vertex_array);
-    #endif
-
-    //glGenBuffers(1, &vertex_buffer);
-    //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    std::shared_ptr<VertexArray> vao;
+    vao.reset(VertexArray::create());
 
     float vertices[3 * 3] = {
         -0.5f, -0.5f, 0.0f,
@@ -53,27 +48,20 @@ void Application::run() {
         0.0f,  0.5f, 0.0f
     };
 
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     BufferLayout layout {
         {ShaderDataType::Float3, "position"}
     };
-    auto buffer = VertexBuffer::create(vertices, sizeof(vertices));
+    std::shared_ptr<VertexBuffer> buffer;
+    buffer.reset(VertexBuffer::create(vertices, sizeof(vertices)));
     buffer->set_layout(layout);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    uint32_t indices[3] = { 0, 1, 2 };
+    std::shared_ptr<IndexBuffer> index_buffer;
+    index_buffer.reset(IndexBuffer::create(indices, sizeof(indices) / sizeof(uint32_t)));
 
-    //glGenBuffers(1, &index_buffer);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    
-
-    unsigned int indices[3] = { 0, 1, 2 };
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    auto index_buffer = IndexBuffer::create(indices, sizeof(indices));
+    vao->add_vertex_buffer(buffer);
+    vao->set_index_buffer(index_buffer);
     // END OpenGL Test
-
-    glBindVertexArray(0);
 
     while (running) {
         auto event = bus::get(channel);
@@ -82,28 +70,19 @@ void Application::run() {
         glClearColor(0.5, 0.5, 0.5, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shader_id);
+        shader.bind();
 
-        #ifdef OPENGL_COMPATIBILITY
-        //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        buffer->bind();
-        index_buffer->bind();
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-        #else
-        glBindVertexArray(vertex_array);
-        #endif
+        vao->bind();
 
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
-        #ifdef OPENGL_COMPATIBILITY
-        glUseProgram(0);
-        //glBindBuffer(GL_ARRAY_BUFFER, 0);
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        #endif
+        
 
         for (Layer* layer: layer_stack) {
             layer->on_update();
         }
+
+        shader.unbind();
 
         interface_layer->begin();
         for (Layer* layer: layer_stack) {

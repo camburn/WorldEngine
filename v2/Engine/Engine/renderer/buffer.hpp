@@ -2,7 +2,7 @@
 #define _BUFFER_HPP
 #include <string>
 #include <vector>
-#include <cstdint>
+//#include <cstdint>
 #include <map>
 
 namespace engine {
@@ -114,7 +114,6 @@ public:
 
     static IndexBuffer* create(uint32_t* indices, uint32_t count);
 };
-
 
 }  // namespace
 #endif

@@ -1,12 +1,12 @@
 workspace "WorldEngine"
-	architecture "x64"
-	startproject "Engine"
+    architecture "x64"
+    startproject "Engine"
 
-	configurations
-	{
-		"Debug",
-		"Release",
-	}
+    configurations
+    {
+        "Debug",
+        "Release",
+    }
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
@@ -18,25 +18,22 @@ IncludeDir["imgui"] = "extern/imgui"
 IncludeDir["glm"] = "extern/glm"
 
 group "Dependencies"
-	include "extern/"
-	-- include "extern/vendor/glad"
-	-- include "Hazel/vendor/imgui"
-
+    include "extern/"
 
 project "Engine"
-	location "./"
-	kind "ConsoleApp"
-	language "C++"
-	cppdialect "C++17"
+    location "./"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++17"
 
-	targetdir ("bin/")
-	objdir ("build/" .. outputdir .. "/")
+    targetdir ("bin/")
+    objdir ("build/" .. outputdir .. "/")
 
-	pchheader "engine.hpp"
-	pchsource "%{prj.name}/engine.cpp"
+    pchheader "engine.hpp"
+    pchsource "%{prj.name}/engine.cpp"
 
-	files
-	{
+    files
+    {
         "%{prj.name}/Engine/**.cpp",
         "%{prj.name}/Engine/**.hpp",
         "%{prj.name}/Tools/**.cpp",
@@ -46,35 +43,33 @@ project "Engine"
         "%{prj.name}/engine.hpp",
         "%{prj.name}/engine.cpp",
         "%{prj.name}/sandbox.cpp",
-		-- "%{prj.name}/vendor/glm/glm/**.hpp",
-		-- "%{prj.name}/vendor/glm/glm/**.inl",
-	}
+    }
 
-	defines
-	{
-		"GLFW_INCLUDE_NONE"
-	}
+    defines
+    {
+        "GLFW_INCLUDE_NONE"
+    }
 
-	includedirs
-	{
+    includedirs
+    {
         "extern/spdlog/include",
-		"%{prj.name}",
-		"%{IncludeDir.glfw}",
-		"%{IncludeDir.imgui}",
-		"%{IncludeDir.glad}",
-		"%{IncludeDir.glm}"
-	}
+        "%{prj.name}",
+        "%{IncludeDir.glfw}",
+        "%{IncludeDir.imgui}",
+        "%{IncludeDir.glad}",
+        "%{IncludeDir.glm}"
+    }
 
-	links 
-	{ 
-		"GLFW",
-		"glad",
-		"imgui",
-	}
+    links 
+    { 
+        "GLFW",
+        "glad",
+        "imgui",
+    }
 
-	filter "system:linux"
-	    staticruntime "on"
-		systemversion "latest"
+    filter "system:linux"
+        staticruntime "on"
+        systemversion "latest"
 
         files
         {
@@ -100,9 +95,9 @@ project "Engine"
             "OPENGL_COMPATIBILITY"
         }
 
-	filter "system:windows"
-		systemversion "latest"
-	    staticruntime "off"
+    filter "system:windows"
+        systemversion "latest"
+        staticruntime "off"
 
         files
         {
@@ -110,23 +105,23 @@ project "Engine"
             "%{prj.name}/Platform/Windows/**.cpp"
         }
 
-		defines
-		{
-			"ENGINE_PLATFORM_WINDOWS",
-			"_CRT_SECURE_NO_WARNINGS"
-		}
+        defines
+        {
+            "ENGINE_PLATFORM_WINDOWS",
+            "_CRT_SECURE_NO_WARNINGS"
+        }
 
         links 
         { 
             "opengl32.lib"
         }
 
-	filter "configurations:Debug"
-		defines "ENGINE_DEBUG_ENABLED"
-		runtime "Debug"
-		symbols "on"
+    filter "configurations:Debug"
+        defines "ENGINE_DEBUG_ENABLED"
+        runtime "Debug"
+        symbols "on"
 
-	filter "configurations:Release"
-		defines "ENGINE_RELEASE"
-		runtime "Release"
-		optimize "on"
+    filter "configurations:Release"
+        defines "ENGINE_RELEASE"
+        runtime "Release"
+        optimize "on"

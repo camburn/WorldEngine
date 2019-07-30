@@ -31,8 +31,6 @@ public:
 
     virtual uint32_t get_count() const { return count; }
 
-    static IndexBuffer* create(float* vertices, uint32_t size);
-
 private:
     uint32_t index_buffer;
     uint32_t count;
