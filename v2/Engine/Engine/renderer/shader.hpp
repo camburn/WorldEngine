@@ -2,6 +2,7 @@
 #define _SHADER_HPP
 #include <string>
 
+#include <glm/glm.hpp>
 
 namespace engine {
 
@@ -11,6 +12,8 @@ public:
     ~Shader();
     void bind();
     void unbind();
+
+    void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
 
 private:
     uint32_t shader_id;

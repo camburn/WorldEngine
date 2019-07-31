@@ -1,20 +1,30 @@
 #ifndef _RENDERER_HPP
 #define _RENDERER_HPP
-
+#include <memory>
 #include "Engine/renderer/renderer_api.hpp"
+#include "Engine/renderer/camera.hpp"
+#include "Engine/renderer/shader.hpp"
 
 namespace engine {
 
 class Renderer {
 public:
-    static void begin_scene(const float r, const float g, const float b, const float a);
-    static void begin_scene(const glm::vec4& color);
+
+    static void begin_scene(const std::shared_ptr<Camera> camera, const glm::vec4& clear_color);
     static void end_scene();
 
-    static void submit(const std::shared_ptr<engine::VertexArray>& vertex_array);
+    static void submit(
+        const std::shared_ptr<Shader>& shader, 
+        const std::shared_ptr<engine::VertexArray>& vertex_array,
+        const glm::mat4& model
+    );
 
     inline static RendererAPI::API get_api() { return RendererAPI::get_api(); }
 private:
+    struct SceneData {
+        glm::mat4 view_projection_matrix;
+    };
+    static SceneData* scene_data;
     static RendererAPI* renderer_api;
 };
 
