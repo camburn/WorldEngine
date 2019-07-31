@@ -23,7 +23,7 @@ void Shader::bind() {
 void Shader::unbind() {
     glUseProgram(0);
 
-    #ifndef OPENGL_COMPATIBILITY
+    #ifdef OPENGL_COMPATIBILITY
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     #endif
