@@ -15,6 +15,10 @@ public:
 
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
 
+    void inspect_uniforms();
+    void inspect_attributes();
+    void program_resources();
+
 private:
     uint32_t shader_id;
 };
