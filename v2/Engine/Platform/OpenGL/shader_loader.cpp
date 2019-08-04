@@ -32,7 +32,7 @@ GLuint load_shader(std::string &source, GLuint shader_id) {
         ENGINE_TRACE("Shader Source\n {0} \n", source);
         ENGINE_ERROR("Shader Compile Failed {0}", err_msg);
         free(err_msg);
-        throw std::runtime_error("Failed to compile shader");
+        return 0;
     }
     return shader_id;
 }
@@ -44,6 +44,10 @@ GLuint build_program(std::string &vertex_shader_file_path, std::string &fragment
     std::string fs = read_file(fragment_shader_file_path);
     GLuint vertex_shader_id = load_shader(vs, glCreateShader(GL_VERTEX_SHADER));
     GLuint fragment_shader_id = load_shader(fs, glCreateShader(GL_FRAGMENT_SHADER));
+
+    if (!vertex_shader_id || !fragment_shader_id) {
+        return 0;
+    }
 
     GLuint program_id = glCreateProgram();
 
@@ -59,14 +63,16 @@ GLuint build_program(std::string &vertex_shader_file_path, std::string &fragment
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
     if (!result) {
         CheckMessage(program_id);
-        throw std::runtime_error("Failed to link shaders");
+        ENGINE_ERROR("Shader link failed");
+        return 0;
     }
 
     glValidateProgram(program_id);
     glGetProgramiv(program_id, GL_VALIDATE_STATUS, &valid);
     if (!valid) {
         CheckMessage(program_id);
-        throw std::runtime_error("Failed to validate program");
+        ENGINE_ERROR("Shader failed validation");
+        return 0;
     }
     glDetachShader(program_id, vertex_shader_id);
     glDetachShader(program_id, fragment_shader_id);

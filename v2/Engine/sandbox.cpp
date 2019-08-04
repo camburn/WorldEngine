@@ -106,6 +106,11 @@ public:
             model_position.x += model_move_speed * delta_time;
         }
 
+        state = glfwGetKey(window, GLFW_KEY_X);
+        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+            shader->recompile();
+        }
+
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         Renderer::submit(shader, vao, glm::translate(glm::mat4(1.0f), model_position));
     }

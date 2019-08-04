@@ -2,6 +2,8 @@
 #define _SHADER_HPP
 #include <string>
 
+#include "glad/glad.h"
+
 #include <glm/glm.hpp>
 
 namespace engine {
@@ -12,15 +14,31 @@ public:
     ~Shader();
     void bind();
     void unbind();
+    void recompile();
 
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
+
+private:
+    struct Uniform {
+        Uniform() {}
+        Uniform(GLint index, std::string name, GLenum type, GLfloat size):
+            index(index), name(name), type(type), size(size) {}
+        GLint index;
+        std::string name;
+        GLenum type;
+        GLfloat size;
+    };
+
+    uint32_t shader_id;
+    std::unordered_map<std::string, Uniform> uniforms;
+    std::string vs_shader_path;
+    std::string fs_shader_path;
+
+    GLuint build();
 
     void inspect_uniforms();
     void inspect_attributes();
     void program_resources();
-
-private:
-    uint32_t shader_id;
 };
 
 }  // namespace

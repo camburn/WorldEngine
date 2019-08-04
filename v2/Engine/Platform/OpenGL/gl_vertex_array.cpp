@@ -26,7 +26,9 @@ GLenum shader_to_gl_type(const engine::ShaderDataType type) {
 
 OpenGLVertexArray::OpenGLVertexArray () {
     #ifndef OPENGL_COMPATIBILITY
-    glCreateVertexArrays(1, &vao_id);
+    glGenVertexArrays(1, &vao_id);
+    // To new
+    // glCreateVertexArrays(1, &vao_id);
     #endif
 }
 
@@ -79,6 +81,9 @@ void OpenGLVertexArray::add_vertex_buffer(const std::shared_ptr<engine::VertexBu
         index++;
     }
     vertex_buffers.push_back(vertex_buffer);
+    #ifndef OPENGL_COMPATIBILITY
+    glBindVertexArray(0);
+    #endif
 }
 
 void OpenGLVertexArray::set_index_buffer(const std::shared_ptr<engine::IndexBuffer>& buffer) {

@@ -28,6 +28,12 @@ void LinuxWindow::init(std::string title) {
         return;
     }
 
+    #ifndef OPENGL_COMPATIBILITY
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #endif
+
     glfwSetErrorCallback(glfw_error_callback);
 
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);

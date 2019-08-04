@@ -92,7 +92,7 @@ project "Engine"
         defines
         {
             "ENGINE_PLATFORM_LINUX",
-            "OPENGL_COMPATIBILITY"
+            -- "OPENGL_COMPATIBILITY"
         }
 
     filter "system:windows"
