@@ -16,7 +16,10 @@ public:
     void unbind();
     void recompile();
 
+    void on_ui_render(bool draw);
+
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
+    void upload_u_vec4(const std::string& u_name, const glm::vec4& vec);
 
 private:
     struct Uniform {
@@ -29,8 +32,19 @@ private:
         GLfloat size;
     };
 
+    struct Attribute {
+        Attribute() {}
+        Attribute(GLint index, std::string name, GLenum type, GLfloat size):
+            index(index), name(name), type(type), size(size) {}
+        GLint index;
+        std::string name;
+        GLenum type;
+        GLfloat size;
+    };
+
     uint32_t shader_id;
     std::unordered_map<std::string, Uniform> uniforms;
+    std::unordered_map<std::string, Attribute> attributes;
     std::string vs_shader_path;
     std::string fs_shader_path;
 

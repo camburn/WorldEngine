@@ -63,6 +63,8 @@ public:
         ImGui::SameLine();
         ImGui::Text("Count: %i", counter);
         ImGui::End();
+
+        shader->on_ui_render(true);
     }
 
     void on_update() override {

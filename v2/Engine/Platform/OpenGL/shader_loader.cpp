@@ -37,6 +37,12 @@ GLuint load_shader(std::string &source, GLuint shader_id) {
     return shader_id;
 }
 
+GLuint build_program(
+    std::string &vertex_shader_file_path,
+    std::string &fragment_shader_file_path,
+    std::vector &vs_) {
+}
+
 GLuint build_program(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path) {
 
     ENGINE_DEBUG("Building Program");
