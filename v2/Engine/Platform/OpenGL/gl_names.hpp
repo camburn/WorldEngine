@@ -112,4 +112,18 @@ const std::unordered_map<GLenum, std::string> GLENUM_NAMES = {
     {GL_UNSIGNED_INT_ATOMIC_COUNTER, "atomic_uint"},
 };
 
+const std::unordered_map<GLenum, engine::ShaderDataType> GLENUM_TO_SHADER_TYPES {
+    {GL_FLOAT, engine::ShaderDataType::Float},
+    {GL_FLOAT_VEC2, engine::ShaderDataType::Float2},
+    {GL_FLOAT_VEC3, engine::ShaderDataType::Float3},
+    {GL_FLOAT_VEC4, engine::ShaderDataType::Float4},
+    {GL_INT, engine::ShaderDataType::Int},
+    {GL_INT, engine::ShaderDataType::Int2},
+    {GL_INT, engine::ShaderDataType::Int3},
+    {GL_INT, engine::ShaderDataType::Int4},
+    {GL_FLOAT, engine::ShaderDataType::Mat3},
+    {GL_FLOAT, engine::ShaderDataType::Mat4},
+    {GL_BOOL, engine::ShaderDataType::Bool},
+};
+
 } // namespace

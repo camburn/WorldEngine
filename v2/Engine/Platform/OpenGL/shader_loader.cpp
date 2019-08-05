@@ -4,6 +4,12 @@
 
 namespace enginegl {
 
+static std::string last_error;
+
+std::string &get_last_error() {
+    return last_error;
+}
+
 void CheckMessage(GLuint program_id) {
     int log_length;
     glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &log_length);
@@ -29,25 +35,31 @@ GLuint load_shader(std::string &source, GLuint shader_id) {
     if (log_length > 0) {
         char* err_msg = (char *)malloc(log_length);
         glGetShaderInfoLog(shader_id, log_length, NULL, err_msg);
-        ENGINE_TRACE("Shader Source\n {0} \n", source);
+        ENGINE_TRACE("Shader Source\n{0}", source);
         ENGINE_ERROR("Shader Compile Failed {0}", err_msg);
+        last_error = err_msg;
         free(err_msg);
         return 0;
     }
     return shader_id;
 }
 
-GLuint build_program(
+GLuint load_build_program(
     std::string &vertex_shader_file_path,
     std::string &fragment_shader_file_path,
-    std::vector &vs_) {
+    std::string &vs_data,
+    std::string &fs_data) {
+
+    vs_data = read_file(vertex_shader_file_path);
+    fs_data = read_file(fragment_shader_file_path);
+
+    return build_program(vs_data, fs_data);
 }
 
-GLuint build_program(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path) {
+GLuint build_program(std::string vs, std::string fs) {
 
     ENGINE_DEBUG("Building Program");
-    std::string vs = read_file(vertex_shader_file_path);
-    std::string fs = read_file(fragment_shader_file_path);
+
     GLuint vertex_shader_id = load_shader(vs, glCreateShader(GL_VERTEX_SHADER));
     GLuint fragment_shader_id = load_shader(fs, glCreateShader(GL_FRAGMENT_SHADER));
 

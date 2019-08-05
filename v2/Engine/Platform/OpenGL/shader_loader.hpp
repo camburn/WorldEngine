@@ -5,9 +5,18 @@
 
 namespace enginegl {
 
+std::string &get_last_error();
+
 GLuint load_shader(std::string &data, GLuint shader_id);
 
-GLuint build_program(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path);
+GLuint build_program(std::string vs, std::string fs);
+
+GLuint load_build_program(
+    std::string &vertex_shader_file_path,
+    std::string &fragment_shader_file_path,
+    std::string &vs_data,
+    std::string &fs_data
+);
 
 } // namespace
 #endif

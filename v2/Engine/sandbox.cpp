@@ -10,6 +10,7 @@
 #include "Engine/renderer/vertex_array.hpp"
 #include "Engine/renderer/renderer.hpp"
 #include "Engine/renderer/camera.hpp"
+#include "Engine/entity.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -26,27 +27,16 @@ public:
 
         camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
 
-        vao.reset(VertexArray::create());
-
-        float vertices[3 * 3] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f,  0.5f, 0.0f
+        std::vector<glm::vec4> data = {
+            { -0.5f, -0.5f, 0.0f, 1.0f },
+            { 0.5f, -0.5f, 0.0f, 1.0f },
+            { 0.0f,  0.5f, 0.0f, 1.0f }
         };
+        std::vector<uint32_t> i_data = { 0, 1, 2 };
 
-        BufferLayout layout {
-            {ShaderDataType::Float3, "position"}
-        };
-        
-        buffer.reset(VertexBuffer::create(vertices, sizeof(vertices)));
-        buffer->set_layout(layout);
-
-        uint32_t indices[3] = { 0, 1, 2 };
-        
-        index_buffer.reset(IndexBuffer::create(indices, sizeof(indices) / sizeof(uint32_t)));
-
-        vao->add_vertex_buffer(buffer);
-        vao->set_index_buffer(index_buffer);
+        entity.add_attribute_data("position", data);
+        entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        entity.add_index_data(i_data);
     }
 
     void on_attach() override {
@@ -68,53 +58,56 @@ public:
     }
 
     void on_update() override {
-        float time = (float)glfwGetTime();
-        float delta_time = time - last_frame_time;
-        last_frame_time = time;
+        {
+            float time = (float)glfwGetTime();
+            float delta_time = time - last_frame_time;
+            last_frame_time = time;
 
-        auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
-        int state = glfwGetKey(window, GLFW_KEY_W);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            camera_position.y += camera_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_S);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            camera_position.y -= camera_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_A);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            camera_position.x -= camera_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_D);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            camera_position.x += camera_move_speed * delta_time;
-        }
-        camera->set_position(camera_position);
+            auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
+            int state = glfwGetKey(window, GLFW_KEY_W);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                camera_position.y += camera_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_S);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                camera_position.y -= camera_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_A);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                camera_position.x -= camera_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_D);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                camera_position.x += camera_move_speed * delta_time;
+            }
+            camera->set_position(camera_position);
 
-        state = glfwGetKey(window, GLFW_KEY_UP);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            model_position.y += model_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_DOWN);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            model_position.y -= model_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_LEFT);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            model_position.x -= model_move_speed * delta_time;
-        }
-        state = glfwGetKey(window, GLFW_KEY_RIGHT);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            model_position.x += model_move_speed * delta_time;
-        }
+            state = glfwGetKey(window, GLFW_KEY_UP);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                model_position.y += model_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_DOWN);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                model_position.y -= model_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_LEFT);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                model_position.x -= model_move_speed * delta_time;
+            }
+            state = glfwGetKey(window, GLFW_KEY_RIGHT);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                model_position.x += model_move_speed * delta_time;
+            }
 
-        state = glfwGetKey(window, GLFW_KEY_X);
-        if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-            shader->recompile();
+            state = glfwGetKey(window, GLFW_KEY_X);
+            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
+                shader->recompile();
+            }
         }
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
-        Renderer::submit(shader, vao, glm::translate(glm::mat4(1.0f), model_position));
+        entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        Renderer::submit_entity(shader, entity);
     }
 
 private:
@@ -123,6 +116,7 @@ private:
     std::shared_ptr<IndexBuffer> index_buffer;
     std::shared_ptr<Shader> shader;
     std::shared_ptr<Camera> camera;
+    Entity entity;
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f};
     glm::vec3 camera_position {0.0f};

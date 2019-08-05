@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "imgui.h"
+#include "imgui_stdlib.h"
 
 #include "Platform/OpenGL/shader_loader.hpp"
 #include "Platform/OpenGL/gl_names.hpp"
@@ -14,7 +15,9 @@ namespace engine {
 
 Shader::Shader(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path)
         : vs_shader_path(vertex_shader_file_path), fs_shader_path(fragment_shader_file_path) {
-    GLuint id = build();
+
+    GLuint id = enginegl::load_build_program(vertex_shader_file_path, fragment_shader_file_path,
+        vs_data, fs_data);
     ENGINE_ASSERT(id, "Shaders could not compile");
     shader_id = id;
     inspect_uniforms();
@@ -25,14 +28,15 @@ Shader::~Shader() {
     glDeleteProgram(shader_id);
 }
 
-void Shader::recompile() {
+int Shader::recompile() {
     ENGINE_INFO("Recompiling shaders");
-    GLuint id = build();
-    if (!id) return;
+    GLuint id = enginegl::build_program(vs_data.data(), fs_data.data());
+    if (!id) return false;
     glDeleteProgram(shader_id);
     shader_id = id;
     inspect_uniforms();
     inspect_attributes();
+    return true;
 }
 
 GLuint Shader::build() {
@@ -66,6 +70,13 @@ void Shader::upload_u_vec4(const std::string& u_name, const glm::vec4& vec) {
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(vec));
 }
 
+void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
+    if (uniforms.count(u_name) == 0)
+        return;
+    GLuint location = uniforms[u_name].index;
+    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(vec));
+}
+
 void Shader::inspect_uniforms() {
     uniforms.clear();
     GLint i;
@@ -79,8 +90,7 @@ void Shader::inspect_uniforms() {
     GLsizei length; // name length
 
     glGetProgramiv(shader_id, GL_ACTIVE_UNIFORMS, &count);
-    printf("Active Uniforms: %d\n", count);
-    uniforms.reserve(count);
+    //uniforms.reserve(count);
 
     for (i = 0; i < count; i++)
     {
@@ -91,6 +101,7 @@ void Shader::inspect_uniforms() {
 }
 
 void Shader::inspect_attributes() {
+    // TODO: Consider how we can build an appropriate buffer based on the currently loaded shader
     attributes.clear();  // Does clear deallocate reserved memory?
     GLint numActiveAttribs = 0;
     GLint size = 0;
@@ -102,15 +113,22 @@ void Shader::inspect_attributes() {
     GLint maxAttribNameLength = 0;
     glGetProgramiv(shader_id, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxAttribNameLength);
     std::vector<GLchar> nameData(maxAttribNameLength);
-    attributes.reserve(numActiveAttribs);
     for(int attrib = 0; attrib < numActiveAttribs; ++attrib)
     {
         glGetActiveAttrib(shader_id, attrib, nameData.size(), &length, &size, &type, &nameData[0]);
-        //std::string name((char*)&nameData[0], length);
         std::string name = nameData.data();
         ENGINE_INFO("Attribute #{0} Type: {1} Name: {2}", attrib, enginegl::GLENUM_NAMES.at(type), name);
         attributes.try_emplace(name, attrib, name, type, size);
     }
+}
+
+BufferLayout Shader::attribute_layout() {
+    std::vector<BufferElement> elements;
+    for (auto &[name, attribute]: attributes) {
+        elements.emplace_back(
+            enginegl::GLENUM_TO_SHADER_TYPES.at(attribute.type), attribute.name);
+    }
+    return BufferLayout {elements};
 }
 
 void Shader::program_resources() {
@@ -139,19 +157,41 @@ void Shader::program_resources() {
     }
 }
 
-
 void Shader::on_ui_render(bool draw) {
     static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
-    
+    static std::string last_error = "";
+
     ImGui::Begin("Shader Editor");
-    std::string text{"Some data\nSome more data\n"};
-    ImGui::InputTextMultiline(
-        "##source",
-        text.c_str(),
-        IM_ARRAYSIZE(text.size()),
-        ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
-        flags
-    );
+    if (ImGui::Button("Rebuild Shaders")) {
+        if (recompile()) {
+            last_error = "";
+        } else {
+            last_error = enginegl::get_last_error();
+        }
+    }
+    ImGui::TextColored({0.8f, 0.1f, 0.1f, 1.0f}, last_error.c_str());
+    
+    if (ImGui::TreeNode("Vertex Shader")) {
+        ImGui::InputTextMultiline(
+            "Vertex shader",
+            &vs_data,
+            ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
+            flags,
+            nullptr
+        );
+        
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Fragment Shader")) {
+        ImGui::InputTextMultiline(
+            "Fragment Shader",
+            &fs_data,
+            ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
+            flags,
+            nullptr
+        );
+        ImGui::TreePop();
+    }
     ImGui::End();
 }
 

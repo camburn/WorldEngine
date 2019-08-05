@@ -5,6 +5,7 @@
 #include "glad/glad.h"
 
 #include <glm/glm.hpp>
+#include "Engine/renderer/buffer.hpp"
 
 namespace engine {
 
@@ -14,13 +15,15 @@ public:
     ~Shader();
     void bind();
     void unbind();
-    void recompile();
+    int recompile();
 
     void on_ui_render(bool draw);
 
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
     void upload_u_vec4(const std::string& u_name, const glm::vec4& vec);
+    void upload_u_vec3(const std::string& u_name, const glm::vec3& vec);
 
+    BufferLayout attribute_layout();
 private:
     struct Uniform {
         Uniform() {}
@@ -43,10 +46,12 @@ private:
     };
 
     uint32_t shader_id;
-    std::unordered_map<std::string, Uniform> uniforms;
-    std::unordered_map<std::string, Attribute> attributes;
+    std::map<std::string, Uniform> uniforms;
+    std::map<std::string, Attribute> attributes;
     std::string vs_shader_path;
     std::string fs_shader_path;
+    std::string fs_data;
+    std::string vs_data;
 
     GLuint build();
 

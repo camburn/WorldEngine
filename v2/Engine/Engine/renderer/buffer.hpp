@@ -62,6 +62,10 @@ public:
 class BufferLayout{
 public:
     BufferLayout() {}
+    BufferLayout(const std::vector<BufferElement>& elements)
+            : elements(elements) {
+        calculate_offset_stride();
+    }
     BufferLayout(const std::initializer_list<BufferElement>& elements)
             : elements(elements) {
         calculate_offset_stride();
