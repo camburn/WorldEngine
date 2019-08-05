@@ -25,7 +25,7 @@ void Entity::add_uniform_data(std::string name, glm::mat4 data) {
 
 void Entity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
     if (attribute_data.size() == 0) {
-        ENGINE_ERROR("No attribute data for this entity");
+        ENGINE_ASSERT(false, "No attribute data for this entity");
         return;
     }
     ;
@@ -40,7 +40,7 @@ void Entity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
             // We don't have that data
             ENGINE_ERROR("NOT IMPLEMENTED");
         } else {
-            ENGINE_ERROR("Entity missing attribute data required by shader - {0}", element.name);
+            ENGINE_ASSERT(0, "Entity missing attribute data required by shader - {0}", element.name);
         }
     }
     //TODO: This only supports vec4 data
@@ -53,7 +53,9 @@ void Entity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
 }
 
 void Entity::update_buffers(const std::shared_ptr<Shader>& shader) {
-    if (buffers_set) return;
+    if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
+    ENGINE_DEBUG("Generating vertex array and buffer for Entity");
+    //if (buffers_set) return;
     // TODO: Shader should cache entities that have buffered data already
     BufferLayout layout = shader->attribute_layout();
 
@@ -70,6 +72,7 @@ void Entity::update_buffers(const std::shared_ptr<Shader>& shader) {
     vao->add_vertex_buffer(buffer);
     vao->set_index_buffer(index_buffer);
     buffers_set = true;
+    shader->register_vertex_array(vao);
 }
 
 void Entity::render(Shader &shader) {

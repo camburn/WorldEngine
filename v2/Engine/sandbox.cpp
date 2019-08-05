@@ -11,6 +11,7 @@
 #include "Engine/renderer/renderer.hpp"
 #include "Engine/renderer/camera.hpp"
 #include "Engine/entity.hpp"
+#include "Tools/gltf_loader.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -27,14 +28,22 @@ public:
 
         camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
 
+        test("/home/campbell/Models/man_test.gltf");
+
         std::vector<glm::vec4> data = {
             { -0.5f, -0.5f, 0.0f, 1.0f },
             { 0.5f, -0.5f, 0.0f, 1.0f },
             { 0.0f,  0.5f, 0.0f, 1.0f }
         };
+        std::vector<glm::vec4> colors = {
+            { 0.8f, 0.2f, 0.2f, 1.0f },
+            { 0.2f, 0.8f, 0.2f, 1.0f },
+            { 0.2f, 0.2f, 0.8f, 1.0f }
+        };
         std::vector<uint32_t> i_data = { 0, 1, 2 };
 
         entity.add_attribute_data("position", data);
+        entity.add_attribute_data("color", colors);
         entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         entity.add_index_data(i_data);
     }

@@ -53,6 +53,7 @@ project "Engine"
     includedirs
     {
         "extern/spdlog/include",
+        "extern/tinygltf",
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",

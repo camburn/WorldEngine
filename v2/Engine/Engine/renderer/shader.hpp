@@ -1,11 +1,14 @@
 #ifndef _SHADER_HPP
 #define _SHADER_HPP
 #include <string>
+#include <map>
+#include <set>
 
 #include "glad/glad.h"
 
 #include <glm/glm.hpp>
 #include "Engine/renderer/buffer.hpp"
+#include "Engine/renderer/vertex_array.hpp"
 
 namespace engine {
 
@@ -18,6 +21,9 @@ public:
     int recompile();
 
     void on_ui_render(bool draw);
+
+    void register_vertex_array(std::shared_ptr<VertexArray> vao);
+    bool is_vertex_array_registered(std::shared_ptr<VertexArray> vao);
 
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
     void upload_u_vec4(const std::string& u_name, const glm::vec4& vec);
@@ -47,7 +53,8 @@ private:
 
     uint32_t shader_id;
     std::map<std::string, Uniform> uniforms;
-    std::map<std::string, Attribute> attributes;
+    std::map<int, Attribute> attributes;
+    std::set<unsigned int> registered_vertex_arrays;
     std::string vs_shader_path;
     std::string fs_shader_path;
     std::string fs_data;

@@ -30,9 +30,11 @@ OpenGLVertexArray::OpenGLVertexArray () {
     // To new
     // glCreateVertexArrays(1, &vao_id);
     #endif
+    ENGINE_TRACE("Vertex array {0} created", vao_id);
 }
 
 OpenGLVertexArray::~OpenGLVertexArray () {
+    ENGINE_TRACE("Vertex array {0} garbage collected", vao_id);
     #ifndef OPENGL_COMPATIBILITY
     glDeleteVertexArrays(1, &vao_id);
     #endif

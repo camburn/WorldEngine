@@ -8,11 +8,16 @@
 
 namespace engine {
 
+static unsigned int array_id = 10000;
+
 class VertexArray {
 public:
+    VertexArray(): id(array_id++) {}
     virtual ~VertexArray() {}
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
+
+    virtual unsigned int get_id() const {return id;}
 
     virtual void add_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertex_buffer) = 0;
     virtual void set_index_buffer(const std::shared_ptr<IndexBuffer>& index_buffer) = 0;
@@ -22,6 +27,7 @@ public:
 
     static VertexArray* create();
 private:
+    const unsigned int id;
 };
 
 } // Namespace

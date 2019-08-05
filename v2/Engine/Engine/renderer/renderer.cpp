@@ -42,6 +42,7 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, Entity &enti
         shader->upload_u_mat4(name, data);
     }
     entity.update_buffers(shader);
+    // TODO: Draw triangles if no indices
     renderer_api->draw_indexed(entity.get_vao());
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
     #ifdef OPENGL_COMPATIBILITY

@@ -36,6 +36,7 @@ int Shader::recompile() {
     shader_id = id;
     inspect_uniforms();
     inspect_attributes();
+    registered_vertex_arrays.clear();
     return true;
 }
 
@@ -75,6 +76,14 @@ void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
         return;
     GLuint location = uniforms[u_name].index;
     glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(vec));
+}
+
+void Shader::register_vertex_array(std::shared_ptr<VertexArray> vao) {
+    registered_vertex_arrays.emplace(vao->get_id());
+}
+
+bool Shader::is_vertex_array_registered(std::shared_ptr<VertexArray> vao) {
+    return registered_vertex_arrays.count(vao->get_id()) == 1;
 }
 
 void Shader::inspect_uniforms() {
@@ -118,13 +127,13 @@ void Shader::inspect_attributes() {
         glGetActiveAttrib(shader_id, attrib, nameData.size(), &length, &size, &type, &nameData[0]);
         std::string name = nameData.data();
         ENGINE_INFO("Attribute #{0} Type: {1} Name: {2}", attrib, enginegl::GLENUM_NAMES.at(type), name);
-        attributes.try_emplace(name, attrib, name, type, size);
+        attributes.try_emplace(attrib, attrib, name, type, size);
     }
 }
 
 BufferLayout Shader::attribute_layout() {
     std::vector<BufferElement> elements;
-    for (auto &[name, attribute]: attributes) {
+    for (auto &[index, attribute]: attributes) {
         elements.emplace_back(
             enginegl::GLENUM_TO_SHADER_TYPES.at(attribute.type), attribute.name);
     }
