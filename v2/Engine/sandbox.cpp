@@ -28,7 +28,11 @@ public:
 
         camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
 
-        test("/home/campbell/Models/man_test.gltf");
+        // TODO: Connect mesh index information to the rendered::submit call
+        // It requires object count and data type (uint/ushort)
+        GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
+        // TODO: Better integrate the meshloader into the VAO/VBO objects
+        vao.reset(VertexArray::create(vao_id));
 
         std::vector<glm::vec4> data = {
             { -0.5f, -0.5f, 0.0f, 1.0f },
@@ -43,7 +47,7 @@ public:
         std::vector<uint32_t> i_data = { 0, 1, 2 };
 
         entity.add_attribute_data("position", data);
-        entity.add_attribute_data("color", colors);
+        //entity.add_attribute_data("color", colors);
         entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         entity.add_index_data(i_data);
     }
@@ -116,7 +120,9 @@ public:
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        Renderer::submit_entity(shader, entity);
+        //Renderer::submit_entity(shader, entity);
+
+        Renderer::submit(shader, vao, glm::mat4(1.0));
     }
 
 private:

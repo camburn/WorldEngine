@@ -24,6 +24,10 @@ GLenum shader_to_gl_type(const engine::ShaderDataType type) {
     return shader_to_gl_types[type];
 }
 
+OpenGLVertexArray::OpenGLVertexArray (GLuint vao) {
+    vao_id = vao;
+}
+
 OpenGLVertexArray::OpenGLVertexArray () {
     #ifndef OPENGL_COMPATIBILITY
     glGenVertexArrays(1, &vao_id);

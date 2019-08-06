@@ -26,6 +26,7 @@ public:
     virtual const std::shared_ptr<IndexBuffer>& get_index_buffer() const = 0;
 
     static VertexArray* create();
+    static VertexArray* create(unsigned int vao);
 private:
     const unsigned int id;
 };

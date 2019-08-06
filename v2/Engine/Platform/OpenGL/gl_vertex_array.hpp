@@ -13,6 +13,7 @@ namespace enginegl {
 class OpenGLVertexArray: public engine::VertexArray {
 public:
     OpenGLVertexArray ();
+    OpenGLVertexArray (GLuint vao);
     ~OpenGLVertexArray ();
 
     virtual void bind() const override;

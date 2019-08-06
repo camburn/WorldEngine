@@ -12,6 +12,8 @@
 
 namespace engine {
 
+
+
 class Shader {
 public:
     Shader(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path);
@@ -30,7 +32,31 @@ public:
     void upload_u_vec3(const std::string& u_name, const glm::vec3& vec);
 
     BufferLayout attribute_layout();
+    bool attribute_supported(std::string name) {
+        name = GLTF_TO_SHADER_ATTRIBUTE[name];
+        for (auto & [index, attribute]: attributes) {
+            if (attribute.name == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool attribute_location(std::string name) {
+        name = GLTF_TO_SHADER_ATTRIBUTE[name];
+        for (auto & [index, attribute]: attributes) {
+            if (attribute.name == name) {
+                return attribute.index;
+            }
+        }
+        return -1;
+    }
+
 private:
+    std::map<std::string, std::string> GLTF_TO_SHADER_ATTRIBUTE {
+        {"POSITION", "position"},
+    };
+    
     struct Uniform {
         Uniform() {}
         Uniform(GLint index, std::string name, GLenum type, GLfloat size):

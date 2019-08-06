@@ -10,4 +10,9 @@ VertexArray* VertexArray::create() {
     return new enginegl::OpenGLVertexArray();
 }
 
+VertexArray* VertexArray::create(unsigned int vao) {
+
+    return new enginegl::OpenGLVertexArray(vao);
+}
+
 } //namespace
