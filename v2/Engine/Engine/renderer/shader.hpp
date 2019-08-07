@@ -52,6 +52,10 @@ public:
         return -1;
     }
 
+    std::string attribute_name_normalise(std::string name) {
+        return GLTF_TO_SHADER_ATTRIBUTE[name];
+    }
+
 private:
     std::map<std::string, std::string> GLTF_TO_SHADER_ATTRIBUTE {
         {"POSITION", "position"},

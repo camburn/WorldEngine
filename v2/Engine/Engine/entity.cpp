@@ -1,19 +1,9 @@
 #include "engine.hpp"
 #include "entity.hpp"
 
+#include "Tools/gltf_loader.hpp"
+
 namespace engine {
-
-void Entity::add_attribute_data(std::string name, std::vector<glm::vec4> &data) {
-    if (attribute_size <= 0) {
-        attribute_size = data.size();
-    }
-    ENGINE_ASSERT(data.size() == attribute_size, "Attributes require the same number of elements");
-    attribute_data[name] = data;
-}
-
-void Entity::add_index_data(std::vector<uint32_t> &data) {
-    index_data = data;
-}
 
 void Entity::add_uniform_data(std::string name, glm::vec4 data) {
     uniform_vec4_data[name] = data;
@@ -23,7 +13,19 @@ void Entity::add_uniform_data(std::string name, glm::mat4 data) {
     uniform_mat4_data[name] = data;
 }
 
-void Entity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
+void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec4> &data) {
+    if (attribute_size <= 0) {
+        attribute_size = data.size();
+    }
+    ENGINE_ASSERT(data.size() == attribute_size, "Attributes require the same number of elements");
+    attribute_data[name] = data;
+}
+
+void CustomEntity::add_index_data(std::vector<uint32_t> &data) {
+    index_data = data;
+}
+
+void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
     if (attribute_data.size() == 0) {
         ENGINE_ASSERT(false, "No attribute data for this entity");
         return;
@@ -52,7 +54,7 @@ void Entity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
     }
 }
 
-void Entity::update_buffers(const std::shared_ptr<Shader>& shader) {
+void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
     ENGINE_DEBUG("Generating vertex array and buffer for Entity");
     //if (buffers_set) return;
@@ -75,8 +77,38 @@ void Entity::update_buffers(const std::shared_ptr<Shader>& shader) {
     shader->register_vertex_array(vao);
 }
 
-void Entity::render(Shader &shader) {
+void CustomEntity::render(Shader &shader) {
     //Renderer::submit(shader, this);
+}
+
+std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
+    std::shared_ptr<tinygltf::Model> model = std::make_shared<tinygltf::Model>();
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+
+    bool ret = loader.LoadASCIIFromFile(model.get(), &err, &warn, file_name);
+    //bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename); // for binary glTF(.glb)
+
+    if (!warn.empty()) ENGINE_WARN("{0}", warn);
+    if (!err.empty()) ENGINE_ERROR("{0}", err);
+    if (!ret) ENGINE_ASSERT(false, "Failed to parse glTF");
+
+    std::shared_ptr<GltfEntity> entity = std::make_shared<GltfEntity>(model);
+
+    return entity; 
+}
+
+GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
+    model = model_data;
+}
+
+void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    vao = gltf_to_opengl(model, shader);
+}
+
+void GltfEntity::render(Shader &shader) {
+
 }
 
 } // namespace

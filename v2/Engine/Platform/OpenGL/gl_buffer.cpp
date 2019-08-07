@@ -4,7 +4,7 @@
 
 namespace enginegl {
 
-OpenGLVertexBuffer::OpenGLVertexBuffer(float *vertices, uint32_t size) {
+OpenGLVertexBuffer::OpenGLVertexBuffer(void *vertices, uint32_t size) {
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
@@ -26,7 +26,16 @@ void OpenGLVertexBuffer::unbind() const {
 
 // IndexBuffer
 
+OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size): count(count) {
+    // Initialiser for unkown data type
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+    ENGINE_TRACE("Index buffer {0} created", index_buffer);
+}
+
 OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count): count(count) {
+    // Initialiser for floating uint32_t sized data
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);

@@ -22,7 +22,7 @@ public:
         const glm::mat4& model
     );
 
-    static void submit_entity(const std::shared_ptr<Shader>& shader, Entity &entity);
+    static void submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity);
 
     inline static RendererAPI::API get_api() { return RendererAPI::get_api(); }
 private:

@@ -18,7 +18,12 @@ enum class ShaderDataType {
     Int4,
     Mat4,
     Mat3,
-    Bool
+    Bool,
+    Char,
+    uChar,
+    Short,
+    uShort,
+    uInt,
 };
 
 struct DataTypeDescriptor {
@@ -70,9 +75,14 @@ public:
             : elements(elements) {
         calculate_offset_stride();
     }
+    BufferLayout(uint32_t stride)
+            : stride(stride) {
+    }
 
     inline uint32_t get_stride() const { return stride; }
     inline const std::vector<BufferElement>& get_elements() const { return elements; }
+
+    void add_element(BufferElement &element) { elements.push_back(element); }
 
     std::vector<BufferElement>::iterator begin() { return elements.begin(); }
     std::vector<BufferElement>::iterator end() { return elements.end(); }
@@ -104,7 +114,7 @@ public:
     virtual const engine::BufferLayout& get_layout() const = 0;
     virtual void set_layout(const engine::BufferLayout& layout) = 0;
 
-    static VertexBuffer* create(float* vertices, uint32_t size);
+    static VertexBuffer* create(void* vertices, uint32_t size);
 };
 
 class IndexBuffer {
@@ -117,6 +127,7 @@ public:
     virtual uint32_t get_count() const = 0;
 
     static IndexBuffer* create(uint32_t* indices, uint32_t count);
+    static IndexBuffer* create(void* indices, uint32_t count, uint32_t size);
 };
 
 }  // namespace

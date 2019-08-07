@@ -30,9 +30,12 @@ public:
 
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
-        GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
+        //GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
+        //vao.reset(VertexArray::create(vao_id));
+        entity2 = GltfEntity::load_from_file("/home/campbell/Models/Cube.gltf");
+        entity.reset( new CustomEntity());
         // TODO: Better integrate the meshloader into the VAO/VBO objects
-        vao.reset(VertexArray::create(vao_id));
+        
 
         std::vector<glm::vec4> data = {
             { -0.5f, -0.5f, 0.0f, 1.0f },
@@ -46,10 +49,10 @@ public:
         };
         std::vector<uint32_t> i_data = { 0, 1, 2 };
 
-        entity.add_attribute_data("position", data);
+        std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("position", data);
         //entity.add_attribute_data("color", colors);
-        entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        entity.add_index_data(i_data);
+        entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        std::dynamic_pointer_cast<CustomEntity>(entity)->add_index_data(i_data);
     }
 
     void on_attach() override {
@@ -119,8 +122,10 @@ public:
         }
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
-        entity.add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        //Renderer::submit_entity(shader, entity);
+        entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        entity2->add_uniform_data("u_model", glm::mat4(1.0f));
+        Renderer::submit_entity(shader, entity);
+        Renderer::submit_entity(shader, entity2);
 
         Renderer::submit(shader, vao, glm::mat4(1.0));
     }
@@ -131,7 +136,8 @@ private:
     std::shared_ptr<IndexBuffer> index_buffer;
     std::shared_ptr<Shader> shader;
     std::shared_ptr<Camera> camera;
-    Entity entity;
+    std::shared_ptr<Entity> entity;
+    std::shared_ptr<Entity> entity2;
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f};
     glm::vec3 camera_position {0.0f};
