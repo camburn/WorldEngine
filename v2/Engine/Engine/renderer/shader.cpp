@@ -20,6 +20,7 @@ Shader::Shader(std::string &vertex_shader_file_path, std::string &fragment_shade
         vs_data, fs_data);
     ENGINE_ASSERT(id, "Shaders could not compile");
     shader_id = id;
+    //bind();
     inspect_uniforms();
     inspect_attributes();
 }
@@ -28,7 +29,7 @@ Shader::~Shader() {
     glDeleteProgram(shader_id);
 }
 
-int Shader::recompile() {
+bool Shader::recompile() {
     ENGINE_INFO("Recompiling shaders");
     GLuint id = enginegl::build_program(vs_data.data(), fs_data.data());
     if (!id) return false;
@@ -68,7 +69,7 @@ void Shader::upload_u_vec4(const std::string& u_name, const glm::vec4& vec) {
     if (uniforms.count(u_name) == 0)
         return;
     GLuint location = uniforms[u_name].index;
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(vec));
+    glUniform4fv(location, 1, glm::value_ptr(vec));
 }
 
 void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
@@ -126,9 +127,12 @@ void Shader::inspect_attributes() {
     {
         glGetActiveAttrib(shader_id, attrib, nameData.size(), &length, &size, &type, &nameData[0]);
         std::string name = nameData.data();
-        ENGINE_INFO("Attribute #{0} Type: {1} Name: {2}", attrib, enginegl::GLENUM_NAMES.at(type), name);
-        attributes.try_emplace(attrib, attrib, name, type, size);
+        GLint attribute_location= glGetAttribLocation(shader_id, name.c_str());
+        attributes.try_emplace(attribute_location, attribute_location, name, type, size);
+        ENGINE_INFO("Attribute #{0} Type: {1} Name: {2}", attribute_location, enginegl::GLENUM_NAMES.at(type), name);
     }
+
+   
 }
 
 BufferLayout Shader::attribute_layout() {

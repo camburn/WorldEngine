@@ -12,8 +12,11 @@ static void glfw_error_callback(int error, const char* description) {
 Window* Window::create() {
     return new LinuxWindow();
 }
-
 LinuxWindow::LinuxWindow(): width(500), height(500) {
+    init("test");
+}
+
+LinuxWindow::LinuxWindow(int width, int height): width(width), height(height) {
     init("test");
 }
 

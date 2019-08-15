@@ -20,7 +20,7 @@ public:
     ~Shader();
     void bind();
     void unbind();
-    int recompile();
+    bool recompile();
 
     void on_ui_render(bool draw);
 
@@ -59,6 +59,7 @@ public:
 private:
     std::map<std::string, std::string> GLTF_TO_SHADER_ATTRIBUTE {
         {"POSITION", "position"},
+        {"NORMAL", "normal"}
     };
     
     struct Uniform {

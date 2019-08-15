@@ -31,6 +31,8 @@ private:
     std::shared_ptr<engine::IndexBuffer> index_buffer;
 };
 
+GLenum shader_to_gl_type(const engine::ShaderDataType type);
+
 } // Namespace
 
 #endif

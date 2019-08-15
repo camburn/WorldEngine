@@ -28,6 +28,7 @@ void OpenGLVertexBuffer::unbind() const {
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size): count(count) {
     // Initialiser for unkown data type
+    type = engine::ShaderDataType::uShort; // TODO: this is broken, need to resolve type correctly
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
@@ -36,6 +37,7 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t siz
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count): count(count) {
     // Initialiser for floating uint32_t sized data
+    type = engine::ShaderDataType::uInt;
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);

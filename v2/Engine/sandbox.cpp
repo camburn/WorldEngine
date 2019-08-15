@@ -27,12 +27,17 @@ public:
         shader.reset(new Shader{vs_file, fs_file});
 
         camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
+        float aspect = 800/800;
+        //camera.reset(new PerspectiveCamera { 65.0f, aspect, 1.0f, 10.0f });
+
+        //camera->set_position(glm::vec3(2.0f, 2.0f, 2.0f));
 
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
         //GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
         //vao.reset(VertexArray::create(vao_id));
-        entity2 = GltfEntity::load_from_file("/home/campbell/Models/Cube.gltf");
+        //entity2 = GltfEntity::load_from_file("D:\\projects\\tinygltf\\models\\Cube\\Cube.gltf");
+        entity2 = GltfEntity::load_from_file("D:\\Blender Projects\\monkey.gltf");
         entity.reset( new CustomEntity());
         // TODO: Better integrate the meshloader into the VAO/VBO objects
         
@@ -47,11 +52,19 @@ public:
             { 0.2f, 0.8f, 0.2f, 1.0f },
             { 0.2f, 0.2f, 0.8f, 1.0f }
         };
+        std::vector<glm::vec4> normals = {
+            { 0.0f, 1.0f, 0.0f, 0.0f },
+            { 0.0f, 1.0f, 0.0f, 0.0f },
+            { 0.0f, 1.0f, 0.0f, 0.0f }
+        };
         std::vector<uint32_t> i_data = { 0, 1, 2 };
 
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("position", data);
+        std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("normal", normals);
         //entity.add_attribute_data("color", colors);
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        entity2->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
+        entity->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_index_data(i_data);
     }
 
@@ -124,10 +137,10 @@ public:
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         entity2->add_uniform_data("u_model", glm::mat4(1.0f));
-        Renderer::submit_entity(shader, entity);
+        //Renderer::submit_entity(shader, entity);
         Renderer::submit_entity(shader, entity2);
 
-        Renderer::submit(shader, vao, glm::mat4(1.0));
+        //Renderer::submit(shader, vao, glm::mat4(1.0));
     }
 
 private:
@@ -148,7 +161,7 @@ private:
 };
 
 int main() {
-    engine::Application application;
+    engine::Application application{800, 800};
     application.push_layer(new MyLayer());
     application.run();
     return 0;

@@ -41,5 +41,12 @@ public:
     virtual void recalculate_view_matrix() override;
 };
 
+class PerspectiveCamera : public Camera {
+public:
+    PerspectiveCamera(float fov, float right, float bottom, float top);
+
+    virtual void recalculate_view_matrix() override;
+};
+
 }
 #endif

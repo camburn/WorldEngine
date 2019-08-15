@@ -6,7 +6,7 @@
 
 namespace enginegl {
 
-std::map<GLenum, std::string> gl_error_types = {
+const std::map<GLenum, std::string> gl_error_types = {
     { GL_DEBUG_TYPE_ERROR, "GL_DEBUG_TYPE_ERROR" },
     { GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR" },
     { GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR" },
@@ -16,6 +16,15 @@ std::map<GLenum, std::string> gl_error_types = {
     { GL_DEBUG_TYPE_PUSH_GROUP, "GL_DEBUG_TYPE_PUSH_GROUP" },
     { GL_DEBUG_TYPE_POP_GROUP, "GL_DEBUG_TYPE_POP_GROUP" },
     { GL_DEBUG_TYPE_OTHER, "GL_DEBUG_TYPE_OTHER" }
+};
+
+const std::map<GLenum, std::string> gl_source_types = {
+    { GL_DEBUG_SOURCE_API, "GL_DEBUG_SOURCE_API" },
+    { GL_DEBUG_SOURCE_WINDOW_SYSTEM, "GL_DEBUG_SOURCE_WINDOW_SYSTEM" },
+    { GL_DEBUG_SOURCE_SHADER_COMPILER, "GL_DEBUG_SOURCE_SHADER_COMPILER" },
+    { GL_DEBUG_SOURCE_THIRD_PARTY, "GL_DEBUG_SOURCE_THIRD_PARTY" },
+    { GL_DEBUG_SOURCE_APPLICATION, "GL_DEBUG_SOURCE_APPLICATION" },
+    { GL_DEBUG_SOURCE_OTHER , "GL_DEBUG_SOURCE_OTHER" }
 };
 
 void GLAPIENTRY
@@ -28,20 +37,21 @@ MessageCallback(
         const GLchar* message,
         const void* userParam
     ) {
-    std::string error_type_str = gl_error_types[type];
+    std::string error_type_str = gl_error_types.at(type);
+    std::string source_str = gl_source_types.at(source);
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        ENGINE_DEBUG("{0} : {1}", error_type_str, message);
+        ENGINE_DEBUG("({0} - {1}): {2}", source_str, error_type_str, message);
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        ENGINE_INFO("{0} : {1}", error_type_str, message);
+        ENGINE_INFO("({0} - {1}): {2}", source_str, error_type_str, message);
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        ENGINE_WARN("{0} : {1}", error_type_str, message);
+        ENGINE_WARN("({0} - {1}): {2}", source_str, error_type_str, message);
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        ENGINE_ERROR("{0} : {1}", error_type_str, message);
+        ENGINE_ERROR("({0} - {1}): {2}", source_str, error_type_str, message);
         break;
     default:
         break;
@@ -64,8 +74,14 @@ void OpenGLContext::init() {
     ENGINE_INFO("  Version: {0}", glGetString(GL_VERSION));
 
     // During init, enable debug output
-    glEnable              ( GL_DEBUG_OUTPUT );
+    #ifdef ENGINE_DEBUG_ENABLED
+    glEnable( GL_DEBUG_OUTPUT );
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    //Filter out Nvidia Buffer detailed info
+    glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+
     glDebugMessageCallback( MessageCallback, 0 );
+    #endif
     
 }
 

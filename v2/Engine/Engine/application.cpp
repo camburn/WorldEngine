@@ -5,15 +5,15 @@ namespace engine {
 
 Application* Application::instance = nullptr;
 
-Application::Application() {
+Application::Application(int width, int height) {
     Log::Init();
     ENGINE_ASSERT(!instance, "Application already exists");
     instance = this;
 
     ENGINE_INFO("Application Started");
     bus::subscribe(channel, ENGINE_APPLICATION_EVENT | ENGINE_KEY_EVENT);
-
-    window = std::unique_ptr<Window>(Window::create());
+    
+    window = std::unique_ptr<Window>(Window::create(width, height));
 
     interface_layer = new InterfaceLayer{};
     push_overlay(interface_layer);

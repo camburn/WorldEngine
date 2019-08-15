@@ -125,6 +125,7 @@ public:
     virtual void unbind() const = 0;
 
     virtual uint32_t get_count() const = 0;
+    virtual int get_type() const = 0;
 
     static IndexBuffer* create(uint32_t* indices, uint32_t count);
     static IndexBuffer* create(void* indices, uint32_t count, uint32_t size);

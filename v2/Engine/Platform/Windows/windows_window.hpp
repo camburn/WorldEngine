@@ -16,6 +16,7 @@ class WindowsWindow: public Window {
 
 public:
     WindowsWindow();
+    WindowsWindow(int width, int height);
     ~WindowsWindow();
 
     void on_update() override;

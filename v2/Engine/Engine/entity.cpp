@@ -104,7 +104,9 @@ GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
 }
 
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
     vao = gltf_to_opengl(model, shader);
+    shader->register_vertex_array(vao);
 }
 
 void GltfEntity::render(Shader &shader) {

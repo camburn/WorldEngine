@@ -9,11 +9,15 @@ static void glfw_error_callback(int error, const char* description) {
     ENGINE_ERROR("GLFW Error ({0}): {1}", error, description);
 }
 
-Window* Window::create() {
-    return new WindowsWindow();
+Window* Window::create(int width, int height) {
+    return new WindowsWindow(width, height);
 }
 
-WindowsWindow::WindowsWindow(): width(500), height(500) {
+WindowsWindow::WindowsWindow(): width(1920), height(1080) {
+    init("test");
+}
+
+WindowsWindow::WindowsWindow(int width, int height) : width(width), height(height) {
     init("test");
 }
 
@@ -22,9 +26,9 @@ WindowsWindow::~WindowsWindow() {
 }
 
 void WindowsWindow::init(std::string title) {
-    ENGINE_INFO("Creating Linux Window: {2} - ({0}, {1})", width, height, title);
+    ENGINE_INFO("Creating Windows Window: {2} - ({0}, {1})", width, height, title);
     if (!glfwInit()){
-        ENGINE_ERROR("Failed to initialise GLFW in Linux Window");
+        ENGINE_ERROR("Failed to initialise GLFW in Windows Window");
         return;
     }
 

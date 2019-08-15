@@ -19,7 +19,7 @@ public:
     // - Event manager
     // - Renderer
     //
-    Application();
+    Application(int width=500 , int height=500);
     ~Application();
 
     void push_layer(Layer* layer);

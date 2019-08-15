@@ -16,6 +16,7 @@ class LinuxWindow: public Window {
 
 public:
     LinuxWindow();
+    LinuxWindow(int width, int height);
     ~LinuxWindow();
 
     void on_update() override;

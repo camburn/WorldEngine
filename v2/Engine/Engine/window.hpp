@@ -9,6 +9,7 @@ namespace engine{
 class Window {
 public:
     Window() {};
+    Window(int width, int height) {};
     virtual ~Window() {};
 
     virtual void on_update() = 0;
@@ -18,7 +19,7 @@ public:
 
     virtual void* get_native_window() const = 0;
 
-    static Window* create();
+    static Window* create(int width, int height);
 };
 
 }

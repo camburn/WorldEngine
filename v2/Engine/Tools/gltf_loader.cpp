@@ -91,20 +91,11 @@ void describe_node(std::shared_ptr<Model> &model, Node &node, int node_index, st
     }
 }
 
-std::shared_ptr<Model> load_gltf(std::string filename) {
-    std::shared_ptr<Model> model = std::make_shared<Model>();
+void inspect_gltf(std::shared_ptr<Model> model) {
+    //std::shared_ptr<Model> model = std::make_shared<Model>();
     TinyGLTF loader;
     std::string err;
     std::string warn;
-
-    bool ret = loader.LoadASCIIFromFile(model.get(), &err, &warn, filename);
-    //bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename); // for binary glTF(.glb)
-
-    if (!warn.empty()) ENGINE_WARN("{0}", warn);
-    if (!err.empty()) ENGINE_ERROR("{0}", err);
-    if (!ret) {
-        ENGINE_ASSERT(false, "Failed to parse glTF");
-    }
 
     // Model is one VAO (Render call)
     int scene_count = model->scenes.size();
@@ -149,7 +140,7 @@ std::shared_ptr<Model> load_gltf(std::string filename) {
         buffer_index++;
     }
     ENGINE_INFO("External model processed");
-    return model;
+    //return model;
 }
 
 class ModelObject {
@@ -243,7 +234,7 @@ void process_node(std::shared_ptr<Model> &model, Node &node, std::shared_ptr<eng
 }
 
 std::shared_ptr<engine::VertexArray> gltf_to_opengl(std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-
+    inspect_gltf(model);
     //GLuint vao;
     //glGenVertexArrays(1, &vao);
     std::shared_ptr<engine::VertexArray> vao (engine::VertexArray::create());
@@ -258,9 +249,4 @@ std::shared_ptr<engine::VertexArray> gltf_to_opengl(std::shared_ptr<Model> &mode
     glBindVertexArray(0);
     vao->unbind();
     return vao;
-}
-
-std::shared_ptr<engine::VertexArray> mesh_loader(std::string filename, const std::shared_ptr<engine::Shader> &shader) {
-    std::shared_ptr<Model> m = load_gltf(filename);
-    return gltf_to_opengl(m, shader);
 }

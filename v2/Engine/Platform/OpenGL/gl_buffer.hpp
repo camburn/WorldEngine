@@ -1,6 +1,7 @@
 #ifndef _GL_BUFFER_HPP
 #define _GL_BUFFER_HPP
 #include "Engine/renderer/buffer.hpp"
+#include "Platform/OpenGL/gl_vertex_array.hpp"
 
 namespace enginegl {
 
@@ -31,8 +32,10 @@ public:
     virtual void unbind() const override;
 
     virtual uint32_t get_count() const { return count; }
+    virtual int get_type() const { return enginegl::shader_to_gl_type(type); }
 
 private:
+    engine::ShaderDataType type;
     uint32_t index_buffer;
     uint32_t count;
 };
