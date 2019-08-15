@@ -8,6 +8,15 @@ workspace "WorldEngine"
         "Release",
     }
 
+    newoption {
+        trigger     = "opengl2",
+        description = "Choose a particular 3D API for rendering"
+    }
+    newoption {
+        trigger     = "opengl3",
+        description = "Choose a particular 3D API for rendering"
+    }
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
@@ -38,8 +47,6 @@ project "Engine"
         "%{prj.name}/Engine/**.hpp",
         "%{prj.name}/Tools/**.cpp",
         "%{prj.name}/Tools/**.hpp",
-        "%{prj.name}/Platform/OpenGL/**.cpp",
-        "%{prj.name}/Platform/OpenGL/**.hpp",
         "%{prj.name}/engine.hpp",
         "%{prj.name}/engine.cpp",
         "%{prj.name}/sandbox.cpp",
@@ -68,6 +75,28 @@ project "Engine"
         "imgui",
     }
 
+    configuration "opengl3"
+        defines
+        {
+            "OPENGL_CORE"
+        }
+        files
+        {
+            "%{prj.name}/Platform/OpenGL/**.cpp",
+            "%{prj.name}/Platform/OpenGL/**.hpp"
+        }
+
+    configuration "opengl2"
+        defines
+        {
+            "OPENGL_COMPATIBILITY"
+        }
+        files
+        {
+            "%{prj.name}/Platform/OpenGL2/**.cpp",
+            "%{prj.name}/Platform/OpenGL2/**.hpp"
+        }
+
     filter "system:linux"
         staticruntime "on"
         systemversion "latest"
@@ -93,7 +122,6 @@ project "Engine"
         defines
         {
             "ENGINE_PLATFORM_LINUX",
-            -- "OPENGL_COMPATIBILITY"
         }
 
     filter "system:windows"

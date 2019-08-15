@@ -22,8 +22,14 @@ using namespace engine;
 class MyLayer: public engine::Layer {
 public:
     MyLayer() {
+        #ifdef OPENGL_CORE
         std::string vs_file = "./shaders/vertex.glsl";
         std::string fs_file = "./shaders/fragment.glsl";
+        #endif
+        #ifdef OPENGL_COMPATIBILITY
+        std::string vs_file = "./shaders/opengl2_vertex.glsl";
+        std::string fs_file = "./shaders/opengl2_fragment.glsl";
+        #endif
         shader.reset(new Shader{vs_file, fs_file});
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );

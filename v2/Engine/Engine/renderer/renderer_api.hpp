@@ -12,7 +12,7 @@ class RendererAPI {
 public:
     enum class API
     {
-        None = 0, OpenGL = 1, OpenGLCompat = 2
+        None = 0, OpenGL = 1, OpenGL2 = 2
     };
 public:
     virtual void clear(const glm::vec4 &color) = 0;
