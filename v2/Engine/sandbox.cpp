@@ -36,7 +36,7 @@ public:
         // It requires object count and data type (uint/ushort)
         //GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
         //vao.reset(VertexArray::create(vao_id));
-        //entity2 = GltfEntity::load_from_file("D:\\projects\\tinygltf\\models\\Cube\\Cube.gltf");
+        entity3 = GltfEntity::load_from_file("D:\\projects\\tinygltf\\models\\Cube\\Cube.gltf");
         entity2 = GltfEntity::load_from_file("D:\\Blender Projects\\monkey.gltf");
         entity.reset( new CustomEntity());
         // TODO: Better integrate the meshloader into the VAO/VBO objects
@@ -144,8 +144,10 @@ public:
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         entity2->add_uniform_data("u_model", glm::mat4(1.0f));
-        //Renderer::submit_entity(shader, entity);
+        entity3->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
+        Renderer::submit_entity(shader, entity);
         Renderer::submit_entity(shader, entity2);
+        Renderer::submit_entity(shader, entity3);
 
         //Renderer::submit(shader, vao, glm::mat4(1.0));
     }
@@ -158,6 +160,7 @@ private:
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Entity> entity;
     std::shared_ptr<Entity> entity2;
+    std::shared_ptr<Entity> entity3;
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f};
     glm::vec3 camera_position {0.0f};
