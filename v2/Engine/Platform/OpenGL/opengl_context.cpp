@@ -83,6 +83,8 @@ void OpenGLContext::init() {
     glDebugMessageCallback( MessageCallback, 0 );
     #endif
     
+    glEnable(GL_DEPTH_TEST);
+
 }
 
 void OpenGLContext::swap_buffers() {

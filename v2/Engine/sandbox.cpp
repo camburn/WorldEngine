@@ -26,9 +26,9 @@ public:
         std::string fs_file = "./shaders/fragment.glsl";
         shader.reset(new Shader{vs_file, fs_file});
 
-        camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
+        //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
         float aspect = 800/800;
-        //camera.reset(new PerspectiveCamera { 65.0f, aspect, 1.0f, 10.0f });
+        camera.reset(new PerspectiveCamera { 45.0f, aspect, 0.1f, 100.0f });
 
         //camera->set_position(glm::vec3(2.0f, 2.0f, 2.0f));
 
@@ -87,10 +87,11 @@ public:
     }
 
     void on_update() override {
+        float time = (float)glfwGetTime();
+        float delta_time = time - last_frame_time;
+        last_frame_time = time;
         {
-            float time = (float)glfwGetTime();
-            float delta_time = time - last_frame_time;
-            last_frame_time = time;
+
 
             auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
             int state = glfwGetKey(window, GLFW_KEY_W);
@@ -133,6 +134,12 @@ public:
                 shader->recompile();
             }
         }
+
+        float radius = 10.0f;
+        float camX = sin(glfwGetTime()) * radius;
+        float camZ = cos(glfwGetTime()) * radius;
+
+        camera->set_position(glm::vec3(camX, 0.0f, camZ));
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));

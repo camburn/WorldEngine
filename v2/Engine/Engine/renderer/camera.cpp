@@ -27,16 +27,18 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, 
 }
 
 void PerspectiveCamera::recalculate_view_matrix() {
-    view_matrix = glm::lookAt(position, glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+    view_matrix = glm::lookAt(position, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    /*
     glm::mat4 transform = 
         glm::rotate(view_matrix, glm::radians(rotation.x), glm::vec3(1, 0, 0)) *
         glm::rotate(view_matrix, glm::radians(rotation.y), glm::vec3(0, 1, 0)) *
         glm::rotate(view_matrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
-
-
+    */
+    //view_matrix = glm::lookAt(glm::vec3(5,0,5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     //view_matrix = glm::inverse(transform);
 
-    view_matrix = glm::lookAt(glm::vec3(2,2,2), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+    glm::mat4 test = glm::perspective(90.0f, 800.0f/800.0f, 1.0f, 100.0f);
+    
     view_projection_matrix = projection_matrix * view_matrix;
 }
 

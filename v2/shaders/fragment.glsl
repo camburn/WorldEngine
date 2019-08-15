@@ -3,7 +3,7 @@
 in vec3 f_normal;
 in vec4 f_fragpos;
 
-uniform vec3 u_lightpos = vec3(1, 1, -2);
+uniform vec3 u_lightpos = vec3(2, 1, 2);
 uniform vec3 u_lightcolor = vec3(1, 1, 1);
 uniform vec4 u_color;
 uniform float ambient_strength = 0.1;
