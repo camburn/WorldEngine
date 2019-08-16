@@ -4,6 +4,8 @@
 #include "Engine/renderer/buffer.hpp"
 //#include "Engine/entity.hpp"
 
+#include "Platform/OpenGL/gl_texture.hpp"
+
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -29,6 +31,19 @@ std::map<int, std::string> ACCESSOR_COMPONENT_TYPE {
     {5125, "UNSIGNED_INT"},
     {5126, "FLOAT"}
 };
+std::map<int, std::string> TEXTURE_NAMES {
+    { 0x2600, "GL_NEAREST"},
+    { 0x2601, "GL_LINEAR"},
+    { 0x2700, "GL_NEAREST_MIPMAP_NEAREST"},
+    { 0x2701, "GL_LINEAR_MIPMAP_NEAREST"},
+    { 0x2702, "GL_NEAREST_MIPMAP_LINEAR"},
+    { 0x2703, "GL_LINEAR_MIPMAP_LINEAR"},
+    { 0x2800, "GL_TEXTURE_MAG_FILTER"},
+    { 0x2801, "GL_TEXTURE_MIN_FILTER"},
+    { 0x2802, "GL_TEXTURE_WRAP_S"},
+    { 0x2803, "GL_TEXTURE_WRAP_T"},
+    { 0x2901, "GL_REPEAT"},
+};
 std::map<int, std::string> ACCESSOR_TYPE {
     {TINYGLTF_TYPE_SCALAR, "SCALAR"},
     {TINYGLTF_TYPE_VEC2, "VEC2"},
@@ -51,7 +66,28 @@ std::map<int, std::string> BUFFER_VIEW_TARGET {
     {34963, "ELEMENT_ARRAY_BUFFER"},
 };
 
-void describe_mesh(Mesh &mesh, std::string indent="") {
+void describe_material(std::shared_ptr<Model> &model, int material_index, std::string indent="") {
+    Material material = model->materials[material_index];
+    ENGINE_INFO(indent + "          + name: {0}", material.name);
+    ENGINE_INFO(indent + "          - Base texture");
+    ENGINE_INFO(indent + "            + Index: {0}", material.pbrMetallicRoughness.baseColorTexture.index);
+    ENGINE_INFO(indent + "            + TexCoord: {0}", material.pbrMetallicRoughness.baseColorTexture.texCoord);
+    Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
+    Sampler sampler = model->samplers[texture.sampler];
+    ENGINE_INFO(indent + "            - Sampler: {0}", TEXTURE_NAMES[texture.sampler]);
+    ENGINE_INFO(indent + "              + minFilter: {0}", TEXTURE_NAMES[sampler.minFilter]);
+    ENGINE_INFO(indent + "              + magFilter: {0}", TEXTURE_NAMES[sampler.magFilter]);
+    ENGINE_INFO(indent + "              + wrapS: {0}", TEXTURE_NAMES[sampler.wrapS]);
+    ENGINE_INFO(indent + "              + wrapT: {0}", TEXTURE_NAMES[sampler.wrapT]);
+    ENGINE_INFO(indent + "              + wrapR: {0}", TEXTURE_NAMES[sampler.wrapR]);
+    Image image = model->images[texture.source];
+    ENGINE_INFO(indent + "            - Image: {0}", texture.source);
+    ENGINE_INFO(indent + "              + File: {0}", image.uri);
+    ENGINE_INFO(indent + "              + Pixel Type: {0}", ACCESSOR_COMPONENT_TYPE[image.pixel_type]);
+    ENGINE_INFO(indent + "              + Size: {0}x{1}", image.width, image.height);
+}
+
+void describe_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::string indent="") {
     ENGINE_INFO(indent + "    - Mesh - {0}", mesh.name);
     for (auto primitive: mesh.primitives) {
         ENGINE_INFO(indent + "      - Primitive");
@@ -59,7 +95,8 @@ void describe_mesh(Mesh &mesh, std::string indent="") {
         if (primitive.indices != -1)
             ENGINE_INFO(indent + "        + Indices: {0}", primitive.indices);
         if (primitive.material != -1)
-            ENGINE_INFO(indent + "        + material: {0}", primitive.material);
+            ENGINE_INFO(indent + "        - Material", primitive.material);
+            describe_material(model, primitive.material);
         ENGINE_INFO(indent + "        - Attributes", primitive.material);
         for (auto &[name, attr_index]: primitive.attributes){
             ENGINE_INFO(indent + "          + {0}: Accessor index: {1}", name, attr_index);
@@ -72,7 +109,7 @@ void describe_node(std::shared_ptr<Model> &model, Node &node, int node_index, st
     // A node can link to *a* mesh
     if (node.mesh != -1) {
         auto mesh = model->meshes[node.mesh];
-        describe_mesh(mesh, indent);
+        describe_mesh(model, mesh, indent);
     // Or *a* camera
     } else if (node.camera != -1) {
         ENGINE_INFO(indent + "    + Camera: {0}", node.camera);
@@ -165,6 +202,13 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
                 required_accessors.emplace(attr);
             }
         }
+
+        // Load textures
+        Material material = model->materials[primitive.material];
+        Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
+        Sampler sampler = model->samplers[texture.sampler];
+        Image image = model->images[texture.source];
+        GLuint tex_id = enginegl::buffer_image(sampler, image);
     }
 
     std::vector<int> required_buffer_views;
