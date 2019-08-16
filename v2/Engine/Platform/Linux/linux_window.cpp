@@ -40,8 +40,6 @@ void LinuxWindow::init(std::string title) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     #endif
 
-
-
     glfwSetErrorCallback(glfw_error_callback);
 
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);

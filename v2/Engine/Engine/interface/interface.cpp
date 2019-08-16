@@ -4,15 +4,12 @@
 #include "imgui.h"
 #include "examples/imgui_impl_glfw.h"
 
-//#define IMGUI_IMPL_OPENGL_LOADER_GLEW
-
 #include "examples/imgui_impl_opengl3.h"
 
 #include "Engine/application.hpp"
 
 // TODO: REMOVE THIS 
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
 
 namespace engine {
@@ -81,9 +78,6 @@ void InterfaceLayer::end() {
 
     // Rendering
     ImGui::Render();
-
-    GLint last_program;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
