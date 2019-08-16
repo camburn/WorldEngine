@@ -12,9 +12,19 @@ void GLRendererAPI::clear(const glm::vec4 &color) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void GLRendererAPI::update_screen(int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {
     vertex_array->bind();
-    glDrawElements(GL_TRIANGLES, vertex_array->get_index_buffer()->get_count(), vertex_array->get_index_buffer()->get_type(), nullptr);
+    glDrawElements(
+        GL_TRIANGLES,
+        vertex_array->get_index_buffer()->get_count(),
+        vertex_array->get_index_buffer()->get_type(),
+        nullptr
+    );
+    vertex_array->unbind();
 }
 
 } //namespace

@@ -9,8 +9,8 @@ static void glfw_error_callback(int error, const char* description) {
     ENGINE_ERROR("GLFW Error ({0}): {1}", error, description);
 }
 
-Window* Window::create() {
-    return new LinuxWindow();
+Window* Window::create(int width, int height) {
+    return new LinuxWindow(width, height);
 }
 LinuxWindow::LinuxWindow(): width(500), height(500) {
     init("test");
@@ -31,7 +31,10 @@ void LinuxWindow::init(std::string title) {
         return;
     }
 
-    #ifndef OPENGL_COMPATIBILITY
+    #ifdef OPENGL_COMPATIBILITY
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    #else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);

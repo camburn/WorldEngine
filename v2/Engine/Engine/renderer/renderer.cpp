@@ -24,10 +24,6 @@ void Renderer::submit(
     shader->upload_u_mat4("u_view_projection", scene_data->view_projection_matrix);
     shader->upload_u_mat4("u_model", model);
     renderer_api->draw_indexed(vertex_array);
-
-    #ifdef OPENGL_COMPATIBILITY
-    shader->unbind();
-    #endif
 }
 
 void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity){
@@ -41,13 +37,11 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
     for (auto const &[name, data]: entity->uniform_mat4_data) {
         shader->upload_u_mat4(name, data);
     }
+    // When do we update buffers?
     entity->update_buffers(shader);
     // TODO: Draw triangles if no indices
     renderer_api->draw_indexed(entity->get_vao());
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
-    #ifdef OPENGL_COMPATIBILITY
-    shader->unbind();
-    #endif
 }
 
 } //namespace

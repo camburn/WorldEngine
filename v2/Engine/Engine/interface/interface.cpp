@@ -4,12 +4,7 @@
 #include "imgui.h"
 #include "examples/imgui_impl_glfw.h"
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLEW
-#ifdef OPENGL_COMPATIBILITY
-#include "examples/imgui_impl_opengl2.h"
-#else
 #include "examples/imgui_impl_opengl3.h"
-#endif
 
 #include "Engine/application.hpp"
 
@@ -46,18 +41,15 @@ void InterfaceLayer::on_attach() {
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 
+    
     #ifdef OPENGL_COMPATIBILITY
-    ImGui_ImplOpenGL2_Init();
+    ImGui_ImplOpenGL3_Init("#version 120");
     #else
     ImGui_ImplOpenGL3_Init("#version 410");
     #endif
 }
 void InterfaceLayer::on_detach() {
-    #ifdef OPENGL_COMPATIBILITY
-    ImGui_ImplOpenGL2_Shutdown();
-    #else
     ImGui_ImplOpenGL3_Shutdown();
-    #endif
 
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -69,11 +61,8 @@ void InterfaceLayer::on_ui_render() {
 }
 
 void InterfaceLayer::begin() {
-    #ifdef OPENGL_COMPATIBILITY
-    ImGui_ImplOpenGL2_NewFrame();
-    #else
+
     ImGui_ImplOpenGL3_NewFrame();
-    #endif
 
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -90,11 +79,7 @@ void InterfaceLayer::end() {
     // Rendering
     ImGui::Render();
 
-    #ifdef OPENGL_COMPATIBILITY
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-    #else
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    #endif
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         GLFWwindow* backup_current_context = glfwGetCurrentContext();

@@ -51,11 +51,6 @@ void Shader::bind() {
 
 void Shader::unbind() {
     glUseProgram(0);
-
-    #ifdef OPENGL_COMPATIBILITY
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    #endif
 }
 
 void Shader::upload_u_mat4(const std::string& u_name, const glm::mat4& matrix) {
@@ -143,7 +138,7 @@ BufferLayout Shader::attribute_layout() {
     }
     return BufferLayout {elements};
 }
-
+#if 0
 void Shader::program_resources() {
     // TODO: Use this (newer method)
     // This might require a later version of OpenGL
@@ -169,6 +164,7 @@ void Shader::program_resources() {
         ENGINE_INFO("Name: {0]", name);
     }
 }
+#endif
 
 void Shader::on_ui_render(bool draw) {
     static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;

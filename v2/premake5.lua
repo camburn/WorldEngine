@@ -8,12 +8,22 @@ workspace "WorldEngine"
         "Release",
     }
 
+    newoption {
+        trigger     = "opengl2",
+        description = "Choose a particular 3D API for rendering"
+    }
+    newoption {
+        trigger     = "opengl3",
+        description = "Choose a particular 3D API for rendering"
+    }
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["glfw"] = "extern/glfw/include"
-IncludeDir["glad"] = "extern/glad/include"
+IncludeDir["glad2"] = "extern/glad2/include"
+IncludeDir["glad3"] = "extern/glad3/include"
 IncludeDir["imgui"] = "extern/imgui"
 IncludeDir["glm"] = "extern/glm"
 
@@ -38,8 +48,6 @@ project "Engine"
         "%{prj.name}/Engine/**.hpp",
         "%{prj.name}/Tools/**.cpp",
         "%{prj.name}/Tools/**.hpp",
-        "%{prj.name}/Platform/OpenGL/**.cpp",
-        "%{prj.name}/Platform/OpenGL/**.hpp",
         "%{prj.name}/engine.hpp",
         "%{prj.name}/engine.cpp",
         "%{prj.name}/sandbox.cpp",
@@ -57,16 +65,52 @@ project "Engine"
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.glad}",
         "%{IncludeDir.glm}"
     }
 
     links 
     { 
         "GLFW",
-        "glad",
         "imgui",
     }
+
+    configuration "opengl3"
+        defines
+        {
+            "OPENGL_CORE"
+        }
+        files
+        {
+            "%{prj.name}/Platform/OpenGL/**.cpp",
+            "%{prj.name}/Platform/OpenGL/**.hpp"
+        }
+        includedirs
+        {
+            "%{IncludeDir.glad3}"
+        }
+        links 
+        {
+            "glad3"
+        }
+
+    configuration "opengl2"
+        defines
+        {
+            "OPENGL_COMPATIBILITY"
+        }
+        files
+        {
+            "%{prj.name}/Platform/OpenGL/**.cpp",
+            "%{prj.name}/Platform/OpenGL/**.hpp"
+        }
+        includedirs
+        {
+            "%{IncludeDir.glad2}"
+        }
+        links 
+        {
+            "glad2"
+        }
 
     filter "system:linux"
         staticruntime "on"
@@ -93,7 +137,6 @@ project "Engine"
         defines
         {
             "ENGINE_PLATFORM_LINUX",
-            -- "OPENGL_COMPATIBILITY"
         }
 
     filter "system:windows"

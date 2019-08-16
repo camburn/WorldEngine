@@ -246,7 +246,6 @@ std::shared_ptr<engine::VertexArray> gltf_to_opengl(std::shared_ptr<Model> &mode
             process_node(model, model->nodes[node_index], vao, shader);
         }
     }
-    glBindVertexArray(0);
     vao->unbind();
     return vao;
 }

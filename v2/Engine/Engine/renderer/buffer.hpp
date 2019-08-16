@@ -50,7 +50,7 @@ public:
     ShaderDataType type;
     std::string name;
     uint32_t size;
-    uint32_t offset;
+    intptr_t offset;
     bool normalised;
 
     BufferElement() {}
