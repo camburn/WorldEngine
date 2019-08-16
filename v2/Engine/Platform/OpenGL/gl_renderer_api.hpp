@@ -13,6 +13,8 @@ class GLRendererAPI: public engine::RendererAPI {
 public:
     virtual void clear(const glm::vec4 &color) override;
 
+    virtual void update_screen(int width, int height) override;
+
     virtual void draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) override;
 };
 

@@ -10,7 +10,10 @@ namespace glengine {
 void GLRendererAPI::clear(const glm::vec4 &color) {
     glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, 800, 800);
+}
+
+void GLRendererAPI::update_screen(int width, int height) {
+    glViewport(0, 0, width, height);
 }
 
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {

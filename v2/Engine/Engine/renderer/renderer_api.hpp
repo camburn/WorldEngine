@@ -17,6 +17,8 @@ public:
 public:
     virtual void clear(const glm::vec4 &color) = 0;
 
+    virtual void update_screen(int width, int height) = 0;
+
     virtual void draw_indexed(const std::shared_ptr<VertexArray>& vertex_array) = 0;
 
     inline static API get_api() { return api; }
