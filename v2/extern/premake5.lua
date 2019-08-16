@@ -105,7 +105,7 @@ project "imgui"
         staticruntime "On"
         
     filter { "system:windows", "configurations:Release" }
-        buildoptions "/MT"
+        buildoptions "/MDd"
 
 
 project "glad2"

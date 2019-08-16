@@ -44,7 +44,8 @@ public:
         //GLuint vao_id = mesh_loader("/home/campbell/Models/Cube.gltf", shader);
         //vao.reset(VertexArray::create(vao_id));
         entity3 = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
-        //entity2 = GltfEntity::load_from_file("D:\\Blender Projects\\monkey.gltf");
+        entity2 = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
+        
         entity.reset( new CustomEntity());
         // TODO: Better integrate the meshloader into the VAO/VBO objects
         
@@ -70,8 +71,10 @@ public:
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("normal", normals);
         //entity.add_attribute_data("color", colors);
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        //entity2->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
+        entity2->add_uniform_data("u_model", glm::mat4(1.0f));
+        entity2->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
         entity->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
+        entity3->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_index_data(i_data);
     }
 
@@ -148,10 +151,10 @@ public:
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        //entity2->add_uniform_data("u_model", glm::mat4(1.0f));
+        
         entity3->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
         Renderer::submit_entity(shader, entity);
-        //Renderer::submit_entity(shader, entity2);
+        Renderer::submit_entity(shader, entity2);
         Renderer::submit_entity(shader, entity3);
 
         //Renderer::submit(shader, vao, glm::mat4(1.0));
