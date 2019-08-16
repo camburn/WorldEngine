@@ -4,15 +4,13 @@
 #include <map>
 #include <set>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include <glm/glm.hpp>
 #include "Engine/renderer/buffer.hpp"
 #include "Engine/renderer/vertex_array.hpp"
 
 namespace engine {
-
-
 
 class Shader {
 public:
@@ -59,7 +57,8 @@ public:
 private:
     std::map<std::string, std::string> GLTF_TO_SHADER_ATTRIBUTE {
         {"POSITION", "position"},
-        {"NORMAL", "normal"}
+        {"NORMAL", "normal"},
+        {"TEXCOORD_0", "texcoord"},
     };
     
     struct Uniform {
