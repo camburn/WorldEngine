@@ -2,7 +2,9 @@
 
 varying vec3 f_normal;
 varying vec4 f_fragpos;
+varying vec2 f_texcoord;
 
+uniform sampler2D base_color;
 uniform vec3 u_lightpos = vec3(2, 1, 2);
 uniform vec3 u_lightcolor = vec3(1, 1, 1);
 uniform vec4 u_color;
@@ -15,7 +17,7 @@ void main() {
     float diff = max(dot(norm, lightdir), 0.0);
     vec3 diffuse = diff * u_lightcolor;
 
-    vec3 result = (ambient + diffuse) * u_color.xyz;
+    vec3 result = (ambient + diffuse) * u_color.xyz * texture2D(base_color, f_texcoord).xyz;;
 
     gl_FragColor = vec4(result, 1);
 }

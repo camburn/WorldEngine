@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include "Engine/renderer/vertex_array.hpp"
 
