@@ -35,75 +35,80 @@ OpenGLVertexArray::OpenGLVertexArray (GLuint vao) {
 }
 
 OpenGLVertexArray::OpenGLVertexArray () {
-    #ifndef OPENGL_COMPATIBILITY
     glGenVertexArrays(1, &vao_id);
-    // To new
+    // Too new
     // glCreateVertexArrays(1, &vao_id);
-    #endif
     ENGINE_TRACE("Vertex array {0} created", vao_id);
 }
 
 OpenGLVertexArray::~OpenGLVertexArray () {
     ENGINE_TRACE("Vertex array {0} garbage collected", vao_id);
-    #ifndef OPENGL_COMPATIBILITY
     glDeleteVertexArrays(1, &vao_id);
-    #endif
 }
 
 void OpenGLVertexArray::bind() const {
-    #ifndef OPENGL_COMPATIBILITY
     glBindVertexArray(vao_id);
-    #else
-    for (auto& buffer: vertex_buffers) {
-        buffer->bind();
-    }
-    index_buffer->bind();
-    #endif
 }
 
 void OpenGLVertexArray::unbind() const {
-    #ifndef OPENGL_COMPATIBILITY
     glBindVertexArray(0);
-    #else
-    for (auto& buffer: vertex_buffers) {
-        buffer->unbind();
+}
+
+void OpenGLVertexArray::describe_layout(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer) const {
+    uint32_t index = 0;
+    const auto& layout = vertex_buffer->get_layout();
+    for (const auto& element: layout) {
+        glEnableVertexAttribArray(index);
+        glVertexAttribPointer(
+            index,
+            element.get_component_count(),
+            shader_to_gl_type(element.type),
+            element.normalised ? GL_TRUE : GL_FALSE,
+            layout.get_stride(),
+            (const void*)element.offset
+        );
+        index++;
     }
-    index_buffer->unbind();
-    #endif
+}
+
+void OpenGLVertexArray::describe_layouts() const {
+    
+    for (auto& vertex_buffer: vertex_buffers) {
+        describe_layout(vertex_buffer);
+    }
+}
+
+void OpenGLVertexArray::disable_layout(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer) const {
+    uint32_t index = 0;
+    const auto& layout = vertex_buffer->get_layout();
+    for (const auto& element: layout) {
+        glDisableVertexAttribArray(index);
+        index++;
+    }
+}
+
+void OpenGLVertexArray::disable_layouts() const {
+    
+    for (auto& vertex_buffer: vertex_buffers) {
+        disable_layout(vertex_buffer);
+    }
 }
 
 void OpenGLVertexArray::add_vertex_buffer(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer, bool generate_attrib_pointers) {
     if (generate_attrib_pointers) {
-        #ifndef OPENGL_COMPATIBILITY
         glBindVertexArray(vao_id);
-        #endif
         vertex_buffer->bind();
 
-        uint32_t index = 0;
-        const auto& layout = vertex_buffer->get_layout();
-        for (const auto& element: layout) {
-            glEnableVertexAttribArray(index);
-            glVertexAttribPointer(
-                index,
-                element.get_component_count(),
-                shader_to_gl_type(element.type),
-                element.normalised ? GL_TRUE : GL_FALSE,
-                layout.get_stride(),
-                (const void*)element.offset
-            );
-            index++;
-        }
-        #ifndef OPENGL_COMPATIBILITY
+        describe_layout(vertex_buffer);
+
         glBindVertexArray(0);
-        #endif
+       
     }
     vertex_buffers.push_back(vertex_buffer);
 }
 
 void OpenGLVertexArray::set_index_buffer(const std::shared_ptr<engine::IndexBuffer>& buffer) {
-    #ifndef OPENGL_COMPATIBILITY
     glBindVertexArray(vao_id);
-    #endif
     index_buffer = buffer;
     index_buffer->bind();
 }

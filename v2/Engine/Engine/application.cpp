@@ -1,6 +1,8 @@
 #include "engine.hpp"
 #include "application.hpp"
 
+#include "Platform/OpenGL/opengl_context.hpp"
+
 namespace engine {
 
 Application* Application::instance = nullptr;

@@ -29,6 +29,12 @@ private:
     uint32_t vao_id;
     std::vector<std::shared_ptr<engine::VertexBuffer>> vertex_buffers;
     std::shared_ptr<engine::IndexBuffer> index_buffer;
+
+    void describe_layouts() const;
+    void describe_layout(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer) const;
+
+    void disable_layouts() const;
+    void disable_layout(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer) const;
 };
 
 GLenum shader_to_gl_type(const engine::ShaderDataType type);

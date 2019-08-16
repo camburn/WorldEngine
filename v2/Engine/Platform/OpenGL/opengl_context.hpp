@@ -7,6 +7,8 @@ struct GLFWwindow;
 
 namespace enginegl {
 
+void _check_gl_error(const char *file, int line);
+
 class OpenGLContext: public GraphicsContext {
 public:
     OpenGLContext(GLFWwindow* window_handle);
@@ -18,6 +20,8 @@ public:
 private:
     GLFWwindow* window_handle;
 };
+
+#define check_gl_error() enginegl::_check_gl_error(__FILE__,__LINE__)
 
 } //namespace
 #endif

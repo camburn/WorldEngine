@@ -44,6 +44,7 @@ void InterfaceLayer::on_attach() {
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 
+    
     #ifdef OPENGL_COMPATIBILITY
     ImGui_ImplOpenGL3_Init("#version 120");
     #else

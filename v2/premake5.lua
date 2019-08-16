@@ -22,7 +22,8 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["glfw"] = "extern/glfw/include"
-IncludeDir["glad"] = "extern/glad/include"
+IncludeDir["glad2"] = "extern/glad2/include"
+IncludeDir["glad3"] = "extern/glad3/include"
 IncludeDir["imgui"] = "extern/imgui"
 IncludeDir["glm"] = "extern/glm"
 
@@ -64,14 +65,12 @@ project "Engine"
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.glad}",
         "%{IncludeDir.glm}"
     }
 
     links 
     { 
         "GLFW",
-        "glad",
         "imgui",
     }
 
@@ -85,6 +84,14 @@ project "Engine"
             "%{prj.name}/Platform/OpenGL/**.cpp",
             "%{prj.name}/Platform/OpenGL/**.hpp"
         }
+        includedirs
+        {
+            "%{IncludeDir.glad3}"
+        }
+        links 
+        {
+            "glad3"
+        }
 
     configuration "opengl2"
         defines
@@ -93,8 +100,16 @@ project "Engine"
         }
         files
         {
-            "%{prj.name}/Platform/OpenGL2/**.cpp",
-            "%{prj.name}/Platform/OpenGL2/**.hpp"
+            "%{prj.name}/Platform/OpenGL/**.cpp",
+            "%{prj.name}/Platform/OpenGL/**.hpp"
+        }
+        includedirs
+        {
+            "%{IncludeDir.glad2}"
+        }
+        links 
+        {
+            "glad2"
         }
 
     filter "system:linux"

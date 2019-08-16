@@ -27,6 +27,7 @@ const std::map<GLenum, std::string> gl_source_types = {
     { GL_DEBUG_SOURCE_OTHER , "GL_DEBUG_SOURCE_OTHER" }
 };
 
+
 void GLAPIENTRY
 MessageCallback(
         GLenum source,
@@ -58,6 +59,25 @@ MessageCallback(
     }
 }
 
+void _check_gl_error(const char *file, int line) {
+        GLenum err (glGetError());
+ 
+        while(err!=GL_NO_ERROR) {
+                std::string error;
+ 
+                switch(err) {
+                        case GL_INVALID_OPERATION:      error="INVALID_OPERATION";      break;
+                        case GL_INVALID_ENUM:           error="INVALID_ENUM";           break;
+                        case GL_INVALID_VALUE:          error="INVALID_VALUE";          break;
+                        case GL_OUT_OF_MEMORY:          error="OUT_OF_MEMORY";          break;
+                        case GL_INVALID_FRAMEBUFFER_OPERATION:  error="INVALID_FRAMEBUFFER_OPERATION";  break;
+                }
+ 
+                ENGINE_ERROR("OpenGL: {0} - {1}:{0}", error.c_str(), file, line);
+                err=glGetError();
+        }
+}
+
 OpenGLContext::OpenGLContext(GLFWwindow* window_handle): window_handle(window_handle) {
     ENGINE_ASSERT(window_handle, "Window handle is null");
     ENGINE_INFO("Context created");
@@ -73,18 +93,17 @@ void OpenGLContext::init() {
     ENGINE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
     ENGINE_INFO("  Version: {0}", glGetString(GL_VERSION));
 
+    
     // During init, enable debug output
     #ifdef ENGINE_DEBUG_ENABLED
     glEnable( GL_DEBUG_OUTPUT );
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     //Filter out Nvidia Buffer detailed info
     glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
-
     glDebugMessageCallback( MessageCallback, 0 );
     #endif
     
     glEnable(GL_DEPTH_TEST);
-
 }
 
 void OpenGLContext::swap_buffers() {

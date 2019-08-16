@@ -24,10 +24,6 @@ void Renderer::submit(
     shader->upload_u_mat4("u_view_projection", scene_data->view_projection_matrix);
     shader->upload_u_mat4("u_model", model);
     renderer_api->draw_indexed(vertex_array);
-
-    #ifdef OPENGL_COMPATIBILITY
-    shader->unbind();
-    #endif
 }
 
 void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity){
