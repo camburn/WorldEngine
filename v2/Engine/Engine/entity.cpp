@@ -18,7 +18,15 @@ void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec4> &
         attribute_size = data.size();
     }
     ENGINE_ASSERT(data.size() == attribute_size, "Attributes require the same number of elements");
-    attribute_data[name] = data;
+    attribute_data_vec4[name] = data;
+}
+
+void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec2> &data) {
+    if (attribute_size <= 0) {
+        attribute_size = data.size();
+    }
+    ENGINE_ASSERT(data.size() == attribute_size, "Attributes require the same number of elements");
+    attribute_data_vec2[name] = data;
 }
 
 void CustomEntity::add_index_data(std::vector<uint32_t> &data) {
@@ -26,17 +34,18 @@ void CustomEntity::add_index_data(std::vector<uint32_t> &data) {
 }
 
 void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data) {
-    if (attribute_data.size() == 0) {
+    if (attribute_data_vec4.size() == 0) {
         ENGINE_ASSERT(false, "No attribute data for this entity");
         return;
     }
     ;
-    data.reserve(attribute_size * attribute_data.size());
+    data.reserve(attribute_size * attribute_data_vec4.size());
     bool fill_missing_data = false;
     // All uniforms lists should have the same number of elements
 
     for (auto& element: layout) {
-        if (attribute_data.count(element.name) > 0) {
+        if (attribute_data_vec4.count(element.name) > 0 ||
+            attribute_data_vec2.count(element.name) > 0) {
             // We have that data
         } else if (fill_missing_data){
             // We don't have that data
@@ -48,8 +57,17 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
     //TODO: This only supports vec4 data
     for (int i = 0; i < attribute_size; i++) {  // For each element
         for (auto& element: layout) {
-            glm::vec4 value = attribute_data[element.name][i];
-            data.insert(data.end(), { value.x, value.y, value.z, value.w });
+            if (element.size == 8) {
+                glm::vec2 value = attribute_data_vec2[element.name][i];
+                data.insert(data.end(), { value.x, value.y });
+            }
+            else if (element.size == 16) {
+                glm::vec4 value = attribute_data_vec4[element.name][i];
+                data.insert(data.end(), { value.x, value.y, value.z, value.w });
+            }
+            else {
+                ENGINE_ASSERT(0, "Element {0} with a size of {1} is not supported", element.name, element.size);
+            }
         }
     }
 }
@@ -57,7 +75,6 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
     ENGINE_DEBUG("Generating vertex array and buffer for Entity");
-    //if (buffers_set) return;
     // TODO: Shader should cache entities that have buffered data already
     BufferLayout layout = shader->attribute_layout();
 
@@ -66,7 +83,7 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     interlace_data(layout, data);
 
     vao.reset(VertexArray::create());
-
+    int sze = sizeof(data);
     buffer.reset(VertexBuffer::create(&data[0], data.size() * sizeof(float)));
     buffer->set_layout(layout);
     index_buffer.reset(IndexBuffer::create(&index_data[0], index_data.size()));
@@ -105,7 +122,10 @@ GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
 
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
-    vao = gltf_to_opengl(model, shader);
+    ModelObject m_obj;
+    gltf_to_opengl(m_obj, model, shader);
+    texture_ids = m_obj.texture_ids;
+    vao = m_obj.vao;
     shader->register_vertex_array(vao);
 }
 

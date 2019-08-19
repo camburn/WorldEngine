@@ -180,13 +180,10 @@ void inspect_gltf(std::shared_ptr<Model> model) {
     //return model;
 }
 
-class ModelObject {
-
-    std::vector<GLuint> vbos;
-    GLuint vao;
-};
-
-void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<engine::VertexArray> &vao, const std::shared_ptr<engine::Shader> &shader) {
+void process_mesh(
+        ModelObject& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
+        const std::shared_ptr<engine::Shader> &shader
+    ) {
     // A mesh has X primitives
     std::map<std::string, int> required_accessors;
 
@@ -209,6 +206,8 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
         Sampler sampler = model->samplers[texture.sampler];
         Image image = model->images[texture.source];
         GLuint tex_id = enginegl::buffer_image(sampler, image);
+        m_obj.texture_ids.push_back(tex_id);
+        ENGINE_INFO("Loaded image - {0}", tex_id);
     }
 
     std::vector<int> required_buffer_views;
@@ -218,17 +217,6 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
 
         if (accessor.bufferView != -1){
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
-            /*
-            GLuint vbo;
-            glGenBuffers(1, &vbo);
-            glBindBuffer(buffer_view.target, vbo);
-            glBufferData(
-                buffer_view.target,
-                buffer_view.byteLength,
-                &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
-                GL_STATIC_DRAW
-            );
-             */
 
             if(buffer_view.target == GL_ELEMENT_ARRAY_BUFFER) {
                 std::shared_ptr<engine::IndexBuffer> index_buffer (
@@ -238,7 +226,7 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
                         buffer_view.byteLength
                     )
                 );
-                vao->set_index_buffer(index_buffer);
+                m_obj.vao->set_index_buffer(index_buffer);
             } else {
                 std::shared_ptr<engine::VertexBuffer> index_buffer (
                     engine::VertexBuffer::create(
@@ -246,7 +234,7 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
                         buffer_view.byteLength
                     )
                 );
-                vao->add_vertex_buffer(index_buffer, false);
+                m_obj.vao->add_vertex_buffer(index_buffer, false);
             }
 
         } else {
@@ -268,28 +256,29 @@ void process_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::shared_ptr<eng
 }
 
 
-void process_node(std::shared_ptr<Model> &model, Node &node, std::shared_ptr<engine::VertexArray> &vao, const std::shared_ptr<engine::Shader> &shader) {
+void process_node(
+        ModelObject& m_obj, std::shared_ptr<Model> &model, Node &node, 
+        const std::shared_ptr<engine::Shader> &shader
+    ) {
     if (node.mesh != -1) {
-        process_mesh(model, model->meshes[node.mesh], vao, shader);
+        process_mesh(m_obj, model, model->meshes[node.mesh], shader);
     }
     for (int child_index: node.children) {
-        process_node(model, model->nodes[child_index], vao, shader);
+        process_node(m_obj, model, model->nodes[child_index], shader);
     }
 }
 
-std::shared_ptr<engine::VertexArray> gltf_to_opengl(std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
+void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
+
     inspect_gltf(model);
-    //GLuint vao;
-    //glGenVertexArrays(1, &vao);
-    std::shared_ptr<engine::VertexArray> vao (engine::VertexArray::create());
-    vao->bind();
-    //glBindVertexArray(vao);
+
+    m_obj.vao.reset(engine::VertexArray::create());
+    m_obj.vao->bind();
 
     for (Scene &scene: model->scenes) {
         for (int &node_index: scene.nodes) {
-            process_node(model, model->nodes[node_index], vao, shader);
+            process_node(m_obj, model, model->nodes[node_index], shader);
         }
     }
-    vao->unbind();
-    return vao;
+    m_obj.vao->unbind();
 }

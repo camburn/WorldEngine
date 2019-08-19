@@ -15,6 +15,8 @@ public:
 
     virtual void update_screen(int width, int height) override;
 
+    virtual void map_texture(const unsigned int tex_id) override;
+
     virtual void draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) override;
 };
 

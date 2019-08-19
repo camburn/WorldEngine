@@ -39,6 +39,9 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
     }
     // When do we update buffers?
     entity->update_buffers(shader);
+    for (auto const &tex_id: entity->texture_ids) {
+        renderer_api->map_texture(tex_id);
+    }
     // TODO: Draw triangles if no indices
     renderer_api->draw_indexed(entity->get_vao());
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
