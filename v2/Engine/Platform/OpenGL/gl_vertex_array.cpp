@@ -97,12 +97,8 @@ void OpenGLVertexArray::disable_layouts() const {
 void OpenGLVertexArray::add_vertex_buffer(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer, bool generate_attrib_pointers) {
     if (generate_attrib_pointers) {
         glBindVertexArray(vao_id);
-        vertex_buffer->bind();
-
         describe_layout(vertex_buffer);
-
         glBindVertexArray(0);
-       
     }
     vertex_buffers.push_back(vertex_buffer);
 }

@@ -16,6 +16,10 @@ void GLRendererAPI::update_screen(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+void GLRendererAPI::map_texture(const unsigned int tex_id) {
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+}
+
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {
     vertex_array->bind();
     glDrawElements(

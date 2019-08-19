@@ -64,10 +64,16 @@ public:
             { 0.0f, 1.0f, 0.0f, 0.0f },
             { 0.0f, 1.0f, 0.0f, 0.0f }
         };
+        std::vector<glm::vec2> texcoords = {
+            { 0.0f, 1.0f },
+            { 1.0f, 0.0f },
+            { 0.0f, 1.0f }
+        };
         std::vector<uint32_t> i_data = { 0, 1, 2 };
 
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("position", data);
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("normal", normals);
+        std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("texcoord", texcoords);
         //entity.add_attribute_data("color", colors);
         entity->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         //entity2->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
