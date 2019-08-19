@@ -10,7 +10,12 @@
 
 #include "tiny_gltf.h"
 
+struct ModelObject {
+    std::vector<GLuint> texture_ids;
+    std::shared_ptr<engine::VertexArray> vao;
+};
+
 std::shared_ptr<engine::VertexArray> mesh_loader(std::string filename, const std::shared_ptr<engine::Shader> &shader);
-std::shared_ptr<engine::VertexArray> gltf_to_opengl(std::shared_ptr<tinygltf::Model> &model, const std::shared_ptr<engine::Shader> &shader);
+void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<tinygltf::Model> &model, const std::shared_ptr<engine::Shader> &shader);
 
 #endif

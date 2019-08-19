@@ -30,6 +30,7 @@ public:
     std::shared_ptr<VertexArray> get_vao(){ return vao; }
     std::map<std::string, glm::vec4> uniform_vec4_data;
     std::map<std::string, glm::mat4> uniform_mat4_data;
+    std::vector<GLuint> texture_ids;
 
 protected:
     std::shared_ptr<VertexArray> vao;
@@ -39,6 +40,7 @@ class CustomEntity: public Entity {
 public:
     CustomEntity(){}
     void add_attribute_data(std::string name, std::vector<glm::vec4> &data);
+    void add_attribute_data(std::string name, std::vector<glm::vec2> &data);
     void add_index_data(std::vector<uint32_t> &data);
     //void add_uniform_data(std::string name, glm::vec4 data);
     //void add_uniform_data(std::string name, glm::mat4 data);
@@ -47,7 +49,8 @@ public:
 
     void render(Shader &shader) override;
 
-    std::map<std::string, std::vector<glm::vec4>> attribute_data;
+    std::map<std::string, std::vector<glm::vec4>> attribute_data_vec4;
+    std::map<std::string, std::vector<glm::vec2>> attribute_data_vec2;
     //std::map<std::string, glm::vec4> uniform_vec4_data;
     //std::map<std::string, glm::mat4> uniform_mat4_data;
     std::vector<uint32_t> index_data;

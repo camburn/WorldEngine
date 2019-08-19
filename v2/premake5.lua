@@ -116,6 +116,10 @@ project "Engine"
         staticruntime "on"
         systemversion "latest"
 
+        toolset "clang"
+        -- Clang toolset not building the PCH?
+        -- clang++ -std=c++17 Engine/engine.hpp -I ./extern/spdlog/include -o ./build/engine.hpp.pch
+    
         files
         {
             "%{prj.name}/Platform/Linux/**.h",
