@@ -67,7 +67,8 @@ void display_loaded_textures(bool display) {
         iss << data.name << "(" << data.width << "x" << data.height << ")";
         std::string name = iss.str();
         if (ImGui::TreeNode(name.c_str())) {
-            ImGui::Image((void*)(intptr_t)data.id, ImVec2(data.width, data.height));
+            auto size = ImGui::GetWindowSize();
+            ImGui::Image((void*)(intptr_t)data.id, ImVec2(size.x - 50, size.x - 50));
             ImGui::TreePop();
         }
     }

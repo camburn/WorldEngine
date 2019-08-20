@@ -171,6 +171,21 @@ void Shader::on_ui_render(bool draw) {
     static std::string last_error = "";
 
     ImGui::Begin("Shader Editor");
+
+    if (ImGui::TreeNode("Attributes")) {
+        for (auto& [index, attribute]: attributes) {
+            ImGui::Text("%i - %s", attribute.index, attribute.name.c_str());
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Uniforms")) {
+        for (auto& [name, uniform]: uniforms) {
+            ImGui::Text("%i - %s", uniform.index, uniform.name.c_str());
+        }
+        ImGui::TreePop();
+    }
+    ImGui::Separator();
+
     if (ImGui::Button("Rebuild Shaders")) {
         if (recompile()) {
             last_error = "";
