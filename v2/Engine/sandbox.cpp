@@ -17,6 +17,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Platform/OpenGL/gl_debug_ui.hpp"
+
+
 using namespace engine;
 
 class MyLayer: public engine::Layer {
@@ -51,26 +54,31 @@ public:
         
 
         std::vector<glm::vec4> data = {
+            {  0.5f,  0.5f, 0.0f, 1.0f },
+            {  0.5f, -0.5f, 0.0f, 1.0f },
             { -0.5f, -0.5f, 0.0f, 1.0f },
-            { 0.5f, -0.5f, 0.0f, 1.0f },
-            { 0.0f,  0.5f, 0.0f, 1.0f }
+            { -0.5f,  0.5f, 0.0f, 1.0f }
         };
         std::vector<glm::vec4> colors = {
             { 0.8f, 0.2f, 0.2f, 1.0f },
             { 0.2f, 0.8f, 0.2f, 1.0f },
-            { 0.2f, 0.2f, 0.8f, 1.0f }
+            { 0.2f, 0.2f, 0.8f, 1.0f },
+            { 0.2f, 0.2f, 0.2f, 1.0f }
         };
         std::vector<glm::vec4> normals = {
+            { 0.0f, 1.0f, 0.0f, 0.0f },
             { 0.0f, 1.0f, 0.0f, 0.0f },
             { 0.0f, 1.0f, 0.0f, 0.0f },
             { 0.0f, 1.0f, 0.0f, 0.0f }
         };
         std::vector<glm::vec2> texcoords = {
-            { 0.0f, 1.0f },
+            { 1.0f, 1.0f },
             { 1.0f, 0.0f },
+            { 0.0f, 0.0f },
             { 0.0f, 1.0f }
         };
-        std::vector<uint32_t> i_data = { 0, 1, 2 };
+
+        std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("position", data);
         std::dynamic_pointer_cast<CustomEntity>(entity)->add_attribute_data("normal", normals);
@@ -100,6 +108,8 @@ public:
         ImGui::End();
 
         shader->on_ui_render(true);
+        enginegl::on_ui_render(true);
+
     }
 
     void on_update() override {
@@ -162,8 +172,6 @@ public:
         Renderer::submit_entity(shader, entity);
         Renderer::submit_entity(shader, entity2);
         Renderer::submit_entity(shader, entity3);
-
-        //Renderer::submit(shader, vao, glm::mat4(1.0));
     }
 
 private:

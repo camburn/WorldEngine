@@ -5,6 +5,7 @@
 
 namespace enginegl {
 GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image);
+void display_loaded_textures(bool display);
 }
 
 #endif

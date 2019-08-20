@@ -242,6 +242,15 @@ void process_mesh(
         }
         if (name != "INDICES") {
             int vertex_attribute_location = shader->attribute_location(name);
+            ENGINE_TRACE("Describing index {0} as {1}", vertex_attribute_location, name);
+            ENGINE_TRACE("glVertexAttribPointer({0}, {1}, {2}, {3}, {4}, {5})",
+                vertex_attribute_location,
+                accessor.type,
+                ACCESSOR_COMPONENT_TYPE[accessor.componentType],
+                accessor.normalized ? "GL_TRUE": "GL_FALSE",
+                model->bufferViews[accessor.bufferView].byteStride,
+                accessor.byteOffset
+            );
             glEnableVertexAttribArray(vertex_attribute_location);
             glVertexAttribPointer(
                 vertex_attribute_location,

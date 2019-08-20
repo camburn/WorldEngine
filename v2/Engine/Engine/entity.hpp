@@ -50,6 +50,7 @@ public:
     void render(Shader &shader) override;
 
     std::map<std::string, std::vector<glm::vec4>> attribute_data_vec4;
+    std::map<std::string, std::vector<glm::vec3>> attribute_data_vec3;
     std::map<std::string, std::vector<glm::vec2>> attribute_data_vec2;
     //std::map<std::string, glm::vec4> uniform_vec4_data;
     //std::map<std::string, glm::mat4> uniform_mat4_data;

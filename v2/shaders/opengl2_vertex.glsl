@@ -12,7 +12,6 @@ varying vec4 f_fragpos;
 varying vec2 f_texcoord;
 
 void main() {
-    gl_TexCoord[0] = vec4(texcoord, 0, 0);
     f_texcoord = texcoord;
     f_normal = normal.xyz;
     f_fragpos = u_model * position;

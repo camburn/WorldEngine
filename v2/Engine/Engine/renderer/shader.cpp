@@ -178,7 +178,7 @@ void Shader::on_ui_render(bool draw) {
             last_error = enginegl::get_last_error();
         }
     }
-    ImGui::TextColored({0.8f, 0.1f, 0.1f, 1.0f}, last_error.c_str());
+    ImGui::TextColored({0.8f, 0.1f, 0.1f, 1.0f}, "%s", last_error.c_str());
     
     if (ImGui::TreeNode("Vertex Shader")) {
         ImGui::InputTextMultiline(

@@ -17,7 +17,7 @@ void main() {
     float diff = max(dot(norm, lightdir), 0.0);
     vec3 diffuse = diff * u_lightcolor;
 
-    vec3 result = (ambient + diffuse) * u_color.xyz * texture2D(base_color, gl_TexCoord[0].st).xyz;;
+    vec3 result = (ambient + diffuse) * u_color.xyz * texture2D(base_color, f_texcoord).xyz;;
 
     gl_FragColor = vec4(result, 1);
 }

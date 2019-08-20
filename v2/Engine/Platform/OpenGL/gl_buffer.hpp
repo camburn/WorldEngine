@@ -14,10 +14,13 @@ public:
     virtual void bind() const override;
     virtual void unbind() const override;
 
+    virtual void read_data() override;
+
     virtual const engine::BufferLayout& get_layout() const override { return m_layout; }
     virtual void set_layout(const engine::BufferLayout& layout) override { m_layout = layout; }
 
 private:
+    uint32_t buffer_size;
     uint32_t vertex_buffer;
     engine::BufferLayout m_layout;
 };
@@ -31,8 +34,8 @@ public:
     virtual void bind() const override;
     virtual void unbind() const override;
 
-    virtual uint32_t get_count() const { return count; }
-    virtual int get_type() const { return enginegl::shader_to_gl_type(type); }
+    virtual uint32_t get_count() const override { return count; }
+    virtual int get_type() const override { return enginegl::shader_to_gl_type(type); }
 
 private:
     engine::ShaderDataType type;
