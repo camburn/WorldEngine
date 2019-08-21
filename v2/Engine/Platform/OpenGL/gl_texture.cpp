@@ -3,6 +3,7 @@
 #include "gl_texture.hpp"
 
 #include "imgui.h"
+#include "stb_image.h"
 
 namespace enginegl {
 
@@ -14,6 +15,66 @@ struct TexData {
 };
 
 std::vector<TexData> textures;
+
+
+GLTexture2D::GLTexture2D(const std::string path) {
+    int img_width, img_height, channels;
+    stbi_set_flip_vertically_on_load(1);
+    stbi_uc* data = stbi_load(path.c_str(), &img_width, &img_height, &channels, 0);
+    ENGINE_ASSERT(data, "Failed to load image from path");
+    width = img_width;
+    height = img_height;
+
+    #ifdef OPENGL_COMPATIBILITY
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+        width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+    );
+    glGenerateMipmap(GL_TEXTURE_2D);
+    #else
+    // Note Modern Opengl 4+ way to create textures
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture_id);
+    
+    glTextureStorage2D(texture_id, 1, GL_RGB8, width, height);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTextureSubImage2D(texture_id, 0, 0, 0, width, height, GL_RGB8, GL_UNSIGNED_BYTE, data);
+    #endif
+
+    textures.push_back(TexData{texture_id, (int)height, (int)width, path});
+
+    stbi_image_free(data);
+}
+
+GLTexture2D::GLTexture2D(const void* address) {
+
+}
+
+GLTexture2D::~GLTexture2D() {
+    glDeleteTextures(1, &texture_id);
+}
+
+void GLTexture2D::bind(uint32_t slot) const {
+    #ifdef OPENGL_COMPATIBILITY
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    #else
+    glBindTextureUnit(slot, texture_id);
+    #endif
+}
+
+
 
 GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
     // Do not load loaded textures

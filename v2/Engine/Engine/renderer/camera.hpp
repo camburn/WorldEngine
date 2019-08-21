@@ -22,6 +22,8 @@ public:
 
     virtual void recalculate_view_matrix() = 0;
 
+    virtual void on_ui_render(bool display) = 0;
+
     const glm::mat4& get_projection_matrix() const { return projection_matrix; }
     const glm::mat4& get_view_matrix() const { return view_matrix; }
     const glm::mat4& get_view_projection_matrix() const { return view_projection_matrix; }
@@ -39,6 +41,8 @@ public:
     OrthographicCamera(float left, float right, float bottom, float top);
 
     virtual void recalculate_view_matrix() override;
+    virtual void on_ui_render(bool display) override;
+
 };
 
 class PerspectiveCamera : public Camera {
@@ -46,6 +50,11 @@ public:
     PerspectiveCamera(float fov, float right, float bottom, float top);
 
     virtual void recalculate_view_matrix() override;
+    virtual void on_ui_render(bool display) override;
+
+private:
+    glm::vec3 look_at  {0.0f, 1.0f, 0.0f};
+    glm::vec3 up {0.0f, 1.0f, 0.0f};
 };
 
 }

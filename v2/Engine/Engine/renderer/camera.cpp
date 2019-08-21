@@ -4,7 +4,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "imgui.h"
+
+
 namespace engine {
+
+
 
 OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
         : Camera(glm::ortho(left, right, bottom, top, -10.0f, 10.0f), glm::mat4(1.0f)) {
@@ -20,26 +25,46 @@ void OrthographicCamera::recalculate_view_matrix() {
     view_projection_matrix = projection_matrix * view_matrix;
 }
 
+void OrthographicCamera::on_ui_render(bool display) {
+    
+    if (display) {
+        ImGui::Begin("Camera Window");
+        ImGui::InputFloat3("Position", (float*)&position, 1, 0);
+        ImGui::InputFloat3("Rotation", (float*)&rotation, 1, 0);
+        ImGui::End();
+    }
+}
+
 PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, float far_plane)
-        : Camera(glm::perspective(fov, aspect, near_plane, far_plane), glm::lookAt(position, glm::vec3(0, 1, 0), glm::vec3(0, 1, 0))) {
+        : Camera(glm::perspective(fov, aspect, near_plane, far_plane), 
+          glm::lookAt(glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0))) {
     view_projection_matrix = projection_matrix * view_matrix;
     
 }
 
 void PerspectiveCamera::recalculate_view_matrix() {
-    view_matrix = glm::lookAt(position, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    /*
+    view_matrix = glm::lookAt(position, look_at, up);
+
     glm::mat4 transform = 
         glm::rotate(view_matrix, glm::radians(rotation.x), glm::vec3(1, 0, 0)) *
         glm::rotate(view_matrix, glm::radians(rotation.y), glm::vec3(0, 1, 0)) *
         glm::rotate(view_matrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
-    */
-    //view_matrix = glm::lookAt(glm::vec3(5,0,5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    //view_matrix = glm::inverse(transform);
+    view_matrix = transform;
 
-    glm::mat4 test = glm::perspective(90.0f, 800.0f/800.0f, 1.0f, 100.0f);
-    
     view_projection_matrix = projection_matrix * view_matrix;
 }
+
+void PerspectiveCamera::on_ui_render(bool display) {
+    
+    if (display) {
+        ImGui::Begin("Camera Window");
+        ImGui::InputFloat3("Position", (float*)&position, 1, 0);
+        ImGui::InputFloat3("Rotation", (float*)&rotation, 1, 0);
+        ImGui::InputFloat3("Look at", (float*)&look_at, 1, 0);
+        ImGui::InputFloat3("Up", (float*)&up, 1, 0);
+        ImGui::End();
+    }
+}
+
 
 } //Namespace
