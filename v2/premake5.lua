@@ -26,6 +26,7 @@ IncludeDir["glad2"] = "extern/glad2/include"
 IncludeDir["glad3"] = "extern/glad3/include"
 IncludeDir["imgui"] = "extern/imgui"
 IncludeDir["glm"] = "extern/glm"
+IncludeDir["stb_image"] = "extern/stb_image"
 
 group "Dependencies"
     include "extern/"
@@ -51,6 +52,7 @@ project "Engine"
         "%{prj.name}/engine.hpp",
         "%{prj.name}/engine.cpp",
         "%{prj.name}/sandbox.cpp",
+        "%{prj.name}/extern/stb_image/**.cpp"
     }
 
     defines
@@ -65,13 +67,14 @@ project "Engine"
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.stb_image}",
     }
 
     links 
     { 
         "GLFW",
-        "imgui",
+        "imgui"
     }
 
     configuration "opengl3"

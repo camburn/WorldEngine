@@ -3,6 +3,8 @@
 #include "gl_vertex_array.hpp"
 #include "glad/glad.h"
 
+#include "Platform/OpenGL/gl_names.hpp"
+
 
 namespace enginegl {
 
@@ -58,6 +60,15 @@ void OpenGLVertexArray::describe_layout(const std::shared_ptr<engine::VertexBuff
     uint32_t index = 0;
     const auto& layout = vertex_buffer->get_layout();
     for (const auto& element: layout) {
+        ENGINE_INFO("Describing index {0} as {1}", index, element.name);
+        ENGINE_INFO("glVertexAttribPointer({0}, {1}, {2}, {3}, {4}, {5})",
+            index,
+            element.get_component_count(),
+            GLENUM_NAMES.at(shader_to_gl_type(element.type)),
+            element.normalised ? "GL_TRUE": "GL_FALSE",
+            layout.get_stride(),
+            element.offset
+        );
         glEnableVertexAttribArray(index);
         glVertexAttribPointer(
             index,

@@ -22,8 +22,8 @@ public:
     virtual void add_vertex_buffer(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer, bool generate_attrib_pointers=true) override;
     virtual void set_index_buffer(const std::shared_ptr<engine::IndexBuffer>& index_buffer) override;
 
-    virtual const std::vector<std::shared_ptr<engine::VertexBuffer>>& get_vertex_buffers() const {return vertex_buffers; }
-    virtual const std::shared_ptr<engine::IndexBuffer>& get_index_buffer() const { return index_buffer; }
+    virtual const std::vector<std::shared_ptr<engine::VertexBuffer>>& get_vertex_buffers() const override {return vertex_buffers; }
+    virtual const std::shared_ptr<engine::IndexBuffer>& get_index_buffer() const override { return index_buffer; }
 
 private:
     uint32_t vao_id;

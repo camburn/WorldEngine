@@ -40,7 +40,7 @@ public:
         return false;
     }
 
-    bool attribute_location(std::string name) {
+    int attribute_location(std::string name) {
         name = GLTF_TO_SHADER_ATTRIBUTE[name];
         for (auto & [index, attribute]: attributes) {
             if (attribute.name == name) {

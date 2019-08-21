@@ -45,6 +45,7 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 
     for (auto& element: layout) {
         if (attribute_data_vec4.count(element.name) > 0 ||
+            attribute_data_vec3.count(element.name) > 0 ||
             attribute_data_vec2.count(element.name) > 0) {
             // We have that data
         } else if (fill_missing_data){
@@ -58,10 +59,17 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
     for (int i = 0; i < attribute_size; i++) {  // For each element
         for (auto& element: layout) {
             if (element.size == 8) {
+                ENGINE_ASSERT(attribute_data_vec2.count(element.name) > 0, "Mismatched shader type and element data - {0}", element.name);
                 glm::vec2 value = attribute_data_vec2[element.name][i];
                 data.insert(data.end(), { value.x, value.y });
             }
+            else if (element.size == 12) {
+                ENGINE_ASSERT(attribute_data_vec3.count(element.name) > 0, "Mismatched shader type and element data - {0}", element.name);
+                glm::vec3 value = attribute_data_vec3[element.name][i];
+                data.insert(data.end(), { value.x, value.y, value.z });
+            }
             else if (element.size == 16) {
+                ENGINE_ASSERT(attribute_data_vec4.count(element.name) > 0, "Mismatched shader type and element data - {0}", element.name);
                 glm::vec4 value = attribute_data_vec4[element.name][i];
                 data.insert(data.end(), { value.x, value.y, value.z, value.w });
             }

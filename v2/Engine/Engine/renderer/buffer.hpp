@@ -111,6 +111,8 @@ public:
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
 
+    virtual void read_data() = 0;
+
     virtual const engine::BufferLayout& get_layout() const = 0;
     virtual void set_layout(const engine::BufferLayout& layout) = 0;
 

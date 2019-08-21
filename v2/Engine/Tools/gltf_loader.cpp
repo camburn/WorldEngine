@@ -73,7 +73,10 @@ void describe_material(std::shared_ptr<Model> &model, int material_index, std::s
     ENGINE_INFO(indent + "            + Index: {0}", material.pbrMetallicRoughness.baseColorTexture.index);
     ENGINE_INFO(indent + "            + TexCoord: {0}", material.pbrMetallicRoughness.baseColorTexture.texCoord);
     Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
-    Sampler sampler = model->samplers[texture.sampler];
+    Sampler sampler;
+    if (texture.sampler > 0) {
+        Sampler sampler = model->samplers[texture.sampler];
+    }
     ENGINE_INFO(indent + "            - Sampler: {0}", TEXTURE_NAMES[texture.sampler]);
     ENGINE_INFO(indent + "              + minFilter: {0}", TEXTURE_NAMES[sampler.minFilter]);
     ENGINE_INFO(indent + "              + magFilter: {0}", TEXTURE_NAMES[sampler.magFilter]);
@@ -203,7 +206,10 @@ void process_mesh(
         // Load textures
         Material material = model->materials[primitive.material];
         Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
-        Sampler sampler = model->samplers[texture.sampler];
+        Sampler sampler; //Use default sampler if one is not specified
+        if (texture.sampler > 0) {
+            sampler = model->samplers[texture.sampler];
+        }
         Image image = model->images[texture.source];
         GLuint tex_id = enginegl::buffer_image(sampler, image);
         m_obj.texture_ids.push_back(tex_id);
@@ -242,6 +248,15 @@ void process_mesh(
         }
         if (name != "INDICES") {
             int vertex_attribute_location = shader->attribute_location(name);
+            ENGINE_TRACE("Describing index {0} as {1}", vertex_attribute_location, name);
+            ENGINE_TRACE("glVertexAttribPointer({0}, {1}, {2}, {3}, {4}, {5})",
+                vertex_attribute_location,
+                accessor.type,
+                ACCESSOR_COMPONENT_TYPE[accessor.componentType],
+                accessor.normalized ? "GL_TRUE": "GL_FALSE",
+                model->bufferViews[accessor.bufferView].byteStride,
+                accessor.byteOffset
+            );
             glEnableVertexAttribArray(vertex_attribute_location);
             glVertexAttribPointer(
                 vertex_attribute_location,
@@ -269,9 +284,6 @@ void process_node(
 }
 
 void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-
-    inspect_gltf(model);
-
     m_obj.vao.reset(engine::VertexArray::create());
     m_obj.vao->bind();
 
