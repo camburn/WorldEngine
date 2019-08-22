@@ -106,6 +106,10 @@ void CustomEntity::render(Shader &shader) {
     //Renderer::submit(shader, this);
 }
 
+void CustomEntity::on_ui_render(bool display) {
+    
+}
+
 std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
     std::shared_ptr<tinygltf::Model> model = std::make_shared<tinygltf::Model>();
     tinygltf::TinyGLTF loader;
@@ -139,6 +143,10 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
 
 void GltfEntity::render(Shader &shader) {
 
+}
+
+void GltfEntity::on_ui_render(bool display) {
+    gltf_inspector(display, model);
 }
 
 } // namespace
