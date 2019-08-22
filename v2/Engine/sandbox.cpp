@@ -80,10 +80,10 @@ public:
 
         std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
-        std::dynamic_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
-        std::dynamic_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
-        std::dynamic_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
-        std::dynamic_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
+        std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
 
         square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
@@ -94,7 +94,7 @@ public:
         cube->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
         cube->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
         
-        tester = Texture2D::create("./assets/textures/checkerboard.png");
+        checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
     }
 
     void on_attach() override {
@@ -181,7 +181,7 @@ public:
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
 
-        tester->bind();
+        checker_texture->bind();
         Renderer::submit_entity(texture_shader, square);
         Renderer::submit_entity(texture_shader, monkey);
         Renderer::submit_entity(texture_shader, cube);
@@ -201,7 +201,7 @@ private:
     std::shared_ptr<Entity> monkey;
     std::shared_ptr<Entity> cube;
 
-    std::shared_ptr<Texture> tester;
+    std::shared_ptr<Texture> checker_texture;
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f};
