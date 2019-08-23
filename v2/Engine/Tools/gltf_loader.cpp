@@ -312,6 +312,82 @@ void gltf_inspector(bool display, std::shared_ptr<Model> &model) {
     ImGui::End();
 }
 
+uint32_t process_material(std::shared_ptr<Model> &model, Material &material) {
+    int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
+    if (texture_index >= 0) {
+        Texture texture = model->textures[texture_index];
+        Sampler sampler; //Use default sampler if one is not specified
+        if (texture.sampler > 0) {
+            sampler = model->samplers[texture.sampler];
+        }
+        Image image = model->images[texture.source];
+        GLuint tex_id = enginegl::buffer_image(sampler, image);
+        return tex_id;
+        ENGINE_INFO("Loaded image - {0}", tex_id);
+    }
+    return -1;
+}
+
+std::shared_ptr<engine::IndexBuffer> process_indices(BufferView &buffer_view, uint32_t count, unsigned char* data) {
+    return engine::IndexBuffer::create(
+        data + buffer_view.byteOffset,
+        count,
+        buffer_view.byteLength
+    );
+}
+
+std::shared_ptr<engine::VertexBuffer> process_buffer_view(BufferView &buffer_view, unsigned char* data) {
+    return engine::VertexBuffer::create(
+        data + buffer_view.byteOffset,
+        buffer_view.byteLength
+    );
+}
+
+void describe_buffer(Accessor &accessor, uint32_t location, uint32_t stride) {
+    glVertexAttribPointer(
+        location,
+        accessor.type,
+        accessor.componentType,
+        accessor.normalized ? GL_TRUE : GL_FALSE,
+        stride,
+        (const void *)(accessor.byteOffset)
+    );
+}
+
+void process_mesh_two(
+        ModelObject& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
+        const std::shared_ptr<engine::Shader> &shader) {
+    std::vector<std::shared_ptr<engine::VertexArray>> vaos;
+    for (Primitive &primitive: mesh.primitives) {
+        auto vao = engine::VertexArray::create();
+        vao->bind();
+        if (primitive.indices != -1) {
+            Accessor accessor = model->accessors[primitive.indices];
+            BufferView buffer_view = model->bufferViews[accessor.bufferView];
+            process_indices(buffer_view, accessor.count, &model->buffers[buffer_view.buffer].data.at(0));
+        }
+        if (primitive.material != -1) {
+            process_material(model, model->materials[primitive.material]);
+        }
+        // Process primitive attribute data
+        for (auto &[name, accessor_view_index]: primitive.attributes){
+            Accessor accessor = model->accessors[accessor_view_index];
+            BufferView buffer_view = model->bufferViews[accessor.bufferView];
+            // We choose not buffer unsupported data?
+            // Alternatively we could buffer it and only recreate the vertexattribpointers
+            if (shader->attribute_supported(name)) {
+                process_buffer_view(buffer_view, &model->buffers[buffer_view.buffer].data.at(0));  // This creates the VBOs
+                // We also need to describe this VBO
+                if (name == "INDICES") continue;
+                GLuint attr_loc = shader->attribute_location(name);
+                describe_buffer(accessor, attr_loc, buffer_view.byteStride);
+            }
+        }
+    
+        vaos.push_back(std::move(vao));
+    }
+}
+
 void process_mesh(
         ModelObject& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader
@@ -352,6 +428,9 @@ void process_mesh(
     // Gather supported buffer views
     for (auto &[name, index]: required_accessors) {
         Accessor accessor = model->accessors[index];
+
+        m_obj.vao = engine::VertexArray::create();
+        m_obj.vao->bind();
 
         if (accessor.bufferView != -1){
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
@@ -399,6 +478,8 @@ void process_mesh(
                 (const void *)(accessor.byteOffset)
             );
         }
+
+        m_obj.vao->unbind();
     }
 }
 
@@ -416,7 +497,7 @@ void process_node(
 }
 
 void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-    m_obj.vao.reset(engine::VertexArray::create());
+    m_obj.vao = engine::VertexArray::create();
     m_obj.vao->bind();
 
     for (Scene &scene: model->scenes) {

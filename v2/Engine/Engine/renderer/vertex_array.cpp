@@ -1,18 +1,15 @@
 #include "engine.hpp"
-#include "buffer.hpp"
-#include "Engine/renderer/vertex_array.hpp"
+#include "vertex_array.hpp"
 #include "Platform/OpenGL/gl_vertex_array.hpp"
 
 namespace engine {
 
-VertexArray* VertexArray::create() {
-
-    return new enginegl::OpenGLVertexArray();
+std::shared_ptr<VertexArray> VertexArray::create() {
+    return std::make_shared<enginegl::OpenGLVertexArray>();
 }
 
-VertexArray* VertexArray::create(unsigned int vao) {
-
-    return new enginegl::OpenGLVertexArray(vao);
+std::shared_ptr<VertexArray> VertexArray::create(unsigned int vao) {
+    return std::make_shared<enginegl::OpenGLVertexArray>(vao);
 }
 
 } //namespace

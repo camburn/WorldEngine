@@ -90,11 +90,11 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     std::vector<float> data;
     interlace_data(layout, data);
 
-    vao.reset(VertexArray::create());
+    vao = VertexArray::create();
     int sze = sizeof(data);
-    buffer.reset(VertexBuffer::create(&data[0], data.size() * sizeof(float)));
+    buffer = VertexBuffer::create(&data[0], data.size() * sizeof(float));
     buffer->set_layout(layout);
-    index_buffer.reset(IndexBuffer::create(&index_data[0], index_data.size()));
+    index_buffer = IndexBuffer::create(&index_data[0], index_data.size());
 
     vao->add_vertex_buffer(buffer);
     vao->set_index_buffer(index_buffer);
