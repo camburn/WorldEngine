@@ -6,6 +6,8 @@
 
 #include "Platform/OpenGL/gl_texture.hpp"
 
+#include "imgui.h"
+
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -72,6 +74,9 @@ void describe_material(std::shared_ptr<Model> &model, int material_index, std::s
     ENGINE_INFO(indent + "          - Base texture");
     ENGINE_INFO(indent + "            + Index: {0}", material.pbrMetallicRoughness.baseColorTexture.index);
     ENGINE_INFO(indent + "            + TexCoord: {0}", material.pbrMetallicRoughness.baseColorTexture.texCoord);
+    if (material.pbrMetallicRoughness.baseColorTexture.index == -1) {
+        return;
+    }
     Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
     Sampler sampler;
     if (texture.sampler > 0) {
@@ -183,6 +188,206 @@ void inspect_gltf(std::shared_ptr<Model> model) {
     //return model;
 }
 
+bool walk_nodes(Node &selected_node, Node &current_node, std::shared_ptr<Model> &model) {
+    bool node_selected = false;
+    if (ImGui::TreeNode("Nodes")) {
+        for (int node_index: current_node.children) {
+            Node node = model->nodes[node_index];
+            if(ImGui::Selectable(node.name.c_str())) {
+                selected_node = node;
+                node_selected = true;
+            }
+            if (node.children.size() > 0) {
+                walk_nodes(selected_node, node, model);
+            }
+        }
+        ImGui::TreePop();
+    }
+    return node_selected;
+}
+
+void gltf_inspector(bool display, std::shared_ptr<Model> &model) {
+    if (!display) return;
+    ImGui::Begin("glTF Inspector");
+    ImGui::Columns(2, "tree", true);
+    // Scenes
+    static Scene selected_scene;
+    static Node selected_node;
+    static Mesh selected_mesh;
+    static Material selected_material;
+
+    static bool node_selected = false;
+    static bool scene_selected = false;
+    static bool mesh_selected = false;
+    static bool material_selected = false;
+
+    auto select = [&](bool& selector) {
+        scene_selected = false;
+        node_selected = false;
+        mesh_selected = false;
+        material_selected = false;
+        selector = true;
+    };
+
+    if (ImGui::TreeNode("Scenes")) {
+        for (Scene scene: model->scenes) {
+            if(ImGui::Selectable(scene.name.c_str())) {
+                selected_scene = scene;
+                select(scene_selected);
+            }
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Nodes")) {
+        // Hmm how to deal with multiple scenes?
+        
+        for (int node_index: model->scenes[0].nodes) {
+            Node node = model->nodes[node_index];
+            if(ImGui::Selectable(node.name.c_str())) {
+                selected_node = node;
+                select(node_selected);
+            }
+            if(walk_nodes(selected_node, node, model)) {
+                select(node_selected);
+            }
+        }
+        /*
+        for (Node node: model->nodes) {
+            if(ImGui::Selectable(node.name.c_str())) {
+                selected_node = node;
+                select(node_selected);
+            }
+        }
+        */
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Meshes")) {
+        for (Mesh mesh: model->meshes) {
+            if(ImGui::Selectable(mesh.name.c_str())) {
+                selected_mesh = mesh;
+                select(mesh_selected);
+            }
+        }
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Materials")) {
+        for (Material material: model->materials) {
+            if(ImGui::Selectable("a")) {
+                selected_material = material;
+                select(material_selected);
+            }
+        }
+        ImGui::TreePop();
+    }
+    ImGui::NextColumn();
+    ImGui::Text("Selected");
+    if (scene_selected) {
+        ImGui::Text("Node count: %zu", selected_scene.nodes.size());
+        
+    }
+    if (node_selected) {
+        ImGui::Text("Name: %s", selected_node.name.c_str());
+        ImGui::Text("Children: %zu", selected_node.children.size());
+        ImGui::Text("Camera: %i", selected_node.camera);
+        ImGui::Text("Mesh: %i", selected_node.mesh);
+    }
+
+    if (mesh_selected) {
+        ImGui::Text("Name: %s", selected_mesh.name.c_str());
+        ImGui::Text("Mesh Primitives: %zu", selected_mesh.primitives.size());
+
+        for (Primitive primitive: selected_mesh.primitives) {
+            if (ImGui::TreeNode("Primitives")) {
+                ImGui::Text("Mode: %s", PRIMITIVE_DRAW_MODE[primitive.mode].c_str());
+                ImGui::Text("Material Indices: %i", primitive.indices);
+                ImGui::Text("Material Index: %i", primitive.material);
+                ImGui::Separator();
+                for (auto attr: primitive.attributes) {
+                    ImGui::Text("Attribute: %s, %i", attr.first.c_str(), attr.second);
+                }
+                ImGui::TreePop();
+            }
+        }
+    }
+    ImGui::End();
+}
+
+uint32_t process_material(std::shared_ptr<Model> &model, Material &material) {
+    int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
+    if (texture_index >= 0) {
+        Texture texture = model->textures[texture_index];
+        Sampler sampler; //Use default sampler if one is not specified
+        if (texture.sampler > 0) {
+            sampler = model->samplers[texture.sampler];
+        }
+        Image image = model->images[texture.source];
+        GLuint tex_id = enginegl::buffer_image(sampler, image);
+        return tex_id;
+        ENGINE_INFO("Loaded image - {0}", tex_id);
+    }
+    return -1;
+}
+
+std::shared_ptr<engine::IndexBuffer> process_indices(BufferView &buffer_view, uint32_t count, unsigned char* data) {
+    return engine::IndexBuffer::create(
+        data + buffer_view.byteOffset,
+        count,
+        buffer_view.byteLength
+    );
+}
+
+std::shared_ptr<engine::VertexBuffer> process_buffer_view(BufferView &buffer_view, unsigned char* data) {
+    return engine::VertexBuffer::create(
+        data + buffer_view.byteOffset,
+        buffer_view.byteLength
+    );
+}
+
+void describe_buffer(Accessor &accessor, uint32_t location, uint32_t stride) {
+    glVertexAttribPointer(
+        location,
+        accessor.type,
+        accessor.componentType,
+        accessor.normalized ? GL_TRUE : GL_FALSE,
+        stride,
+        (const void *)(accessor.byteOffset)
+    );
+}
+
+void process_mesh_two(
+        ModelObject& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
+        const std::shared_ptr<engine::Shader> &shader) {
+    std::vector<std::shared_ptr<engine::VertexArray>> vaos;
+    for (Primitive &primitive: mesh.primitives) {
+        auto vao = engine::VertexArray::create();
+        vao->bind();
+        if (primitive.indices != -1) {
+            Accessor accessor = model->accessors[primitive.indices];
+            BufferView buffer_view = model->bufferViews[accessor.bufferView];
+            process_indices(buffer_view, accessor.count, &model->buffers[buffer_view.buffer].data.at(0));
+        }
+        if (primitive.material != -1) {
+            process_material(model, model->materials[primitive.material]);
+        }
+        // Process primitive attribute data
+        for (auto &[name, accessor_view_index]: primitive.attributes){
+            Accessor accessor = model->accessors[accessor_view_index];
+            BufferView buffer_view = model->bufferViews[accessor.bufferView];
+            // We choose not buffer unsupported data?
+            // Alternatively we could buffer it and only recreate the vertexattribpointers
+            if (shader->attribute_supported(name)) {
+                process_buffer_view(buffer_view, &model->buffers[buffer_view.buffer].data.at(0));  // This creates the VBOs
+                // We also need to describe this VBO
+                if (name == "INDICES") continue;
+                GLuint attr_loc = shader->attribute_location(name);
+                describe_buffer(accessor, attr_loc, buffer_view.byteStride);
+            }
+        }
+    
+        vaos.push_back(std::move(vao));
+    }
+}
+
 void process_mesh(
         ModelObject& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader
@@ -205,21 +410,27 @@ void process_mesh(
 
         // Load textures
         Material material = model->materials[primitive.material];
-        Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
-        Sampler sampler; //Use default sampler if one is not specified
-        if (texture.sampler > 0) {
-            sampler = model->samplers[texture.sampler];
+        int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
+        if (texture_index >= 0) {
+            Texture texture = model->textures[texture_index];
+            Sampler sampler; //Use default sampler if one is not specified
+            if (texture.sampler > 0) {
+                sampler = model->samplers[texture.sampler];
+            }
+            Image image = model->images[texture.source];
+            GLuint tex_id = enginegl::buffer_image(sampler, image);
+            m_obj.texture_ids.push_back(tex_id);
+            ENGINE_INFO("Loaded image - {0}", tex_id);
         }
-        Image image = model->images[texture.source];
-        GLuint tex_id = enginegl::buffer_image(sampler, image);
-        m_obj.texture_ids.push_back(tex_id);
-        ENGINE_INFO("Loaded image - {0}", tex_id);
     }
 
     std::vector<int> required_buffer_views;
     // Gather supported buffer views
     for (auto &[name, index]: required_accessors) {
         Accessor accessor = model->accessors[index];
+
+        m_obj.vao = engine::VertexArray::create();
+        m_obj.vao->bind();
 
         if (accessor.bufferView != -1){
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
@@ -267,6 +478,8 @@ void process_mesh(
                 (const void *)(accessor.byteOffset)
             );
         }
+
+        m_obj.vao->unbind();
     }
 }
 
@@ -284,7 +497,7 @@ void process_node(
 }
 
 void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-    m_obj.vao.reset(engine::VertexArray::create());
+    m_obj.vao = engine::VertexArray::create();
     m_obj.vao->bind();
 
     for (Scene &scene: model->scenes) {

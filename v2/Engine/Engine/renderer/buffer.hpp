@@ -2,6 +2,7 @@
 #define _BUFFER_HPP
 #include <string>
 #include <vector>
+#include <memory>
 //#include <cstdint>
 #include <map>
 
@@ -116,7 +117,7 @@ public:
     virtual const engine::BufferLayout& get_layout() const = 0;
     virtual void set_layout(const engine::BufferLayout& layout) = 0;
 
-    static VertexBuffer* create(void* vertices, uint32_t size);
+    static std::shared_ptr<VertexBuffer> create(void* vertices, uint32_t size);
 };
 
 class IndexBuffer {
@@ -129,8 +130,8 @@ public:
     virtual uint32_t get_count() const = 0;
     virtual int get_type() const = 0;
 
-    static IndexBuffer* create(uint32_t* indices, uint32_t count);
-    static IndexBuffer* create(void* indices, uint32_t count, uint32_t size);
+    static std::shared_ptr<IndexBuffer> create(uint32_t* indices, uint32_t count);
+    static std::shared_ptr<IndexBuffer> create(void* indices, uint32_t count, uint32_t size);
 };
 
 }  // namespace

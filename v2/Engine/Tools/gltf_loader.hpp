@@ -17,5 +17,6 @@ struct ModelObject {
 
 std::shared_ptr<engine::VertexArray> mesh_loader(std::string filename, const std::shared_ptr<engine::Shader> &shader);
 void gltf_to_opengl(ModelObject& m_obj, std::shared_ptr<tinygltf::Model> &model, const std::shared_ptr<engine::Shader> &shader);
+void gltf_inspector(bool display, std::shared_ptr<tinygltf::Model> &model);
 
 #endif

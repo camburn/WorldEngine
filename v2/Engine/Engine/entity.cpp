@@ -90,11 +90,11 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     std::vector<float> data;
     interlace_data(layout, data);
 
-    vao.reset(VertexArray::create());
+    vao = VertexArray::create();
     int sze = sizeof(data);
-    buffer.reset(VertexBuffer::create(&data[0], data.size() * sizeof(float)));
+    buffer = VertexBuffer::create(&data[0], data.size() * sizeof(float));
     buffer->set_layout(layout);
-    index_buffer.reset(IndexBuffer::create(&index_data[0], index_data.size()));
+    index_buffer = IndexBuffer::create(&index_data[0], index_data.size());
 
     vao->add_vertex_buffer(buffer);
     vao->set_index_buffer(index_buffer);
@@ -104,6 +104,10 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
 
 void CustomEntity::render(Shader &shader) {
     //Renderer::submit(shader, this);
+}
+
+void CustomEntity::on_ui_render(bool display) {
+    
 }
 
 std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
@@ -139,6 +143,10 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
 
 void GltfEntity::render(Shader &shader) {
 
+}
+
+void GltfEntity::on_ui_render(bool display) {
+    gltf_inspector(display, model);
 }
 
 } // namespace

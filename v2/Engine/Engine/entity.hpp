@@ -27,6 +27,8 @@ public:
 
     virtual void render(Shader &shader) = 0;
 
+    virtual void on_ui_render(bool display) = 0;
+
     std::shared_ptr<VertexArray> get_vao(){ return vao; }
     std::map<std::string, glm::vec4> uniform_vec4_data;
     std::map<std::string, glm::mat4> uniform_mat4_data;
@@ -48,6 +50,8 @@ public:
     void update_buffers(const std::shared_ptr<Shader>& shader) override;
 
     void render(Shader &shader) override;
+
+    virtual void on_ui_render(bool display) override;
 
     std::map<std::string, std::vector<glm::vec4>> attribute_data_vec4;
     std::map<std::string, std::vector<glm::vec3>> attribute_data_vec3;
@@ -80,6 +84,7 @@ public:
 
     static std::shared_ptr<GltfEntity> load_from_file(std::string file_name);
 
+    virtual void on_ui_render(bool display) override;
 private:
     //std::shared_ptr<VertexArray> vao;
     std::vector<std::shared_ptr<VertexBuffer>> buffers;

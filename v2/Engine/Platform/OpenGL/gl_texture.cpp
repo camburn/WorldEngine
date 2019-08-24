@@ -74,8 +74,6 @@ void GLTexture2D::bind(uint32_t slot) const {
     #endif
 }
 
-
-
 GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
     // Do not load loaded textures
     for (auto& data: textures) {
