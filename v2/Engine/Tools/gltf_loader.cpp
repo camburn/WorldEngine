@@ -368,7 +368,7 @@ void describe_buffer(Accessor &accessor, uint32_t location, uint32_t stride) {
 std::map<int, std::shared_ptr<engine::IndexBuffer>> common_index_buffers;
 std::map<int, std::shared_ptr<engine::VertexBuffer>> common_buffers;
 
-void process_mesh_two(
+void process_mesh(
         ModelObjects& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader) {
     for (Primitive &primitive: mesh.primitives) {
@@ -421,101 +421,6 @@ void process_mesh_two(
     }
 }
 
-void process_mesh(
-        ModelObjects& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
-        const std::shared_ptr<engine::Shader> &shader
-    ) {
-    // A mesh has X primitives
-    std::map<std::string, int> required_accessors;
-
-    // gather supported accessors
-    for (Primitive primitive: mesh.primitives) {
-        if (primitive.indices != -1) {
-            // This has indices
-            required_accessors.emplace("INDICES", primitive.indices);
-        }
-        // Primitive describe the mode, its indices, and attributes
-        for (auto &attr: primitive.attributes){
-            if (shader->attribute_supported(attr.first)) {
-                required_accessors.emplace(attr);
-            }
-        }
-
-        // Load textures
-        Material material = model->materials[primitive.material];
-        int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
-        if (texture_index >= 0) {
-            Texture texture = model->textures[texture_index];
-            Sampler sampler; //Use default sampler if one is not specified
-            if (texture.sampler > 0) {
-                sampler = model->samplers[texture.sampler];
-            }
-            Image image = model->images[texture.source];
-            GLuint tex_id = enginegl::buffer_image(sampler, image);
-            m_obj.texture_ids.push_back(tex_id);
-            ENGINE_INFO("Loaded image - {0}", tex_id);
-        }
-    }
-
-    std::vector<int> required_buffer_views;
-    // Gather supported buffer views
-    for (auto &[name, index]: required_accessors) {
-        Accessor accessor = model->accessors[index];
-
-        //m_obj.vao = engine::VertexArray::create();
-        //m_obj.vao->bind();
-
-        if (accessor.bufferView != -1){
-            BufferView buffer_view = model->bufferViews[accessor.bufferView];
-            if(buffer_view.target == GL_ELEMENT_ARRAY_BUFFER) {
-                ENGINE_TRACE("Processed Indices; Count: {0}, Length: {1}", accessor.count, buffer_view.byteLength);
-                std::shared_ptr<engine::IndexBuffer> index_buffer (
-                    engine::IndexBuffer::create(
-                        &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
-                        accessor.count,
-                        buffer_view.byteLength
-                    )
-                );
-                m_obj.vaos[0]->set_index_buffer(index_buffer);
-            } else {
-                ENGINE_TRACE("Processed Vertex Buffer; Offset: {0}, Length: {1}", buffer_view.byteOffset, buffer_view.byteLength);
-                std::shared_ptr<engine::VertexBuffer> vertex_buffer (
-                    engine::VertexBuffer::create(
-                        &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
-                        buffer_view.byteLength
-                    )
-                );
-                m_obj.vaos[0]->add_vertex_buffer(vertex_buffer, false);
-            }
-
-        } else {
-            ENGINE_WARN("Accessor with no buffer view, should be filled with zeros");
-        }
-        if (name != "INDICES") {
-            int vertex_attribute_location = shader->attribute_location(name);
-            ENGINE_TRACE("Describing index {0} as {1}", vertex_attribute_location, name);
-            ENGINE_TRACE("glVertexAttribPointer({0}, {1}, {2}, {3}, {4}, {5})",
-                vertex_attribute_location,
-                accessor.type,
-                ACCESSOR_COMPONENT_TYPE[accessor.componentType],
-                accessor.normalized ? "GL_TRUE": "GL_FALSE",
-                model->bufferViews[accessor.bufferView].byteStride,
-                accessor.byteOffset
-            );
-            glEnableVertexAttribArray(vertex_attribute_location);
-            glVertexAttribPointer(
-                vertex_attribute_location,
-                accessor.type,
-                accessor.componentType,
-                accessor.normalized ? GL_TRUE : GL_FALSE,
-                model->bufferViews[accessor.bufferView].byteStride,
-                (const void *)(accessor.byteOffset)
-            );
-        }
-        //m_obj.vao->unbind();
-    }
-}
-
 void process_node(
         ModelObjects& m_obj, std::shared_ptr<Model> &model, Node &node, 
         const std::shared_ptr<engine::Shader> &shader
@@ -529,9 +434,9 @@ void process_node(
 }
 
 /*
-Primitive - VAO, textures
+Primitive - VAO, + material (textures + other data)
 Mesh - Collection of Primitives
-Node - Mesh + Transforms
+Node - Mesh + relative_transform
 */
 
 void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
@@ -540,7 +445,7 @@ void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const st
     common_index_buffers.clear();
 
     for (Mesh &mesh: model->meshes) {
-        process_mesh_two(m_obj, model, mesh, shader);
+        process_mesh(m_obj, model, mesh, shader);
     }
 
     for (Scene &scene: model->scenes) {
@@ -548,29 +453,4 @@ void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const st
             process_node(m_obj, model, model->nodes[node_index], shader);
         }
     }
-}
-
-void process_node_old(
-        ModelObjects& m_obj, std::shared_ptr<Model> &model, Node &node, 
-        const std::shared_ptr<engine::Shader> &shader
-    ) {
-    if (node.mesh != -1) {
-        process_mesh(m_obj, model, model->meshes[node.mesh], shader);
-    }
-    for (int child_index: node.children) {
-        process_node_old(m_obj, model, model->nodes[child_index], shader);
-    }
-}
-
-void gltf_to_opengl_old(ModelObjects& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-    m_obj.vaos.push_back(engine::VertexArray::create());
-    auto &vao = m_obj.vaos[0];
-    
-    vao->bind();
-    for (Scene &scene: model->scenes) {
-        for (int &node_index: scene.nodes) {
-            process_node_old(m_obj, model, model->nodes[node_index], shader);
-        }
-    }
-    vao->unbind();
 }
