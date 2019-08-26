@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <unordered_set>
 
 #include <glm/glm.hpp>
 #include "tiny_gltf.h"
@@ -23,19 +24,26 @@ public:
     virtual void add_uniform_data(std::string name, glm::vec4 data);
     virtual void add_uniform_data(std::string name, glm::mat4 data);
 
+    virtual void add_vertex_array(std::shared_ptr<VertexArray> vao);
+
     virtual void update_buffers(const std::shared_ptr<Shader>& shader) = 0;
 
     virtual void render(Shader &shader) = 0;
 
     virtual void on_ui_render(bool display) = 0;
 
-    std::shared_ptr<VertexArray> get_vao(){ return vao; }
+    std::vector<std::shared_ptr<VertexArray>>::iterator begin() { return vaos.begin(); }
+    std::vector<std::shared_ptr<VertexArray>>::iterator end() { return vaos.end(); }
+    std::vector<std::shared_ptr<VertexArray>>::const_iterator begin() const { return vaos.begin(); }
+    std::vector<std::shared_ptr<VertexArray>>::const_iterator end() const { return vaos.end(); }
+
+    std::shared_ptr<VertexArray> get_vao(uint32_t index);
     std::map<std::string, glm::vec4> uniform_vec4_data;
     std::map<std::string, glm::mat4> uniform_mat4_data;
     std::vector<GLuint> texture_ids;
 
 protected:
-    std::shared_ptr<VertexArray> vao;
+    std::vector<std::shared_ptr<VertexArray>> vaos;
 };
 
 class CustomEntity: public Entity {
@@ -90,6 +98,7 @@ private:
     std::vector<std::shared_ptr<VertexBuffer>> buffers;
     std::shared_ptr<IndexBuffer> index_buffer;
     std::shared_ptr<tinygltf::Model> model;
+    std::unordered_set<uint32_t> handled_shaders;
 };
 
 } // Namespace
