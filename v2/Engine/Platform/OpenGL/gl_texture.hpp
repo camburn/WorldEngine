@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <sstream>
 #include <glad/glad.h>
 #include "tiny_gltf.h"
 

@@ -31,7 +31,7 @@ struct MeshObject {
 
 struct NodeObject {
     std::shared_ptr<MeshObject> mesh;
-    glm::mat4 transform;
+    glm::mat4 transform_matrix;
     glm::vec4 rotation;
     glm::vec3 transform;
     glm::vec3 scale;
@@ -42,7 +42,7 @@ struct DrawObject {
 };
 
 std::shared_ptr<engine::VertexArray> mesh_loader(std::string filename, const std::shared_ptr<engine::Shader> &shader);
-void gltf_to_opengl(MeshObject& m_obj, std::shared_ptr<tinygltf::Model> &model, const std::shared_ptr<engine::Shader> &shader);
+void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<tinygltf::Model> &model, const std::shared_ptr<engine::Shader> &shader);
 void gltf_inspector(bool display, std::shared_ptr<tinygltf::Model> &model);
 
 #endif

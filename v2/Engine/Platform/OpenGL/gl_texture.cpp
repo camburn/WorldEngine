@@ -1,4 +1,3 @@
-#include <sstream>
 #include "engine.hpp"
 #include "gl_texture.hpp"
 
@@ -47,9 +46,9 @@ GLTexture2D::GLTexture2D(const std::string path) {
     glTextureStorage2D(texture_id, 1, GL_RGB8, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTextureSubImage2D(texture_id, 0, 0, 0, width, height, GL_RGB8, GL_UNSIGNED_BYTE, data);
+    glTextureSubImage2D(texture_id, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
     #endif
 
     textures.push_back(TexData{texture_id, (int)height, (int)width, path});
@@ -122,7 +121,7 @@ GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
 void display_loaded_textures(bool display) {
     ImGui::Begin("Textures");
     for (TexData data: textures) {
-        std::ostringstream iss;
+        std::stringstream iss;
         iss << data.name << "(" << data.width << "x" << data.height << ")";
         std::string name = iss.str();
         if (ImGui::TreeNode(name.c_str())) {

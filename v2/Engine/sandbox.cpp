@@ -33,13 +33,19 @@ public:
 
         std::string vs_file_texture = "./shaders/opengl2_vertex_texture.glsl";
         std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
+
+        texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
+        color_shader.reset(new Shader{ vs_file_color, fs_file_color });
         #else
+        std::string vs_file_color = "./shaders/vertex_color.glsl";
+        std::string fs_file_color = "./shaders/fragment_color.glsl";
+
         std::string vs_file = "./shaders/vertex.glsl";
         std::string fs_file = "./shaders/fragment.glsl";
-        #endif
 
-        texture_shader.reset(new Shader{vs_file_texture, fs_file_texture});
-        color_shader.reset(new Shader{vs_file_color, fs_file_color});
+        texture_shader.reset(new Shader{ vs_file, fs_file });
+        color_shader.reset(new Shader{ vs_file_color, fs_file_color });
+        #endif
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
         float aspect = 800/800;

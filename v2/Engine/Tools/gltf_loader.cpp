@@ -388,9 +388,10 @@ void process_mesh(
             vao->set_index_buffer(common_index_buffers[accessor.bufferView]);
         }
         if (primitive.material != -1) {
-            m_obj.texture_ids.push_back(
-                process_material(model, model->materials[primitive.material])
-            );
+            int texture_id = process_material(model, model->materials[primitive.material]);
+            if (texture_id > -1) {
+                m_obj.texture_ids.push_back(texture_id);
+            }
         }
         // Process primitive attribute data
         ENGINE_TRACE("--------ATTRIBUTES----------");
@@ -444,8 +445,13 @@ void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const st
     common_buffers.clear();
     common_index_buffers.clear();
 
+    int counter = 0;
     for (Mesh &mesh: model->meshes) {
         process_mesh(m_obj, model, mesh, shader);
+        counter++;
+        if (counter == 2) {
+            break;
+        }
     }
 
     for (Scene &scene: model->scenes) {
