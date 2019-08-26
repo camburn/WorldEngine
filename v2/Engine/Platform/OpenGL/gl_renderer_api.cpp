@@ -21,6 +21,7 @@ void GLRendererAPI::map_texture(const unsigned int tex_id) {
 }
 
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {
+    ENGINE_ASSERT(vertex_array->get_index_buffer(), "Index buffer not set on Vertex Array");
     vertex_array->bind();
     glDrawElements(
         GL_TRIANGLES,

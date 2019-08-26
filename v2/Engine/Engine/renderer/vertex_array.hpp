@@ -17,7 +17,7 @@ public:
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
 
-    virtual unsigned int get_id() const {return id;}
+    virtual uint32_t get_id() const = 0;
 
     virtual void add_vertex_buffer(const std::shared_ptr<VertexBuffer>& vertex_buffer, bool generate_attrib_pointers=true) = 0;
     virtual void set_index_buffer(const std::shared_ptr<IndexBuffer>& index_buffer) = 0;

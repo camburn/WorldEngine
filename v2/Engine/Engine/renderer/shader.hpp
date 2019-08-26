@@ -20,6 +20,8 @@ public:
     void unbind();
     bool recompile();
 
+    uint32_t get_id() { return shader_id; }
+
     void on_ui_render(bool draw);
 
     void register_vertex_array(std::shared_ptr<VertexArray> vao);

@@ -43,7 +43,9 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
         renderer_api->map_texture(tex_id);
     }
     // TODO: Draw triangles if no indices
-    renderer_api->draw_indexed(entity->get_vao());
+    for (auto const &vao: *entity) {
+        renderer_api->draw_indexed(vao);
+    }
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
 }
 

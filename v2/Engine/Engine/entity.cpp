@@ -13,6 +13,17 @@ void Entity::add_uniform_data(std::string name, glm::mat4 data) {
     uniform_mat4_data[name] = data;
 }
 
+std::shared_ptr<VertexArray> Entity::get_vao(uint32_t index) { 
+    if (vaos.size() < index) {
+        return vaos[index];
+    }
+    return nullptr;
+}
+
+void Entity::add_vertex_array(std::shared_ptr<VertexArray> vao) {
+    vaos.push_back(std::move(vao));
+}
+
 void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec4> &data) {
     if (attribute_size <= 0) {
         attribute_size = data.size();
@@ -81,6 +92,10 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 }
 
 void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    if (vaos.size() == 0) {
+        vaos.emplace_back();
+    }
+    auto &vao = vaos[0];
     if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
     ENGINE_DEBUG("Generating vertex array and buffer for Entity");
     // TODO: Shader should cache entities that have buffered data already
@@ -133,12 +148,13 @@ GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
 }
 
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
-    if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
-    ModelObject m_obj;
+    if (handled_shaders.count(shader->get_id()) > 0 ) return;
+    ModelObjects m_obj;
     gltf_to_opengl(m_obj, model, shader);
     texture_ids = m_obj.texture_ids;
-    vao = m_obj.vao;
-    shader->register_vertex_array(vao);
+    vaos = m_obj.vaos;
+    //vaos.push_back(m_obj.vao);
+    handled_shaders.emplace(shader->get_id());
 }
 
 void GltfEntity::render(Shader &shader) {
