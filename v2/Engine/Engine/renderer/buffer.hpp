@@ -129,9 +129,12 @@ public:
 
     virtual uint32_t get_count() const = 0;
     virtual int get_type() const = 0;
+    virtual uint32_t get_offset() const = 0;
 
+    static std::shared_ptr<IndexBuffer> create(std::shared_ptr<IndexBuffer> buffer, uint32_t count, uint32_t offset);
     static std::shared_ptr<IndexBuffer> create(uint32_t* indices, uint32_t count);
     static std::shared_ptr<IndexBuffer> create(void* indices, uint32_t count, uint32_t size);
+    static std::shared_ptr<IndexBuffer> create(void* indices, uint32_t count, uint32_t size, uint32_t offset);
 };
 
 }  // namespace

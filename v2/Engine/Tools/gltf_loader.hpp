@@ -23,6 +23,7 @@ struct MaterialObject {
 struct PrimitiveObject {
     MaterialObject material;
     std::shared_ptr<engine::VertexArray> vao; // Contains VBOs, IBO
+    // Who stores the IBO offset?
 };
 
 struct MeshObject {

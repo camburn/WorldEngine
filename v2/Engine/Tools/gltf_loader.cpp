@@ -328,12 +328,17 @@ uint32_t process_material(std::shared_ptr<Model> &model, Material &material) {
     return -1;
 }
 
-std::shared_ptr<engine::IndexBuffer> process_indices(std::shared_ptr<Model> &model, BufferView &buffer_view, uint32_t count) {
-    ENGINE_TRACE("Processed Indices; Count: {0}, Length: {1}", count, buffer_view.byteLength);
+std::shared_ptr<engine::IndexBuffer> process_indices(std::shared_ptr<Model> &model, BufferView &buffer_view, Accessor &accessor) {
+    ENGINE_TRACE("Processed Indices; Type: {0}, Count: {1}, Length: {2}, Offset: {3}",
+        ACCESSOR_COMPONENT_TYPE[accessor.componentType],
+        accessor.count, buffer_view.byteLength, accessor.byteOffset
+    );
+    int type = accessor.componentType; // TODO: Set the component type of the IndexBuffer
     return engine::IndexBuffer::create(
         &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
-        count,
-        buffer_view.byteLength
+        accessor.count,
+        buffer_view.byteLength,
+        accessor.byteOffset
     );
 }
 
@@ -380,12 +385,19 @@ void process_mesh(
             Accessor accessor = model->accessors[primitive.indices];
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
             if (common_index_buffers.count(accessor.bufferView) == 0) {
-                auto index_buffer = process_indices(model, buffer_view, accessor.count);
+                auto index_buffer = process_indices(model, buffer_view, accessor);
                 common_index_buffers[accessor.bufferView] = index_buffer;
+                vao->set_index_buffer(index_buffer);
             } else {
-                common_index_buffers[accessor.bufferView]->bind();
+                auto base_buffer = common_index_buffers[accessor.bufferView];
+                auto index_buffer = engine::IndexBuffer::create(
+                    base_buffer, accessor.count, accessor.byteOffset + buffer_view.byteOffset);
+                vao->set_index_buffer(index_buffer);
+                ENGINE_TRACE("Processed Indices; Type: {0}, Count: {1}, Length: {2}, Offset: {3}",
+                    ACCESSOR_COMPONENT_TYPE[accessor.componentType], 
+                    accessor.count, buffer_view.byteLength, accessor.byteOffset
+                );
             }
-            vao->set_index_buffer(common_index_buffers[accessor.bufferView]);
         }
         if (primitive.material != -1) {
             int texture_id = process_material(model, model->materials[primitive.material]);
@@ -449,7 +461,7 @@ void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const st
     for (Mesh &mesh: model->meshes) {
         process_mesh(m_obj, model, mesh, shader);
         counter++;
-        if (counter == 2) {
+        if (counter == 5) {
             break;
         }
     }

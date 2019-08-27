@@ -7,6 +7,8 @@
 #include "Engine/renderer/vertex_array.hpp"
 #include "Engine/renderer/renderer_api.hpp"
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 namespace glengine {
 
 class GLRendererAPI: public engine::RendererAPI {

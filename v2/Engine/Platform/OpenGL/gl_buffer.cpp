@@ -42,7 +42,12 @@ void OpenGLVertexBuffer::read_data() {
 
 // IndexBuffer
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size): count(count) {
+OpenGLIndexBuffer::OpenGLIndexBuffer(std::shared_ptr<OpenGLIndexBuffer> &other, uint32_t count, uint32_t offset): count(count), offset(offset) {
+    index_buffer = other->index_buffer;
+    type = engine::ShaderDataType::uShort;
+}
+
+OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size, uint32_t offset): count(count), offset(offset) {
     // Initialiser for unkown data type
     type = engine::ShaderDataType::uShort; // TODO: this is broken, need to resolve type correctly
     glGenBuffers(1, &index_buffer);
@@ -51,7 +56,16 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t siz
     ENGINE_TRACE("Index buffer {0} created", index_buffer);
 }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count): count(count) {
+OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size): count(count), offset(0) {
+    // Initialiser for unkown data type
+    type = engine::ShaderDataType::uShort; // TODO: this is broken, need to resolve type correctly
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+    ENGINE_TRACE("Index buffer {0} created", index_buffer);
+}
+
+OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count): count(count), offset(0) {
     // Initialiser for floating uint32_t sized data
     type = engine::ShaderDataType::uInt;
     glGenBuffers(1, &index_buffer);
