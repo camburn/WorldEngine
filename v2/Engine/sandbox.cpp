@@ -101,7 +101,7 @@ public:
         cube->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
         cube->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
 
-        gearbox->add_uniform_data("u_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        gearbox->add_uniform_data("u_color", glm::vec4(0.4f, 0.8f, 0.4f, 1.0f));
         gearbox->add_uniform_data("u_model", glm::mat4(1.0f));
         
         checker_texture = Texture2D::create("./assets/textures/checkerboard.png");

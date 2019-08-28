@@ -377,13 +377,17 @@ void process_mesh(
         ModelObjects& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader) {
     for (Primitive &primitive: mesh.primitives) {
-        ENGINE_TRACE("VAO create");
         m_obj.vaos.push_back(engine::VertexArray::create());
         auto &vao = m_obj.vaos.back();
         vao->bind();
         if (primitive.indices != -1) {
             Accessor accessor = model->accessors[primitive.indices];
+            if (accessor.sparse.isSparse) {
+                ENGINE_WARN("Warning, Sparse accessor detected, skipping");
+                continue;
+            }
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
+            // Buffer deduplication
             if (common_index_buffers.count(accessor.bufferView) == 0) {
                 auto index_buffer = process_indices(model, buffer_view, accessor);
                 common_index_buffers[accessor.bufferView] = index_buffer;
@@ -391,7 +395,7 @@ void process_mesh(
             } else {
                 auto base_buffer = common_index_buffers[accessor.bufferView];
                 auto index_buffer = engine::IndexBuffer::create(
-                    base_buffer, accessor.count, accessor.byteOffset + buffer_view.byteOffset);
+                    base_buffer, accessor.count, accessor.byteOffset);
                 vao->set_index_buffer(index_buffer);
                 ENGINE_TRACE("Processed Indices; Type: {0}, Count: {1}, Length: {2}, Offset: {3}",
                     ACCESSOR_COMPONENT_TYPE[accessor.componentType], 
@@ -406,9 +410,7 @@ void process_mesh(
             }
         }
         // Process primitive attribute data
-        ENGINE_TRACE("--------ATTRIBUTES----------");
         for (auto &[name, accessor_view_index]: primitive.attributes){
-            ENGINE_TRACE("----- {0}", name);
             Accessor accessor = model->accessors[accessor_view_index];
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
             // We choose not buffer unsupported data?
@@ -423,14 +425,10 @@ void process_mesh(
                 vao->add_vertex_buffer(common_buffers[accessor.bufferView], false);
                 // We also need to describe this VBO
                 GLuint attr_loc = shader->attribute_location(name);
-                ENGINE_TRACE("Describing index {0} as {1}", attr_loc, name);
                 describe_buffer(accessor, attr_loc, buffer_view.byteStride);
             }
-            ENGINE_TRACE("--------------------------");
         }
         vao->unbind();
-        
-        ENGINE_TRACE("VAO Setup finished");
     }
 }
 
@@ -460,10 +458,6 @@ void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const st
     int counter = 0;
     for (Mesh &mesh: model->meshes) {
         process_mesh(m_obj, model, mesh, shader);
-        counter++;
-        if (counter == 5) {
-            break;
-        }
     }
 
     for (Scene &scene: model->scenes) {
