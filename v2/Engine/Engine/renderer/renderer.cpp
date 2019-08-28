@@ -26,6 +26,20 @@ void Renderer::submit(
     renderer_api->draw_indexed(vertex_array);
 }
 
+void Renderer::submit_node(const std::shared_ptr<Shader>& shader, NodeObject &node_object) {
+    // Update node uniforms (transform)
+
+    for (PrimitiveObject prim: node_object.mesh.primitives) {
+        // Update uniforms (color, textures)
+        shader->upload_u_vec4("u_color", prim.material.color);
+        // Submit texture
+        if (prim.material.texture_id > -1)
+            renderer_api->map_texture(prim.material.texture_id);
+        // Submit draw call with VAO
+        renderer_api->draw_indexed(prim.vao);
+    }
+}
+
 void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity){
     shader->bind();
     // send global uniforms
@@ -47,6 +61,10 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
         renderer_api->draw_indexed(vao);
     }
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
+
+    shader->bind();
+
+    submit_node();
 }
 
 } //namespace

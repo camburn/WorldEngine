@@ -7,6 +7,7 @@
 #include "Engine/renderer/camera.hpp"
 #include "Engine/renderer/shader.hpp"
 #include "Engine/entity.hpp"
+#include "Tools/gltf_loader.hpp"
 
 namespace engine {
 
@@ -31,6 +32,8 @@ private:
     };
     static SceneData* scene_data;
     static RendererAPI* renderer_api;
+
+    void submit_node(const std::shared_ptr<Shader>& shader, NodeObject &node_object);
 };
 
 } //namespace

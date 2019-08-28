@@ -150,7 +150,7 @@ GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     if (handled_shaders.count(shader->get_id()) > 0 ) return;
     ModelObjects m_obj;
-    gltf_to_opengl(m_obj, model, shader);
+    NodeObject node_object = gltf_to_opengl(m_obj, model, shader);
     texture_ids = m_obj.texture_ids;
     vaos = m_obj.vaos;
     //vaos.push_back(m_obj.vao);

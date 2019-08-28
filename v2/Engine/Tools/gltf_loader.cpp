@@ -4,6 +4,9 @@
 #include "Engine/renderer/buffer.hpp"
 //#include "Engine/entity.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Platform/OpenGL/gl_texture.hpp"
 
 #include "imgui.h"
@@ -312,7 +315,15 @@ void gltf_inspector(bool display, std::shared_ptr<Model> &model) {
     ImGui::End();
 }
 
-uint32_t process_material(std::shared_ptr<Model> &model, Material &material) {
+MaterialObject process_material(std::shared_ptr<Model> &model, Material &material) {
+    MaterialObject material_object;
+    // The baseColorFactor has a specification guaranteed default of (1,1,1,1)
+    material_object.color = glm::vec4(
+        material.pbrMetallicRoughness.baseColorFactor[0],
+        material.pbrMetallicRoughness.baseColorFactor[1],
+        material.pbrMetallicRoughness.baseColorFactor[2],
+        material.pbrMetallicRoughness.baseColorFactor[3]
+    );
     int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
     if (texture_index > -1) {
         Texture texture = model->textures[texture_index];
@@ -323,9 +334,11 @@ uint32_t process_material(std::shared_ptr<Model> &model, Material &material) {
         Image image = model->images[texture.source];
         GLuint tex_id = enginegl::buffer_image(sampler, image);
         ENGINE_INFO("Loaded image - {0}", tex_id);
-        return tex_id;
+        material_object.texture_id = tex_id;
+        return material_object;
     }
-    return -1;
+    material_object.texture_id = -1;
+    return material_object;
 }
 
 std::shared_ptr<engine::IndexBuffer> process_indices(std::shared_ptr<Model> &model, BufferView &buffer_view, Accessor &accessor) {
@@ -372,12 +385,17 @@ void describe_buffer(Accessor &accessor, uint32_t location, uint32_t stride) {
 
 std::map<int, std::shared_ptr<engine::IndexBuffer>> common_index_buffers;
 std::map<int, std::shared_ptr<engine::VertexBuffer>> common_buffers;
+std::map<int, MaterialObject> map_materials;
+std::map<int, MeshObject> map_meshes;
 
-void process_mesh(
+MeshObject process_mesh(
         ModelObjects& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader) {
+    MeshObject mesh_object;
     for (Primitive &primitive: mesh.primitives) {
-        m_obj.vaos.push_back(engine::VertexArray::create());
+        PrimitiveObject primitive_object;
+        primitive_object.vao = engine::VertexArray::create();
+        m_obj.vaos.push_back(primitive_object.vao);
         auto &vao = m_obj.vaos.back();
         vao->bind();
         if (primitive.indices != -1) {
@@ -404,10 +422,14 @@ void process_mesh(
             }
         }
         if (primitive.material != -1) {
-            int texture_id = process_material(model, model->materials[primitive.material]);
-            if (texture_id > -1) {
-                m_obj.texture_ids.push_back(texture_id);
+            primitive_object.material = map_materials[primitive.material];
+            /*
+            MaterialObject material_object = process_material(model, model->materials[primitive.material]);
+            if (material_object.texture_id > -1) {
+                m_obj.texture_ids.push_back(material_object.texture_id);
             }
+            primitive_object.material = material_object;
+            */
         }
         // Process primitive attribute data
         for (auto &[name, accessor_view_index]: primitive.attributes){
@@ -429,19 +451,43 @@ void process_mesh(
             }
         }
         vao->unbind();
+        mesh_object.primitives.push_back(primitive_object);
     }
+    return mesh_object;
 }
 
-void process_node(
-        ModelObjects& m_obj, std::shared_ptr<Model> &model, Node &node, 
-        const std::shared_ptr<engine::Shader> &shader
-    ) {
+NodeObject process_node(std::shared_ptr<Model> &model, Node &node) {
+    NodeObject node_object;
     if (node.mesh != -1) {
-        //process_mesh_two(m_obj, model, model->meshes[node.mesh], shader);
+        node_object.mesh = map_meshes[node.mesh];
+        // Load these only if we have a mesh (does it make sense for the others?)
+        if (node.matrix.size() > 0) {
+            node_object.transform_matrix = glm::make_mat4(
+                node.matrix.data()
+            );
+        }
+        if (node.translation.size() > 0) {
+            node_object.transform = glm::make_vec3(
+                node.translation.data()
+            );
+        }
+        if (node.scale.size() > 0) {
+            node_object.scale = glm::make_vec3(
+                node.scale.data()
+            );
+        }
+        if (node.rotation.size() > 0) {
+            node_object.rotation = glm::make_vec4(
+                node.rotation.data()
+            );
+        }
     }
     for (int child_index: node.children) {
-        process_node(m_obj, model, model->nodes[child_index], shader);
+        node_object.children.push_back(
+            process_node(model, model->nodes[child_index])
+        );
     }
+    return node_object;
 }
 
 /*
@@ -450,19 +496,27 @@ Mesh - Collection of Primitives
 Node - Mesh + relative_transform
 */
 
-void gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
+NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
     ENGINE_INFO("Processing GLtf");
     common_buffers.clear();
     common_index_buffers.clear();
-
     int counter = 0;
+    for (Material &material: model->materials) {
+        map_materials[counter] = process_material(model, material);
+        counter++;
+    }
+    
+    counter = 0;
     for (Mesh &mesh: model->meshes) {
-        process_mesh(m_obj, model, mesh, shader);
+        map_meshes[counter] = process_mesh(m_obj, model, mesh, shader);
+        counter++;
     }
 
+    NodeObject node_object;
     for (Scene &scene: model->scenes) {
         for (int &node_index: scene.nodes) {
-            process_node(m_obj, model, model->nodes[node_index], shader);
+            node_object = process_node(model, model->nodes[node_index]);
         }
     }
+    return node_object;
 }
