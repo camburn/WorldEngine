@@ -9,6 +9,8 @@
 #include "Engine/entity.hpp"
 #include "Tools/gltf_loader.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace engine {
 
 class Renderer {
@@ -16,6 +18,8 @@ public:
 
     static void begin_scene(const std::shared_ptr<Camera> camera, const glm::vec4& clear_color);
     static void end_scene();
+
+    static void on_ui_render(bool draw);
 
     static void submit(
         const std::shared_ptr<Shader>& shader,
@@ -33,7 +37,10 @@ private:
     static SceneData* scene_data;
     static RendererAPI* renderer_api;
 
-    void submit_node(const std::shared_ptr<Shader>& shader, NodeObject &node_object);
+    static void submit_node(
+        const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity, 
+        NodeObject &node_object, glm::mat4 global_transform
+    );
 };
 
 } //namespace

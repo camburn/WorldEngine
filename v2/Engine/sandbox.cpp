@@ -55,7 +55,9 @@ public:
 
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
-        gearbox = GltfEntity::load_from_file("./assets/gltf/GearboxAssy.gltf");
+        gearbox = GltfEntity::load_from_file(
+            "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
+        );
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         square.reset( new CustomEntity());
@@ -103,8 +105,11 @@ public:
 
         gearbox->add_uniform_data("u_color", glm::vec4(0.4f, 0.8f, 0.4f, 1.0f));
         gearbox->add_uniform_data("u_model", glm::mat4(1.0f));
+        //gearbox->add_uniform_data("u_model", glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.25)));
         
         checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
+
+        gearbox->update_buffers(color_shader);
     }
 
     void on_attach() override {
@@ -112,21 +117,18 @@ public:
     }
 
     void on_ui_render() override {
-        static int counter = 0;
-        ImGui::Begin("Test");
+        ImGui::Begin("Entities");
         ImGui::Text("Sandbox UI");
-        if (ImGui::Button("Count")){
-            counter++;
+        if (ImGui::Button("Draw Gears")){
+            draw_gears |= draw_gears;
         }
-        ImGui::SameLine();
-        ImGui::Text("Count: %i", counter);
         ImGui::End();
 
         texture_shader->on_ui_render(true);
         camera->on_ui_render(true);
         enginegl::on_ui_render(true);
         //monkey->on_ui_render(true);
-        //gearbox->on_ui_render(true);
+        gearbox->on_ui_render(true);
     }
 
     void on_update() override {
@@ -194,10 +196,11 @@ public:
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
 
         checker_texture->bind();
-        Renderer::submit_entity(texture_shader, square);
+        ///Renderer::submit_entity(texture_shader, square);
         Renderer::submit_entity(texture_shader, monkey);
         Renderer::submit_entity(texture_shader, cube);
-        Renderer::submit_entity(color_shader, gearbox);
+        if (draw_gears)
+            Renderer::submit_entity(texture_shader, gearbox);
     }
 
 private:
@@ -226,6 +229,7 @@ private:
     float last_frame_time = 0.0f;
 
     bool camera_rotate = false;
+    bool draw_gears = true;
 };
 
 int main() {

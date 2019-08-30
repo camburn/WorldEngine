@@ -12,6 +12,8 @@
 #include "Engine/renderer/buffer.hpp"
 #include "Engine/renderer/vertex_array.hpp"
 
+#include "Tools/gltf_loader.hpp"
+
 namespace engine {
 
 //                  vec4      vec3     vec2
@@ -93,12 +95,14 @@ public:
     static std::shared_ptr<GltfEntity> load_from_file(std::string file_name);
 
     virtual void on_ui_render(bool display) override;
+    NodeObject &get_node() { return node_object; }
 private:
     //std::shared_ptr<VertexArray> vao;
     std::vector<std::shared_ptr<VertexBuffer>> buffers;
     std::shared_ptr<IndexBuffer> index_buffer;
     std::shared_ptr<tinygltf::Model> model;
     std::unordered_set<uint32_t> handled_shaders;
+    NodeObject node_object;
 };
 
 } // Namespace

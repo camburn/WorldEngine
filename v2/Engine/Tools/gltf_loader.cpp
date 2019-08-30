@@ -6,6 +6,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtx/decomposition.hpp>
 
 #include "Platform/OpenGL/gl_texture.hpp"
 
@@ -71,247 +73,50 @@ std::map<int, std::string> BUFFER_VIEW_TARGET {
     {34963, "ELEMENT_ARRAY_BUFFER"},
 };
 
-void describe_material(std::shared_ptr<Model> &model, int material_index, std::string indent="") {
-    Material material = model->materials[material_index];
-    ENGINE_INFO(indent + "          + name: {0}", material.name);
-    ENGINE_INFO(indent + "          - Base texture");
-    ENGINE_INFO(indent + "            + Index: {0}", material.pbrMetallicRoughness.baseColorTexture.index);
-    ENGINE_INFO(indent + "            + TexCoord: {0}", material.pbrMetallicRoughness.baseColorTexture.texCoord);
-    if (material.pbrMetallicRoughness.baseColorTexture.index == -1) {
-        return;
+NodeObject selected_node;
+
+void draw_node(NodeObject &node, int& counter) {
+    counter++;
+    if (ImGui::Selectable(("Node: " + std::to_string(counter)).c_str())) {
+        selected_node = node;
     }
-    Texture texture = model->textures[material.pbrMetallicRoughness.baseColorTexture.index];
-    Sampler sampler;
-    if (texture.sampler > 0) {
-        Sampler sampler = model->samplers[texture.sampler];
-    }
-    ENGINE_INFO(indent + "            - Sampler: {0}", TEXTURE_NAMES[texture.sampler]);
-    ENGINE_INFO(indent + "              + minFilter: {0}", TEXTURE_NAMES[sampler.minFilter]);
-    ENGINE_INFO(indent + "              + magFilter: {0}", TEXTURE_NAMES[sampler.magFilter]);
-    ENGINE_INFO(indent + "              + wrapS: {0}", TEXTURE_NAMES[sampler.wrapS]);
-    ENGINE_INFO(indent + "              + wrapT: {0}", TEXTURE_NAMES[sampler.wrapT]);
-    ENGINE_INFO(indent + "              + wrapR: {0}", TEXTURE_NAMES[sampler.wrapR]);
-    Image image = model->images[texture.source];
-    ENGINE_INFO(indent + "            - Image: {0}", texture.source);
-    ENGINE_INFO(indent + "              + File: {0}", image.uri);
-    ENGINE_INFO(indent + "              + Pixel Type: {0}", ACCESSOR_COMPONENT_TYPE[image.pixel_type]);
-    ENGINE_INFO(indent + "              + Size: {0}x{1}", image.width, image.height);
-}
+    if (node.children.size() > 0) {
 
-void describe_mesh(std::shared_ptr<Model> &model, Mesh &mesh, std::string indent="") {
-    ENGINE_INFO(indent + "    - Mesh - {0}", mesh.name);
-    for (auto primitive: mesh.primitives) {
-        ENGINE_INFO(indent + "      - Primitive");
-        ENGINE_INFO(indent + "        + Mode: {0}", PRIMITIVE_DRAW_MODE[primitive.mode]);
-        if (primitive.indices != -1)
-            ENGINE_INFO(indent + "        + Indices: {0}", primitive.indices);
-        if (primitive.material != -1)
-            ENGINE_INFO(indent + "        - Material", primitive.material);
-            describe_material(model, primitive.material);
-        ENGINE_INFO(indent + "        - Attributes", primitive.material);
-        for (auto &[name, attr_index]: primitive.attributes){
-            ENGINE_INFO(indent + "          + {0}: Accessor index: {1}", name, attr_index);
-        }
-    }
-}
+        if (ImGui::TreeNode(("Children: " + std::to_string(counter)).c_str())) {
 
-void describe_node(std::shared_ptr<Model> &model, Node &node, int node_index, std::string indent) {
-    ENGINE_INFO(indent + "  - Node {0} - {1}", node_index, node.name);
-    // A node can link to *a* mesh
-    if (node.mesh != -1) {
-        auto mesh = model->meshes[node.mesh];
-        describe_mesh(model, mesh, indent);
-    // Or *a* camera
-    } else if (node.camera != -1) {
-        ENGINE_INFO(indent + "    + Camera: {0}", node.camera);
-    }
-    if (node.matrix.size() > 0)
-        ENGINE_INFO(indent + "    + Matrix");
-    if (node.translation.size() > 0)
-        ENGINE_INFO(indent + "    + Translation");
-    if (node.rotation.size() > 0)
-        ENGINE_INFO(indent + "    + Rotation");
-    if (node.scale.size() > 0)
-        ENGINE_INFO(indent + "    + Scale");
-
-    for (auto child_index: node.children) {
-        describe_node(model, model->nodes[child_index], child_index, indent + "  ");
-    }
-}
-
-void inspect_gltf(std::shared_ptr<Model> model) {
-    //std::shared_ptr<Model> model = std::make_shared<Model>();
-    TinyGLTF loader;
-    std::string err;
-    std::string warn;
-
-    // Model is one VAO (Render call)
-    int scene_count = model->scenes.size();
-    
-    ENGINE_WARN("Model Hierarchy");
-    for (auto scene: model->scenes) {
-        ENGINE_INFO("Scene - {0}", scene.name);
-        for (auto node_index: scene.nodes) {
-            auto node = model->nodes[node_index];
-            describe_node(model, node, node_index, "");
-        }
-    }
-
-    ENGINE_WARN("Buffer Layout");
-
-    int buffer_index = 0;
-    for (auto buffer: model->buffers) {
-        ENGINE_INFO("Buffer - {0} bytes", buffer.data.size());
-        int buffer_view_index = 0;
-        for (auto buffer_view: model->bufferViews) {
-            if (buffer_view.buffer == buffer_index){  // Check if this view belongs to this buffer
-                ENGINE_INFO("  - View {0} - {1}", buffer_view_index, buffer_view.name);
-                ENGINE_INFO("    + Target: {0}", BUFFER_VIEW_TARGET[buffer_view.target]);
-                ENGINE_INFO("    + Length: {0} bytes", buffer_view.byteLength);
-                ENGINE_INFO("    + Offset: {0} bytes", buffer_view.byteOffset);
-                ENGINE_INFO("    + Stride: {0} bytes", buffer_view.byteStride);
-                int accessor_index = 0;
-                for (auto accessor: model->accessors) {
-                    if (accessor.bufferView == buffer_view_index) {  // Check if accessor belongs to this view
-                        ENGINE_INFO("    - Accessor {0} - {1}", accessor_index, accessor.name);
-                        ENGINE_INFO("      + Offset - {0} bytes", accessor.byteOffset);
-                        ENGINE_INFO("      + Component type - {0}", ACCESSOR_COMPONENT_TYPE[accessor.componentType]);
-                        ENGINE_INFO("      + Component Count - {0}", accessor.count);
-                        ENGINE_INFO("      + type - {0}", ACCESSOR_TYPE[accessor.type]);
-                    }
-                    
-                    accessor_index++;
-                }
+            for (auto &node: node.children) {
+            draw_node(node, counter);
             }
-            buffer_view_index++;
+            ImGui::TreePop();
         }
-        buffer_index++;
     }
-    ENGINE_INFO("External model processed");
-    //return model;
 }
 
-bool walk_nodes(Node &selected_node, Node &current_node, std::shared_ptr<Model> &model) {
-    bool node_selected = false;
-    if (ImGui::TreeNode("Nodes")) {
-        for (int node_index: current_node.children) {
-            Node node = model->nodes[node_index];
-            if(ImGui::Selectable(node.name.c_str())) {
-                selected_node = node;
-                node_selected = true;
-            }
-            if (node.children.size() > 0) {
-                walk_nodes(selected_node, node, model);
-            }
-        }
-        ImGui::TreePop();
-    }
-    return node_selected;
-}
+void draw_node_graph(NodeObject &root_node) {
 
-void gltf_inspector(bool display, std::shared_ptr<Model> &model) {
-    if (!display) return;
     ImGui::Begin("glTF Inspector");
     ImGui::Columns(2, "tree", true);
-    // Scenes
-    static Scene selected_scene;
-    static Node selected_node;
-    static Mesh selected_mesh;
-    static Material selected_material;
+    int counter = 0;
+    draw_node(root_node, counter);
 
-    static bool node_selected = false;
-    static bool scene_selected = false;
-    static bool mesh_selected = false;
-    static bool material_selected = false;
-
-    auto select = [&](bool& selector) {
-        scene_selected = false;
-        node_selected = false;
-        mesh_selected = false;
-        material_selected = false;
-        selector = true;
-    };
-
-    if (ImGui::TreeNode("Scenes")) {
-        for (Scene scene: model->scenes) {
-            if(ImGui::Selectable(scene.name.c_str())) {
-                selected_scene = scene;
-                select(scene_selected);
-            }
-        }
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Nodes")) {
-        // Hmm how to deal with multiple scenes?
-        
-        for (int node_index: model->scenes[0].nodes) {
-            Node node = model->nodes[node_index];
-            if(ImGui::Selectable(node.name.c_str())) {
-                selected_node = node;
-                select(node_selected);
-            }
-            if(walk_nodes(selected_node, node, model)) {
-                select(node_selected);
-            }
-        }
-        /*
-        for (Node node: model->nodes) {
-            if(ImGui::Selectable(node.name.c_str())) {
-                selected_node = node;
-                select(node_selected);
-            }
-        }
-        */
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Meshes")) {
-        for (Mesh mesh: model->meshes) {
-            if(ImGui::Selectable(mesh.name.c_str())) {
-                selected_mesh = mesh;
-                select(mesh_selected);
-            }
-        }
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Materials")) {
-        for (Material material: model->materials) {
-            if(ImGui::Selectable("a")) {
-                selected_material = material;
-                select(material_selected);
-            }
-        }
-        ImGui::TreePop();
-    }
     ImGui::NextColumn();
-    ImGui::Text("Selected");
-    if (scene_selected) {
-        ImGui::Text("Node count: %zu", selected_scene.nodes.size());
-        
-    }
-    if (node_selected) {
-        ImGui::Text("Name: %s", selected_node.name.c_str());
-        ImGui::Text("Children: %zu", selected_node.children.size());
-        ImGui::Text("Camera: %i", selected_node.camera);
-        ImGui::Text("Mesh: %i", selected_node.mesh);
-    }
 
-    if (mesh_selected) {
-        ImGui::Text("Name: %s", selected_mesh.name.c_str());
-        ImGui::Text("Mesh Primitives: %zu", selected_mesh.primitives.size());
+    ImGui::Text("Node Selected");
+    ImGui::Text("Children: %zu", selected_node.children.size());
+    ImGui::Text("Mesh Primitives: %zu", selected_node.mesh.primitives.size());
+    
+    //glm::decompose(selected_node.transform_matrix, );
+    ImGui::Text("Transform Matrix");
+    auto &m = selected_node.transform_matrix;
+    float row_a[4] = {m[0][0], m[1][0], m[2][0], m[3][0]};
+    float row_b[4] = {m[0][1], m[1][1], m[2][1], m[3][1]};
+    float row_c[4] = {m[0][2], m[1][2], m[2][2], m[3][2]};
+    float row_d[4] = {m[0][3], m[1][3], m[2][3], m[3][3]};
+    ImGui::InputFloat4("", row_a);
+    ImGui::InputFloat4("", row_b);
+    ImGui::InputFloat4("", row_c);
+    ImGui::InputFloat4("", row_d);
 
-        for (Primitive primitive: selected_mesh.primitives) {
-            if (ImGui::TreeNode("Primitives")) {
-                ImGui::Text("Mode: %s", PRIMITIVE_DRAW_MODE[primitive.mode].c_str());
-                ImGui::Text("Material Indices: %i", primitive.indices);
-                ImGui::Text("Material Index: %i", primitive.material);
-                ImGui::Separator();
-                for (auto attr: primitive.attributes) {
-                    ImGui::Text("Attribute: %s, %i", attr.first.c_str(), attr.second);
-                }
-                ImGui::TreePop();
-            }
-        }
-    }
     ImGui::End();
 }
 
@@ -335,6 +140,7 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         GLuint tex_id = enginegl::buffer_image(sampler, image);
         ENGINE_INFO("Loaded image - {0}", tex_id);
         material_object.texture_id = tex_id;
+        material_object.texture_set = true;
         return material_object;
     }
     material_object.texture_id = -1;
@@ -458,29 +264,34 @@ MeshObject process_mesh(
 
 NodeObject process_node(std::shared_ptr<Model> &model, Node &node) {
     NodeObject node_object;
+    if (node.matrix.size() == 16) {
+        node_object.transform_matrix = glm::mat4(
+            node.matrix[0], node.matrix[1], node.matrix[2], node.matrix[3],
+            node.matrix[4], node.matrix[5], node.matrix[6], node.matrix[7],
+            node.matrix[8], node.matrix[9], node.matrix[10], node.matrix[11],
+            node.matrix[12], node.matrix[13], node.matrix[14], node.matrix[15]
+        );
+        //glm::decompose to extract transform, rotation, and scale
+    }
+    if (node.translation.size() > 0) {
+        node_object.transform = glm::make_vec3(
+            node.translation.data()
+        );
+    }
+    if (node.scale.size() > 0) {
+        node_object.scale = glm::make_vec3(
+            node.scale.data()
+        );
+    }
+    if (node.rotation.size() > 0) {
+        node_object.rotation = glm::make_vec4(
+            node.rotation.data()
+        );
+    }
+    // Load our mesh
     if (node.mesh != -1) {
         node_object.mesh = map_meshes[node.mesh];
-        // Load these only if we have a mesh (does it make sense for the others?)
-        if (node.matrix.size() > 0) {
-            node_object.transform_matrix = glm::make_mat4(
-                node.matrix.data()
-            );
-        }
-        if (node.translation.size() > 0) {
-            node_object.transform = glm::make_vec3(
-                node.translation.data()
-            );
-        }
-        if (node.scale.size() > 0) {
-            node_object.scale = glm::make_vec3(
-                node.scale.data()
-            );
-        }
-        if (node.rotation.size() > 0) {
-            node_object.rotation = glm::make_vec4(
-                node.rotation.data()
-            );
-        }
+
     }
     for (int child_index: node.children) {
         node_object.children.push_back(
@@ -500,6 +311,9 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
     ENGINE_INFO("Processing GLtf");
     common_buffers.clear();
     common_index_buffers.clear();
+    map_materials.clear();
+    map_meshes.clear();
+
     int counter = 0;
     for (Material &material: model->materials) {
         map_materials[counter] = process_material(model, material);
@@ -515,7 +329,9 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
     NodeObject node_object;
     for (Scene &scene: model->scenes) {
         for (int &node_index: scene.nodes) {
-            node_object = process_node(model, model->nodes[node_index]);
+            node_object.children.push_back(
+                process_node(model, model->nodes[node_index])
+            );
         }
     }
     return node_object;
