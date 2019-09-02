@@ -47,6 +47,12 @@ GLuint Shader::build() {
 
 void Shader::bind() {
     glUseProgram(shader_id);
+
+    for (auto& [name, uniform]: uniforms) {
+        if (uniform.type == GL_SAMPLER_2D) {
+            upload_u_int1(uniform.name, uniform.texture_unit);
+        }
+    }
 }
 
 void Shader::unbind() {
@@ -74,6 +80,13 @@ void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
     glUniform3fv(location, 1, glm::value_ptr(vec));
 }
 
+void Shader::upload_u_int1(const std::string& u_name, const GLint& value) {
+    if (uniforms.count(u_name) == 0)
+        return;
+    GLuint location = uniforms[u_name].index;
+    glUniform1i(location, value);
+}
+
 void Shader::register_vertex_array(std::shared_ptr<VertexArray> vao) {
     registered_vertex_arrays.emplace(vao->get_id());
 }
@@ -89,6 +102,7 @@ void Shader::inspect_uniforms() {
 
     GLint size; // size of the variable
     GLenum type; // type of the variable (float, vec3 or mat4, etc)
+    GLint texture_unit = 0;
 
     const GLsizei bufSize = 32; // maximum name length
     GLchar name[bufSize]; // variable name in GLSL
@@ -100,8 +114,15 @@ void Shader::inspect_uniforms() {
     for (i = 0; i < count; i++)
     {
         glGetActiveUniform(shader_id, i, bufSize, &length, &size, &type, name);
-        ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", i, enginegl::GLENUM_NAMES.at(type), size, name);
-        uniforms.try_emplace(std::string{name}, i, std::string{name}, type, size);
+        if (type == GL_SAMPLER_2D) {
+            // Assign a texture unit
+            uniforms.try_emplace(std::string{name}, i, std::string{name}, type, size, texture_unit);
+            ENGINE_INFO("Attribute #{0} Type: {1} Name: {2} TextureUnit: {3}", i, enginegl::GLENUM_NAMES.at(type), name, texture_unit);
+            texture_unit++;
+        } else {
+            ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", i, enginegl::GLENUM_NAMES.at(type), size, name);
+            uniforms.try_emplace(std::string{name}, i, std::string{name}, type, size);
+        }
     }
 }
 
@@ -112,7 +133,6 @@ void Shader::inspect_attributes() {
     GLint size = 0;
     GLenum type = 0;
     GLsizei length = 0;
-
     glGetProgramiv(shader_id, GL_ACTIVE_ATTRIBUTES, &numActiveAttribs);
 
     GLint maxAttribNameLength = 0;
@@ -122,12 +142,10 @@ void Shader::inspect_attributes() {
     {
         glGetActiveAttrib(shader_id, attrib, nameData.size(), &length, &size, &type, &nameData[0]);
         std::string name = nameData.data();
-        GLint attribute_location= glGetAttribLocation(shader_id, name.c_str());
+        GLint attribute_location = glGetAttribLocation(shader_id, name.c_str());
         attributes.try_emplace(attribute_location, attribute_location, name, type, size);
         ENGINE_INFO("Attribute #{0} Type: {1} Name: {2}", attribute_location, enginegl::GLENUM_NAMES.at(type), name);
     }
-
-   
 }
 
 BufferLayout Shader::attribute_layout() {

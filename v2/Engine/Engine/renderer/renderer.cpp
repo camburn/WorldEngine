@@ -40,8 +40,11 @@ void Renderer::submit_node(
         // Update uniforms (color, textures)
         shader->upload_u_vec4("u_color", prim.material.color);
         // Submit texture
-        if (prim.material.texture_set)
-            renderer_api->map_texture(prim.material.texture_id);
+        for (auto& texture: prim.material.textures) {
+            if (texture.texture_id != -1) {
+                renderer_api->map_texture_unit(texture.texture_id, texture.texture_unit);
+            }
+        }
         // Submit draw call with VAO
         renderer_api->draw_indexed(prim.vao);
     }

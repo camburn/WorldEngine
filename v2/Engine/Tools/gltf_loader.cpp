@@ -120,7 +120,20 @@ void draw_node_graph(NodeObject &root_node) {
     ImGui::End();
 }
 
-MaterialObject process_material(std::shared_ptr<Model> &model, Material &material) {
+TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, std::string name, const std::shared_ptr<engine::Shader> &shader) {
+    Sampler sampler; //Use default sampler if one is not specified
+    if (texture.sampler > -1) {
+        sampler = model->samplers[texture.sampler];
+    }
+    Image image = model->images[texture.source];
+    GLuint tex_id = enginegl::buffer_image(sampler, image);
+    ENGINE_INFO("Loaded image - {0}: {1}", name, tex_id);
+    GLint texture_unit = shader->uniform_texture_unit(name);
+    return TextureObject {tex_id, texture_unit};
+}
+
+MaterialObject process_material(std::shared_ptr<Model> &model, Material &material,
+        const std::shared_ptr<engine::Shader> &shader) {
     MaterialObject material_object;
     // The baseColorFactor has a specification guaranteed default of (1,1,1,1)
     material_object.color = glm::vec4(
@@ -129,19 +142,26 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         material.pbrMetallicRoughness.baseColorFactor[2],
         material.pbrMetallicRoughness.baseColorFactor[3]
     );
+    // TODO: How to avoid hardcoding these names?
     int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
-    if (texture_index > -1) {
-        Texture texture = model->textures[texture_index];
-        Sampler sampler; //Use default sampler if one is not specified
-        if (texture.sampler > -1) {
-            sampler = model->samplers[texture.sampler];
-        }
-        Image image = model->images[texture.source];
-        GLuint tex_id = enginegl::buffer_image(sampler, image);
-        ENGINE_INFO("Loaded image - {0}", tex_id);
-        material_object.texture_id = tex_id;
-        material_object.texture_set = true;
-        return material_object;
+    if (texture_index > -1 && shader->uniform_supported("albedo")) {
+        material_object.textures.push_back(
+            process_texture(model, model->textures[texture_index], "albedo", shader)
+        );
+    }
+    int normal_index = material.normalTexture.index;
+    if (normal_index > -1 && shader->uniform_supported("normal")) {
+        material_object.textures.push_back(
+            process_texture(model, model->textures[normal_index], "normal", shader)
+        );
+    }
+    int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
+    int ao_index = material.occlusionTexture.index;
+    if (mr_index > -1 && ao_index > -1 && mr_index == ao_index
+            && shader->uniform_supported("ambient_roughness_metallic")) {
+        material_object.textures.push_back(
+            process_texture(model, model->textures[mr_index], "ambient_roughness_metallic", shader)
+        );
     }
     material_object.texture_id = -1;
     return material_object;
@@ -229,13 +249,6 @@ MeshObject process_mesh(
         }
         if (primitive.material != -1) {
             primitive_object.material = map_materials[primitive.material];
-            /*
-            MaterialObject material_object = process_material(model, model->materials[primitive.material]);
-            if (material_object.texture_id > -1) {
-                m_obj.texture_ids.push_back(material_object.texture_id);
-            }
-            primitive_object.material = material_object;
-            */
         }
         // Process primitive attribute data
         for (auto &[name, accessor_view_index]: primitive.attributes){
@@ -318,7 +331,7 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
 
     int counter = 0;
     for (Material &material: model->materials) {
-        map_materials[counter] = process_material(model, material);
+        map_materials[counter] = process_material(model, material, shader);
         counter++;
     }
     

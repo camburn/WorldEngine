@@ -30,6 +30,7 @@ public:
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
     void upload_u_vec4(const std::string& u_name, const glm::vec4& vec);
     void upload_u_vec3(const std::string& u_name, const glm::vec3& vec);
+    void upload_u_int1(const std::string& u_name, const GLint& value);
 
     BufferLayout attribute_layout();
     bool attribute_supported(std::string name) {
@@ -52,6 +53,20 @@ public:
         return -1;
     }
 
+    bool uniform_supported(std::string name) {
+        if (uniforms.count(name) > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    int uniform_texture_unit(std::string name) {
+        if (uniforms.count(name) > 0) {
+            return uniforms[name].texture_unit;
+        }
+        return -1;
+    }
+
     std::string attribute_name_normalise(std::string name) {
         return GLTF_TO_SHADER_ATTRIBUTE[name];
     }
@@ -66,11 +81,14 @@ private:
     struct Uniform {
         Uniform() {}
         Uniform(GLint index, std::string name, GLenum type, GLfloat size):
-            index(index), name(name), type(type), size(size) {}
+            index(index), name(name), type(type), size(size), texture_unit(-1)  {}
+        Uniform(GLint index, std::string name, GLenum type, GLfloat size, GLint texture_unit):
+            index(index), name(name), type(type), size(size), texture_unit(texture_unit) {}
         GLint index;
         std::string name;
         GLenum type;
         GLfloat size;
+        GLint texture_unit;
     };
 
     struct Attribute {

@@ -4,6 +4,7 @@
 #include <memory>
 #include <map>
 #include "Engine/renderer/shader.hpp"
+#include "Engine/renderer/texture.hpp"
 #include "Engine/renderer/vertex_array.hpp"
 
 #include <glm/glm.hpp>
@@ -19,8 +20,14 @@ struct ModelObjects {
     std::vector<std::shared_ptr<engine::VertexArray>> vaos;
 };
 
+struct TextureObject {
+    GLuint texture_id;
+    GLint texture_unit;
+};
+
 struct MaterialObject {
     bool texture_set = false;
+    std::vector<TextureObject> textures;
     GLuint texture_id;
     glm::vec4 color;
 };

@@ -20,6 +20,11 @@ void GLRendererAPI::map_texture(const unsigned int tex_id) {
     glBindTexture(GL_TEXTURE_2D, tex_id);
 }
 
+void GLRendererAPI::map_texture_unit(const unsigned int tex_id, const unsigned int unit) {
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+}
+
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {
     ENGINE_ASSERT(vertex_array->get_index_buffer(), "Index buffer not set on Vertex Array");
     vertex_array->bind();

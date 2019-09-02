@@ -22,6 +22,7 @@ public:
     virtual void draw_indexed(const std::shared_ptr<VertexArray>& vertex_array) = 0;
 
     virtual void map_texture(const unsigned int tex_id) = 0;
+    virtual void map_texture_unit(const unsigned int tex_id, const unsigned int unit) = 0;
 
     inline static API get_api() { return api; }
 
