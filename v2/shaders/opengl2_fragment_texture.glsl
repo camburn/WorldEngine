@@ -5,10 +5,13 @@ varying vec4 f_fragpos;
 varying vec2 f_texcoord;
 
 uniform sampler2D base_color;
+
 uniform vec3 u_lightpos = vec3(20, 5, 20);
 uniform vec3 u_lightcolor = vec3(1, 1, 1);
 uniform vec4 u_color;
 uniform float ambient_strength = 0.8;
+
+const float PI = 3.14159265359;
 
 void main() {
     

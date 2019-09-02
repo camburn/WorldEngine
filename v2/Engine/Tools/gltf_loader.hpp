@@ -6,6 +6,10 @@
 #include "Engine/renderer/shader.hpp"
 #include "Engine/renderer/vertex_array.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+
 #include "glad/glad.h"
 
 #include "tiny_gltf.h"
@@ -33,15 +37,49 @@ struct MeshObject {
 
 struct NodeObject {
     NodeObject(): 
-        transform_matrix(glm::mat4(1.0f)), rotation(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)),
-        transform(glm::vec3(0.0f)), scale(glm::vec3(1.0f)) { }
+        transform_matrix(glm::mat4(1.0f)),
+        rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)),
+        translation(glm::vec3(0.0f, 0.0f, 0.0f)),
+        scale(glm::vec3(1.0f, 1.0f, 1.0f)) { }
+
+    glm::mat4& get_matrix() {
+        if (!changed) return transform_matrix;
+        glm::mat4 rotation_matrix = glm::toMat4(rotation);  // Rotation
+        glm::mat4 translate_matrix = glm::translate(glm::mat4(1.0f), translation);
+        glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale);
+        transform_matrix = translate_matrix * rotation_matrix * scale_matrix;
+        changed = false;
+        return transform_matrix;
+    }
+
+    glm::quat get_rotation(){ return rotation; }
+    glm::vec3 get_translation(){ return translation; }
+    glm::vec3 get_scale(){ return scale; }
+
+    void set_rotation(glm::quat r) {
+        rotation = r;
+        changed = true;
+    }
+
+    void set_translation(glm::vec3 t) {
+        translation = t;
+        changed = true;
+    }
+
+    void set_scale(glm::vec3 s) {
+        scale = s;
+        changed = true;
+    }
 
     std::vector<NodeObject> children;
     MeshObject mesh;
+
+private:
     glm::mat4 transform_matrix;
-    glm::vec4 rotation;
-    glm::vec3 transform;
+    glm::quat rotation;
+    glm::vec3 translation;
     glm::vec3 scale;
+    bool changed = false;
 };
 
 struct DrawObject {

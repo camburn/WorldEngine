@@ -117,7 +117,7 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     shader->register_vertex_array(vao);
 }
 
-void CustomEntity::render(Shader &shader) {
+void CustomEntity::render() {
     //Renderer::submit(shader, this);
 }
 
@@ -157,7 +157,7 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     handled_shaders.emplace(shader->get_id());
 }
 
-void GltfEntity::render(Shader &shader) {
+void GltfEntity::render() {
 
 }
 

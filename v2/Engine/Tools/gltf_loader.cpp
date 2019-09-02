@@ -107,7 +107,7 @@ void draw_node_graph(NodeObject &root_node) {
     
     //glm::decompose(selected_node.transform_matrix, );
     ImGui::Text("Transform Matrix");
-    auto &m = selected_node.transform_matrix;
+    auto& m = selected_node.get_matrix();
     float row_a[4] = {m[0][0], m[1][0], m[2][0], m[3][0]};
     float row_b[4] = {m[0][1], m[1][1], m[2][1], m[3][1]};
     float row_c[4] = {m[0][2], m[1][2], m[2][2], m[3][2]};
@@ -263,30 +263,32 @@ MeshObject process_mesh(
 }
 
 NodeObject process_node(std::shared_ptr<Model> &model, Node &node) {
-    NodeObject node_object;
+    NodeObject node_object {};
     if (node.matrix.size() == 16) {
-        node_object.transform_matrix = glm::mat4(
-            node.matrix[0], node.matrix[1], node.matrix[2], node.matrix[3],
-            node.matrix[4], node.matrix[5], node.matrix[6], node.matrix[7],
-            node.matrix[8], node.matrix[9], node.matrix[10], node.matrix[11],
+        glm::mat4 matrix {
+            node.matrix[0],  node.matrix[1],  node.matrix[2],  node.matrix[3],
+            node.matrix[4],  node.matrix[5],  node.matrix[6],  node.matrix[7],
+            node.matrix[8],  node.matrix[9],  node.matrix[10], node.matrix[11],
             node.matrix[12], node.matrix[13], node.matrix[14], node.matrix[15]
-        );
-        //glm::decompose to extract transform, rotation, and scale
+        };
+        glm::vec3 scale;
+        glm::quat rotation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+        node_object.set_translation(translation);
+        node_object.set_rotation(rotation);
+        node_object.set_scale(scale);
     }
-    if (node.translation.size() > 0) {
-        node_object.transform = glm::make_vec3(
-            node.translation.data()
-        );
+    if (node.translation.size() == 3) {
+        node_object.set_translation(glm::make_vec3(node.translation.data()));
     }
-    if (node.scale.size() > 0) {
-        node_object.scale = glm::make_vec3(
-            node.scale.data()
-        );
+    if (node.scale.size() == 3) {
+        node_object.set_scale(glm::make_vec3(node.scale.data()));
     }
-    if (node.rotation.size() > 0) {
-        node_object.rotation = glm::make_vec4(
-            node.rotation.data()
-        );
+    if (node.rotation.size() == 4) {
+        node_object.set_rotation(glm::make_quat( node.rotation.data()));
     }
     // Load our mesh
     if (node.mesh != -1) {

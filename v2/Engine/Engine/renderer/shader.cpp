@@ -71,7 +71,7 @@ void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
     if (uniforms.count(u_name) == 0)
         return;
     GLuint location = uniforms[u_name].index;
-    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(vec));
+    glUniform3fv(location, 1, glm::value_ptr(vec));
 }
 
 void Shader::register_vertex_array(std::shared_ptr<VertexArray> vao) {

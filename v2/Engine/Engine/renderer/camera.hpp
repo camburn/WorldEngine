@@ -53,7 +53,7 @@ public:
     virtual void on_ui_render(bool display) override;
 
 private:
-    glm::vec3 look_at  {0.0f, 1.0f, 0.0f};
+    glm::vec3 look_at  {0.0f, 0.0f, 0.0f};
     glm::vec3 up {0.0f, 1.0f, 0.0f};
 };
 

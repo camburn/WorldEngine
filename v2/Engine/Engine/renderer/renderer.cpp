@@ -33,8 +33,7 @@ void Renderer::submit_node(
         const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity,
         NodeObject &node_object, glm::mat4 global_transform
     ) {
-    // Update node uniforms (transform)
-    glm::mat4 current_transform = node_object.transform_matrix * global_transform;
+    glm::mat4 current_transform = global_transform * node_object.get_matrix();
     shader->upload_u_mat4("u_model", current_transform);
 
     for (PrimitiveObject prim: node_object.mesh.primitives) {
@@ -57,16 +56,14 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
     // send global uniforms
     shader->upload_u_mat4("u_view_projection", scene_data->view_projection_matrix);
     
-
     entity->update_buffers(shader);
-
-    submit_node(
-        shader, entity, std::static_pointer_cast<GltfEntity>(entity)->get_node(),
-        entity->uniform_mat4_data["u_model"]
-    );
-
-    return;
-
+    if (std::dynamic_pointer_cast<GltfEntity>(entity)) {
+        submit_node(
+            shader, entity, std::static_pointer_cast<GltfEntity>(entity)->get_node(),
+            entity->uniform_mat4_data["u_model"]
+        );
+        return;
+    }
 
     // Send Entity uniforms
     for (auto const &[name, data]: entity->uniform_vec4_data) {
