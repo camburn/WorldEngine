@@ -16,9 +16,7 @@ uniform sampler2D normal;
 // Metallic from B channel
 uniform sampler2D ambient_roughness_metallic;
 
-
 // First light is always directional
-uniform float ambient_strength = 0.8;
 
 uniform vec3 u_camera_position;
 uniform vec3 u_lightpos[MAX_LIGHTS];
@@ -102,7 +100,7 @@ void main() {
             radiance = u_lightcolor[i];
         } else {
             //Attenuation is for a point light
-            vec3 radiance = u_lightcolor[i] * attenuation;
+            radiance = u_lightcolor[i] * attenuation;
         }
         // Not using it results in a directional light
 
