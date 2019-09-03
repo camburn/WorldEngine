@@ -60,31 +60,83 @@ void Shader::unbind() {
 }
 
 void Shader::upload_u_mat4(const std::string& u_name, const glm::mat4& matrix) {
-    if (uniforms.count(u_name) == 0)
+    if (!uniform_supported(u_name))
         return;
-    GLuint location = uniforms[u_name].index;
+    GLuint location = uniform_location(u_name);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 void Shader::upload_u_vec4(const std::string& u_name, const glm::vec4& vec) {
-    if (uniforms.count(u_name) == 0)
+    if (!uniform_supported(u_name))
         return;
-    GLuint location = uniforms[u_name].index;
+    GLuint location = uniform_location(u_name);
     glUniform4fv(location, 1, glm::value_ptr(vec));
 }
 
 void Shader::upload_u_vec3(const std::string& u_name, const glm::vec3& vec) {
-    if (uniforms.count(u_name) == 0)
+    if (!uniform_supported(u_name))
         return;
-    GLuint location = uniforms[u_name].index;
+    GLuint location = uniform_location(u_name);
     glUniform3fv(location, 1, glm::value_ptr(vec));
 }
 
-void Shader::upload_u_int1(const std::string& u_name, const GLint& value) {
-    if (uniforms.count(u_name) == 0)
+void Shader::upload_u_vec3(const std::string& u_name, const std::vector<glm::vec3>& vecs) {
+    if (!uniform_supported(u_name))
         return;
-    GLuint location = uniforms[u_name].index;
+    GLuint location = uniform_location(u_name);
+    glUniform3fv(location, vecs.size(), glm::value_ptr(vecs[0]));
+}
+
+void Shader::upload_u_int1(const std::string& u_name, const GLint& value) {
+    if (!uniform_supported(u_name))
+        return;
+    GLuint location = uniform_location(u_name);
     glUniform1i(location, value);
+}
+
+bool Shader::attribute_supported(std::string name) {
+    name = GLTF_TO_SHADER_ATTRIBUTE[name];
+    for (auto & [index, attribute]: attributes) {
+        if (attribute.name == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int Shader::attribute_location(std::string name) {
+    name = GLTF_TO_SHADER_ATTRIBUTE[name];
+    for (auto & [index, attribute]: attributes) {
+        if (attribute.name == name) {
+            return attribute.index;
+        }
+    }
+    return -1;
+}
+
+bool Shader::uniform_supported(std::string name) {
+    if (uniforms.count(name) > 0) {
+        return true;
+    }
+    return false;
+}
+
+int Shader::uniform_location(std::string name) {
+    if (uniforms.count(name) > 0) {
+        return uniforms.at(name).index;
+    }
+    return -1;
+}
+
+int Shader::uniform_texture_unit(std::string name) {
+    if (uniforms.count(name) > 0) {
+        return uniforms.at(name).texture_unit;
+    }
+    return -1;
+}
+
+std::string Shader::attribute_name_normalise(std::string name) {
+    return GLTF_TO_SHADER_ATTRIBUTE[name];
 }
 
 void Shader::register_vertex_array(std::shared_ptr<VertexArray> vao) {
@@ -105,23 +157,39 @@ void Shader::inspect_uniforms() {
     GLint texture_unit = 0;
 
     const GLsizei bufSize = 32; // maximum name length
-    GLchar name[bufSize]; // variable name in GLSL
+    GLchar c_name[bufSize]; // variable name in GLSL
     GLsizei length; // name length
 
     glGetProgramiv(shader_id, GL_ACTIVE_UNIFORMS, &count);
     //uniforms.reserve(count);
 
-    for (i = 0; i < count; i++)
-    {
-        glGetActiveUniform(shader_id, i, bufSize, &length, &size, &type, name);
+    for (i = 0; i < count; i++) {
+        glGetActiveUniform(shader_id, i, bufSize, &length, &size, &type, c_name);
+        std::string name = std::string(c_name);
         if (type == GL_SAMPLER_2D) {
             // Assign a texture unit
-            uniforms.try_emplace(std::string{name}, i, std::string{name}, type, size, texture_unit);
+            uniforms.try_emplace(name, i, name, type, size, texture_unit);
             ENGINE_INFO("Attribute #{0} Type: {1} Name: {2} TextureUnit: {3}", i, enginegl::GLENUM_NAMES.at(type), name, texture_unit);
             texture_unit++;
         } else {
-            ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", i, enginegl::GLENUM_NAMES.at(type), size, name);
-            uniforms.try_emplace(std::string{name}, i, std::string{name}, type, size);
+            if (name.find("[") < name.length()) {
+                GLint attribute_location=  -2;
+                int counter = 0;
+                while (true) {
+                    name.pop_back(); name.pop_back();
+                    name = name + std::to_string(counter) + "]";
+                    attribute_location = glGetUniformLocation(shader_id, name.c_str());
+                    if (attribute_location == -1)
+                        break;
+                    ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);
+                    uniforms.try_emplace(name, attribute_location, name, type, size);
+                    counter++;
+                }
+            }else {
+                GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
+                ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);
+                uniforms.try_emplace(name, attribute_location, name, type, size);
+            }
         }
     }
 }
@@ -228,7 +296,7 @@ void Shader::on_ui_render(bool draw) {
         ImGui::InputTextMultiline(
             "Fragment Shader",
             &fs_data,
-            ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
+            ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 64),
             flags,
             nullptr
         );

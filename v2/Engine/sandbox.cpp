@@ -38,8 +38,8 @@ public:
         std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
-        color_shader.reset(new Shader{ vs_file_color, fs_file_color });
-        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
+        //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         #else
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/fragment_simple.glsl";
@@ -51,8 +51,8 @@ public:
         std::string fs_file = "./shaders/fragment.glsl";
 
         texture_shader.reset(new Shader{ vs_file, fs_file });
-        color_shader.reset(new Shader{ vs_file_color, fs_file_color });
-        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
+        //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         #endif
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
@@ -67,10 +67,10 @@ public:
             "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
             //"/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/GearboxAssy/glTF/GearboxAssy.gltf"
         );
-        cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+        //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         //monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
-        square.reset( new CustomEntity());
+        //square.reset( new CustomEntity());
         
         std::vector<glm::vec4> data = {
             {  0.5f,  0.5f, 0.0f, 1.0f },
@@ -99,19 +99,19 @@ public:
 
         std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
-        std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
+        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
+        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
+        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
+        //std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
 
-        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
+        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        //square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
         entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
         entities["monkey"]->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
 
-        cube->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
-        cube->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
+        //cube->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+        //cube->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
 
         entities["helmet"]->add_uniform_data("u_color", glm::vec4(0.4f, 0.8f, 0.4f, 1.0f));
         entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
@@ -119,9 +119,8 @@ public:
         
         checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
 
-        entities["helmet"]->update_buffers(color_shader);
         for (auto& [name, entity]: entities) {
-            entity->update_buffers(color_shader);
+            entity->update_buffers(texture_shader);
         }
     }
 
@@ -134,8 +133,12 @@ public:
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
         ImGui::SetNextItemWidth(50.f);
         ImGui::InputFloat("Camera radius", &camera_radius);
-        ImGui::InputFloat3("Light Position", &light_position.x);
-        ImGui::InputFloat3("Light Color", &light_color.r);
+        ImGui::InputFloat3("Dir Light Position", &light_position.x);
+        ImGui::InputFloat3("Dir Light Color", &light_color.r);
+        ImGui::InputFloat3("Point Light Position", &light_position_b.x);
+        ImGui::InputFloat3("Point Light Color", &light_color_b.r);
+        glm::vec3 camera_pos = camera->get_position();
+        ImGui::InputFloat3("Camera Position", &camera_pos.x);
         
         ImGui::Separator();
         ImGui::Text("Entities");
@@ -225,49 +228,59 @@ public:
         if (camera_rotate) {
             camera->set_position(glm::vec3(camX, 0.0f, camZ));
         }
-        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
 
         texture_shader->bind();
-        texture_shader->upload_u_vec3("u_lightpos", light_position);
-        texture_shader->upload_u_vec3("u_lightcolor", light_color);
+        //texture_shader->upload_u_vec3("u_lightpos[0]",
+        //    std::vector<glm::vec3> { light_position, light_position_b });
+        //texture_shader->upload_u_vec3("u_lightcolor[0]",
+        //    std::vector<glm::vec3> { light_color, light_color_b });
+        texture_shader->upload_u_vec3("u_lightpos[0]", light_position);
+        texture_shader->upload_u_vec3("u_lightpos[1]", light_position_b);
+        texture_shader->upload_u_vec3("u_lightcolor[0]", light_color);
+        texture_shader->upload_u_vec3("u_lightcolor[1]", light_color_b);
+        
+        texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
 
-        cube->add_uniform_data("u_color", glm::vec4(light_color, 1.0f));
-        cube->add_uniform_data("u_model", 
-            glm::translate(glm::mat4(1.0f), light_position) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1))
-        );
+        //cube->add_uniform_data("u_color", glm::vec4(light_color, 1.0f));
+        //cube->add_uniform_data("u_model", 
+        //    glm::translate(glm::mat4(1.0f), light_position) *
+        //    glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1))
+        //);
 
         Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
 
         checker_texture->bind();
-        Renderer::submit_entity(texture_shader, square);
+        //Renderer::submit_entity(texture_shader, square);
         
         for (auto& [name, entity]: entities) {
             if (entity->draw)
                 Renderer::submit_entity(texture_shader, entity);
         }
 
-        Renderer::submit_entity(simple_shader, cube);
+        //Renderer::submit_entity(simple_shader, cube);
     }
 
 private:
-    std::shared_ptr<Shader> color_shader;
+    //std::shared_ptr<Shader> color_shader;
     std::shared_ptr<Shader> texture_shader;
-    std::shared_ptr<Shader> simple_shader;
+    //std::shared_ptr<Shader> simple_shader;
 
     std::shared_ptr<Camera> camera;
 
-    std::shared_ptr<Entity> square;
-    std::shared_ptr<Entity> cube;
+    //std::shared_ptr<Entity> square;
+    //std::shared_ptr<Entity> cube;
 
     std::map<std::string, std::shared_ptr<Entity>> entities;
 
     std::shared_ptr<Texture> checker_texture;
 
     glm::mat4 model_matrix {1.0f};
-    glm::vec3 model_position {0.0f};
+    glm::vec3 model_position {0.0f, 2.0f, 0.0f};
     glm::vec3 light_position {5, 5, 5};
-    glm::vec3 light_color {1, 1, 1};
+    glm::vec3 light_color {150, 150, 150};
+    glm::vec3 light_position_b {1, 0, 0};
+    glm::vec3 light_color_b {150, 0, 0};
     
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;

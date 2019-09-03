@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
 
 #include <glad/glad.h>
 
@@ -30,46 +31,17 @@ public:
     void upload_u_mat4(const std::string& u_name, const glm::mat4& matrix);
     void upload_u_vec4(const std::string& u_name, const glm::vec4& vec);
     void upload_u_vec3(const std::string& u_name, const glm::vec3& vec);
+    void upload_u_vec3(const std::string& u_name, const std::vector<glm::vec3>& vecs);
     void upload_u_int1(const std::string& u_name, const GLint& value);
 
     BufferLayout attribute_layout();
-    bool attribute_supported(std::string name) {
-        name = GLTF_TO_SHADER_ATTRIBUTE[name];
-        for (auto & [index, attribute]: attributes) {
-            if (attribute.name == name) {
-                return true;
-            }
-        }
-        return false;
-    }
+    bool attribute_supported(std::string name);
+    int attribute_location(std::string name);
+    std::string attribute_name_normalise(std::string name);
 
-    int attribute_location(std::string name) {
-        name = GLTF_TO_SHADER_ATTRIBUTE[name];
-        for (auto & [index, attribute]: attributes) {
-            if (attribute.name == name) {
-                return attribute.index;
-            }
-        }
-        return -1;
-    }
-
-    bool uniform_supported(std::string name) {
-        if (uniforms.count(name) > 0) {
-            return true;
-        }
-        return false;
-    }
-
-    int uniform_texture_unit(std::string name) {
-        if (uniforms.count(name) > 0) {
-            return uniforms[name].texture_unit;
-        }
-        return -1;
-    }
-
-    std::string attribute_name_normalise(std::string name) {
-        return GLTF_TO_SHADER_ATTRIBUTE[name];
-    }
+    bool uniform_supported(std::string name);
+    int uniform_location(std::string name);
+    int uniform_texture_unit(std::string name);
 
 private:
     std::map<std::string, std::string> GLTF_TO_SHADER_ATTRIBUTE {
