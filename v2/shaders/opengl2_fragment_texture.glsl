@@ -1,6 +1,6 @@
 #version 120
 
-const int MAX_LIGHTS = 2;
+const int MAX_LIGHTS = 3;
 const float PI = 3.14159265359;
 
 varying vec3 f_normal;
@@ -14,7 +14,8 @@ uniform sampler2D normal;
 // Ambient Occlusion from R channel
 // Roughness from G channel
 // Metallic from B channel
-uniform sampler2D ambient_roughness_metallic;
+uniform sampler2D roughness_metallic;
+uniform sampler2D ambient;
 
 // First light is always directional
 
@@ -27,8 +28,8 @@ vec3 get_normal_from_map() {
 
     vec3 Q1 = dFdx(f_worldpos);
     vec3 Q2 = dFdy(f_worldpos);
-    vec3 st1 = dFdx(f_worldpos);
-    vec3 st2 = dFdy(f_worldpos);
+    vec2 st1 = dFdx(f_texcoord);
+    vec2 st2 = dFdy(f_texcoord);
 
     vec3 N = normalize(f_normal);
     vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
@@ -78,9 +79,9 @@ void main() {
     
     //vec3 albedo_sample = pow(texture2D(albedo, f_texcoord).rgb, vec3(2.2)); // sRGB Converter
     vec3 albedo_sample = texture2D(albedo, f_texcoord).rgb;
-    float ambient_occlusion = texture2D(ambient_roughness_metallic, f_texcoord).r;
-    float roughness = texture2D(ambient_roughness_metallic, f_texcoord).g;
-    float metallic = texture2D(ambient_roughness_metallic, f_texcoord).b;
+    float ambient_occlusion = texture2D(ambient, f_texcoord).r;
+    float roughness = texture2D(roughness_metallic, f_texcoord).g;
+    float metallic = texture2D(roughness_metallic, f_texcoord).b;
 
     vec3 N = get_normal_from_map();
     vec3 V = normalize(u_camera_position - f_worldpos);
@@ -123,9 +124,9 @@ void main() {
         Lo += (kD * albedo_sample / PI + specular) * radiance * NdotL;
     }
 
-    vec3 ambient = vec3(0.03) * albedo_sample * ambient_occlusion;
+    vec3 ambient_value = vec3(0.03) * albedo_sample * ambient_occlusion;
 
-    vec3 color = ambient * Lo;
+    vec3 color = ambient_value * Lo;
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // Gamma correction

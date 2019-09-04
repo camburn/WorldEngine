@@ -65,7 +65,7 @@ public:
         // It requires object count and data type (uint/ushort)
         entities["helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
-            //"/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/GearboxAssy/glTF/GearboxAssy.gltf"
+            //"/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/SciFiHelmet/glTF/SciFiHelmet.gltf"
         );
         //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         //monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
@@ -131,12 +131,19 @@ public:
     void on_ui_render() override {
         ImGui::Begin("Entities");
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
+        
         ImGui::SetNextItemWidth(50.f);
         ImGui::InputFloat("Camera radius", &camera_radius);
         ImGui::InputFloat3("Dir Light Position", &light_position.x);
         ImGui::InputFloat3("Dir Light Color", &light_color.r);
-        ImGui::InputFloat3("Point Light Position", &light_position_b.x);
-        ImGui::InputFloat3("Point Light Color", &light_color_b.r);
+        ImGui::Separator();
+        ImGui::InputFloat("Light A radius", &light_radius);
+        ImGui::Checkbox("Rotate Light A", &light_rotate);
+        ImGui::InputFloat3("Point Light Position A", &light_position_b.x);
+        ImGui::InputFloat3("Point Light Color A", &light_color_b.r);
+        ImGui::Separator();
+        ImGui::InputFloat3("Point Light Position B", &light_position_c.x);
+        ImGui::InputFloat3("Point Light Color B", &light_color_c.r);
         glm::vec3 camera_pos = camera->get_position();
         ImGui::InputFloat3("Camera Position", &camera_pos.x);
         
@@ -223,10 +230,16 @@ public:
             }
         }
 
-        float camX = sin(glfwGetTime()) * camera_radius;
-        float camZ = cos(glfwGetTime()) * camera_radius;
+
         if (camera_rotate) {
+            float camX = sin(glfwGetTime()) * camera_radius;
+            float camZ = cos(glfwGetTime()) * camera_radius;
             camera->set_position(glm::vec3(camX, 0.0f, camZ));
+        }
+        if (light_rotate) {
+            float lightX = sin(glfwGetTime()) * light_radius;
+            float lightZ = cos(glfwGetTime()) * light_radius;
+            light_position_b = glm::vec3(lightX, 0.0f, lightZ);
         }
         //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
 
@@ -237,8 +250,10 @@ public:
         //    std::vector<glm::vec3> { light_color, light_color_b });
         texture_shader->upload_u_vec3("u_lightpos[0]", light_position);
         texture_shader->upload_u_vec3("u_lightpos[1]", light_position_b);
+        texture_shader->upload_u_vec3("u_lightpos[2]", light_position_c);
         texture_shader->upload_u_vec3("u_lightcolor[0]", light_color);
         texture_shader->upload_u_vec3("u_lightcolor[1]", light_color_b);
+        texture_shader->upload_u_vec3("u_lightcolor[2]", light_color_c);
         
         texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
 
@@ -281,6 +296,8 @@ private:
     glm::vec3 light_color {150, 150, 150};
     glm::vec3 light_position_b {1, 0, 0};
     glm::vec3 light_color_b {150, 0, 0};
+    glm::vec3 light_position_c {-1, 0, 0};
+    glm::vec3 light_color_c {0, 150, 0};
     
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;
@@ -288,7 +305,9 @@ private:
     float last_frame_time = 0.0f;
 
     float camera_radius = 1.0f;
+    float light_radius = 1.0f;
     bool camera_rotate = false;
+    bool light_rotate = false;
     bool draw_gears = true;
 };
 

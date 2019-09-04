@@ -26,8 +26,8 @@ vec3 get_normal_from_map() {
 
     vec3 Q1 = dFdx(f_worldpos);
     vec3 Q2 = dFdy(f_worldpos);
-    vec3 st1 = dFdx(f_worldpos);
-    vec3 st2 = dFdy(f_worldpos);
+    vec2 st1 = dFdx(f_texcoord);
+    vec2 st2 = dFdy(f_texcoord);
 
     vec3 N = normalize(f_normal);
     vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);

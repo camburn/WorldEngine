@@ -157,10 +157,16 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
     }
     int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
     int ao_index = material.occlusionTexture.index;
+    // TODO: Handle when ambient is a seperate texture to roughness_metallic
     if (mr_index > -1 && ao_index > -1 && mr_index == ao_index
-            && shader->uniform_supported("ambient_roughness_metallic")) {
+            && shader->uniform_supported("roughness_metallic")
+            && shader->uniform_supported("ambient")
+        ) {
         material_object.textures.push_back(
-            process_texture(model, model->textures[mr_index], "ambient_roughness_metallic", shader)
+            process_texture(model, model->textures[mr_index], "roughness_metallic", shader)
+        );
+        material_object.textures.push_back(
+            process_texture(model, model->textures[mr_index], "ambient", shader)
         );
     }
     material_object.texture_id = -1;

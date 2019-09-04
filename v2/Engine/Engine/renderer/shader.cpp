@@ -224,33 +224,6 @@ BufferLayout Shader::attribute_layout() {
     }
     return BufferLayout {elements};
 }
-#if 0
-void Shader::program_resources() {
-    // TODO: Use this (newer method)
-    // This might require a later version of OpenGL
-    GLint numActiveAttribs = 0;
-    GLint numActiveUniforms = 0;
-    glGetProgramInterfaceiv(shader_id, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numActiveAttribs);
-    glGetProgramInterfaceiv(shader_id, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numActiveUniforms);
-
-    std::vector<GLchar> nameData(256);
-    std::vector<GLenum> properties;
-    properties.push_back(GL_NAME_LENGTH);
-    properties.push_back(GL_TYPE);
-    properties.push_back(GL_ARRAY_SIZE);
-    std::vector<GLint> values(properties.size());
-    for(int attrib = 0; attrib < numActiveAttribs; ++attrib)
-    {
-        glGetProgramResourceiv(shader_id, GL_PROGRAM_INPUT, attrib, properties.size(),
-            &properties[0], values.size(), NULL, &values[0]);
-
-        nameData.resize(values[0]); //The length of the name.
-        glGetProgramResourceName(shader_id, GL_PROGRAM_INPUT, attrib, nameData.size(), NULL, &nameData[0]);
-        std::string name((char*)&nameData[0], nameData.size() - 1);
-        ENGINE_INFO("Name: {0]", name);
-    }
-}
-#endif
 
 void Shader::on_ui_render(bool draw) {
     static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
