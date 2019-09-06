@@ -39,7 +39,7 @@ public:
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
-        //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         #else
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/fragment_simple.glsl";
@@ -52,7 +52,7 @@ public:
 
         texture_shader.reset(new Shader{ vs_file, fs_file });
         //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
-        //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         #endif
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
@@ -64,10 +64,12 @@ public:
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
         entities["helmet"] = GltfEntity::load_from_file(
-            "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
-            //"/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/SciFiHelmet/glTF/SciFiHelmet.gltf"
+            "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
         );
-        //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+        entities["flight_helmet"] = GltfEntity::load_from_file(
+            "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
+        );
+        cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         //monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         //square.reset( new CustomEntity());
@@ -108,13 +110,13 @@ public:
         //square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
         entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
-        entities["monkey"]->add_uniform_data("u_color", glm::vec4(0.3f, 0.2f, 0.8f, 1.0f));
 
-        //cube->add_uniform_data("u_color", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
-        //cube->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)));
-
-        entities["helmet"]->add_uniform_data("u_color", glm::vec4(0.4f, 0.8f, 0.4f, 1.0f));
         entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
+
+        entities["flight_helmet"]->add_uniform_data("u_model",
+            glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(4, 4, 4))
+        );
         //gearbox->add_uniform_data("u_model", glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.25)));
         
         checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
@@ -130,6 +132,7 @@ public:
 
     void on_ui_render() override {
         ImGui::Begin("Entities");
+        ImGui::InputInt("Render Mode", &render_mode);
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
         
         ImGui::SetNextItemWidth(50.f);
@@ -256,6 +259,7 @@ public:
         texture_shader->upload_u_vec3("u_lightcolor[2]", light_color_c);
         
         texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
+        texture_shader->upload_u_int1("u_render_mode", render_mode);
 
         //cube->add_uniform_data("u_color", glm::vec4(light_color, 1.0f));
         //cube->add_uniform_data("u_model", 
@@ -273,18 +277,32 @@ public:
                 Renderer::submit_entity(texture_shader, entity);
         }
 
-        //Renderer::submit_entity(simple_shader, cube);
+        // Draw light positions
+        simple_shader->bind();
+        cube->add_uniform_data("u_color", glm::vec4(light_color_b, 1.0f));
+        cube->add_uniform_data("u_model", 
+            glm::translate(glm::mat4(1.0f), light_position_b) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05))
+        );
+        Renderer::submit_entity(simple_shader, cube);
+        
+        cube->add_uniform_data("u_color", glm::vec4(light_color_c, 1.0f));
+        cube->add_uniform_data("u_model", 
+            glm::translate(glm::mat4(1.0f), light_position_c) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05))
+        );
+        Renderer::submit_entity(simple_shader, cube);
     }
 
 private:
     //std::shared_ptr<Shader> color_shader;
     std::shared_ptr<Shader> texture_shader;
-    //std::shared_ptr<Shader> simple_shader;
+    std::shared_ptr<Shader> simple_shader;
 
     std::shared_ptr<Camera> camera;
 
     //std::shared_ptr<Entity> square;
-    //std::shared_ptr<Entity> cube;
+    std::shared_ptr<Entity> cube;
 
     std::map<std::string, std::shared_ptr<Entity>> entities;
 
@@ -309,6 +327,8 @@ private:
     bool camera_rotate = false;
     bool light_rotate = false;
     bool draw_gears = true;
+
+    int render_mode = 0;
 };
 
 int main() {

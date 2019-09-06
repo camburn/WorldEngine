@@ -36,6 +36,8 @@ void Renderer::submit_node(
     glm::mat4 current_transform = global_transform * node_object.get_matrix();
     shader->upload_u_mat4("u_model", current_transform);
 
+    std::vector<int> used_texture_units;
+
     for (PrimitiveObject prim: node_object.mesh.primitives) {
         // Update uniforms (color, textures)
         shader->upload_u_vec4("u_color", prim.material.color);
@@ -43,10 +45,20 @@ void Renderer::submit_node(
         for (auto& texture: prim.material.textures) {
             if (texture.texture_id != -1) {
                 renderer_api->map_texture_unit(texture.texture_id, texture.texture_unit);
+                used_texture_units.push_back(texture.texture_unit);
             }
+        }
+        // Custom uniforms will override material ones, need to merge the
+        // representations
+        for (auto const &[name, data]: entity->uniform_vec4_data) {
+            shader->upload_u_vec4(name, data);
         }
         // Submit draw call with VAO
         renderer_api->draw_indexed(prim.vao);
+
+        for (int unit: used_texture_units) {
+            renderer_api->map_texture_unit(0, unit);
+        }
     }
 
     for (NodeObject child: node_object.children) {
@@ -65,6 +77,7 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
             shader, entity, std::static_pointer_cast<GltfEntity>(entity)->get_node(),
             entity->uniform_mat4_data["u_model"]
         );
+
         return;
     }
 

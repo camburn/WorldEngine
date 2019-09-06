@@ -109,7 +109,7 @@ GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
         return 0;
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
         image.width, image.height,
         0, format, image.pixel_type, &image.image.at(0)
     );

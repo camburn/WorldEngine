@@ -127,7 +127,7 @@ TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, s
     }
     Image image = model->images[texture.source];
     GLuint tex_id = enginegl::buffer_image(sampler, image);
-    ENGINE_INFO("Loaded image - {0}: {1}", name, tex_id);
+    ENGINE_INFO("Loaded image - {0}: {1}: {2}", name, tex_id, image.uri);
     GLint texture_unit = shader->uniform_texture_unit(name);
     return TextureObject {tex_id, texture_unit};
 }
@@ -156,17 +156,22 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         );
     }
     int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-    int ao_index = material.occlusionTexture.index;
     // TODO: Handle when ambient is a seperate texture to roughness_metallic
-    if (mr_index > -1 && ao_index > -1 && mr_index == ao_index
-            && shader->uniform_supported("roughness_metallic")
-            && shader->uniform_supported("ambient")
-        ) {
+    if (mr_index > -1 && shader->uniform_supported("roughness_metallic") ) {
         material_object.textures.push_back(
             process_texture(model, model->textures[mr_index], "roughness_metallic", shader)
         );
+    }
+    int ao_index = material.occlusionTexture.index;
+    if (ao_index > -1 && shader->uniform_supported("ambient")) {
         material_object.textures.push_back(
-            process_texture(model, model->textures[mr_index], "ambient", shader)
+            process_texture(model, model->textures[ao_index], "ambient", shader)
+        );
+    }
+    int emission_index = material.emissiveTexture.index;
+    if (emission_index > -1 && shader->uniform_supported("emission")) {
+        material_object.textures.push_back(
+            process_texture(model, model->textures[emission_index], "emission", shader)
         );
     }
     material_object.texture_id = -1;
