@@ -64,7 +64,7 @@ public:
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
         entities["helmet"] = GltfEntity::load_from_file(
-            "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
+            "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf"
         );
         entities["flight_helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
