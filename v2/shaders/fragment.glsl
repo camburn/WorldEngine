@@ -13,11 +13,15 @@ uniform sampler2D normal;
 // Ambient Occlusion from R channel
 // Roughness from G channel
 // Metallic from B channel
-uniform sampler2D ambient_roughness_metallic;
+uniform sampler2D roughness_metallic;
+uniform sampler2D ambient;
+uniform sampler2D emission;
 
 uniform vec3 u_camera_position;
 uniform vec3 u_lightpos[MAX_LIGHTS];
 uniform vec3 u_lightcolor[MAX_LIGHTS];
+
+uniform int u_render_mode = 0;
 
 out vec4 out_color;
 
@@ -75,18 +79,18 @@ vec3 fresnel_schlick(float cos_theta, vec3 F0)
 
 void main() {
 
-    //vec3 albedo_sample = pow(texture2D(albedo, f_texcoord).rgb, vec3(2.2)); // sRGB Converter
-    vec3 albedo_sample = texture(albedo, f_texcoord).rgb;
-    float ambient_occlusion = texture(ambient_roughness_metallic, f_texcoord).r;
-    float roughness = texture(ambient_roughness_metallic, f_texcoord).g;
-    float metallic = texture(ambient_roughness_metallic, f_texcoord).b;
-
+    vec4 albedo_sample = pow(texture2D(albedo, f_texcoord), vec4(2.2, 2.2, 2.2, 1)); // sRGB Converter
+    //vec4 albedo_sample = texture(albedo, f_texcoord);
+    float ambient_occlusion = texture(ambient, f_texcoord).r;
+    float roughness = texture(roughness_metallic, f_texcoord).g;
+    float metallic = texture(roughness_metallic, f_texcoord).b;
+    vec3 emission_sample = texture2D(emission, f_texcoord).xyz;
 
     vec3 N = get_normal_from_map();
     vec3 V = normalize(u_camera_position - f_worldpos);
 
     vec3 F0 = vec3(0.4);
-    F0 = mix(F0, albedo_sample, metallic);
+    F0 = mix(F0, albedo_sample.xyz, metallic);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -120,16 +124,36 @@ void main() {
 
         float NdotL = max(dot(N, L), 0.0);
 
-        Lo += (kD * albedo_sample / PI + specular) * radiance * NdotL;
+        Lo += (kD * albedo_sample.xyz / PI + specular) * radiance * NdotL;
     }
 
-    vec3 ambient = vec3(0.03) * albedo_sample * ambient_occlusion;
+    vec3 ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
 
-    vec3 color = ambient * Lo;
+    vec3 color = ambient_value * Lo;
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // Gamma correction
     color = pow(color, vec3(1.0/2.2));
 
-    out_color = vec4(color, 1);
+    color += emission_sample.xyz;
+
+    vec4 final_color = vec4(color, albedo_sample.a);
+
+    // Debug modes
+    if (u_render_mode == 1) final_color = albedo_sample;
+    else if (u_render_mode == 2) final_color = vec4(vec3(metallic), 1);
+    else if (u_render_mode == 3) final_color = vec4(vec3(roughness), 1);
+    else if (u_render_mode == 4) final_color = vec4(vec3(ambient_occlusion), 1);
+    else if (u_render_mode == 5) final_color = vec4(emission_sample, 1);
+    else if (u_render_mode == 6) final_color = vec4(Lo, 1);
+    else if (u_render_mode == 7) final_color = vec4(1); // lighting
+    else if (u_render_mode == 8) final_color = vec4(1); // fresnel
+    else if (u_render_mode == 9) final_color = vec4(1); // irradiance
+    else if (u_render_mode == 10) final_color = vec4(1); // reflection
+    else if (u_render_mode == 11) final_color = vec4(f_normal, 1); // normal
+    else if (u_render_mode == 12) final_color = vec4(texture2D(normal, f_texcoord).xyz, 1); // texture_normal
+    else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
+    else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
+    
+    out_color = final_color;
 }
