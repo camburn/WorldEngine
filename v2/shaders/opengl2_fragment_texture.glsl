@@ -81,8 +81,8 @@ vec3 fresnel_schlick(float cos_theta, vec3 F0)
 
 void main() {
     
-    //vec3 albedo_sample = pow(texture2D(albedo, f_texcoord).rgb, vec3(2.2)); // sRGB Converter
-    vec4 albedo_sample = texture2D(albedo, f_texcoord);
+    vec4 albedo_sample = pow(texture2D(albedo, f_texcoord), vec4(2.2, 2.2, 2.2, 1)); // sRGB Converter
+    //vec4 albedo_sample = texture2D(albedo, f_texcoord);
     float ambient_occlusion = texture2D(ambient, f_texcoord).r;
     float roughness = texture2D(roughness_metallic, f_texcoord).g;
     float metallic = texture2D(roughness_metallic, f_texcoord).b;

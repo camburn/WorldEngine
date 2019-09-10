@@ -81,10 +81,10 @@ public:
         square.reset( new CustomEntity());
         
         std::vector<glm::vec4> data = {
-            {  5.0f, 0.0f,  5.0f, 1.0f },
-            {  5.0f, 0.0f, -5.0f, 1.0f },
-            { -5.0f, 0.0f, -5.0f, 1.0f },
-            { -5.0f, 0.0f,  5.0f, 1.0f }
+            {  3.0f, 0.0f,  3.0f, 1.0f },
+            {  3.0f, 0.0f, -3.0f, 1.0f },
+            { -3.0f, 0.0f, -3.0f, 1.0f },
+            { -3.0f, 0.0f,  3.0f, 1.0f }
         };
         std::vector<glm::vec4> colors = {
             { 0.8f, 0.2f, 0.2f, 1.0f },
@@ -338,7 +338,7 @@ private:
     std::shared_ptr<Texture> dirt_normal_texture;
 
     glm::mat4 model_matrix {1.0f};
-    glm::vec3 model_position {0.0f, -5.0f, 0.0f};
+    glm::vec3 model_position {0.0f, -2.0f, 0.0f};
     glm::vec3 light_position {5, 5, 5};
     glm::vec3 light_color {150, 150, 150};
     glm::vec3 light_position_b {1, 0, 0};
