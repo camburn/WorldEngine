@@ -25,7 +25,7 @@ public:
     unsigned int get_height() override;
     const std::string name = "Linux Window";
 
-    void* get_native_window() const {return window;}
+    void* get_native_window() const override {return window;}
 
 private:
     void init(std::string title);

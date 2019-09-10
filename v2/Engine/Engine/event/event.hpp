@@ -11,6 +11,7 @@ enum EVENT_TYPE {
     ENGINE_MOUSE_EVENT = 1 << 3,
     ENGINE_UI_EVENT = 1 << 4,
     ENGINE_APPLICATION_EVENT = 1 << 5,
+    ENGINE_WINDOW_RESIZE_EVENT = 1 << 6
 };
 
 class Event {
@@ -32,7 +33,6 @@ public:
 
     static EVENT_TYPE get_static_type() { return ENGINE_TEXT_EVENT; }
     virtual EVENT_TYPE get_type() const override { return get_static_type(); }
-    //static const EVENT_TYPE type = TEXT_EVENT;
 };
 
 enum APP_FLAG {
@@ -46,7 +46,16 @@ public:
 
     static EVENT_TYPE get_static_type() { return ENGINE_APPLICATION_EVENT; }
     virtual EVENT_TYPE get_type() const override { return get_static_type(); }
-    //static const EVENT_TYPE type = APPLICATION_EVENT;
+};
+
+class WindowResize: public Event {
+public:
+    WindowResize(int width, int height):  width(width), height(height) {}
+    int width;
+    int height;
+
+    static EVENT_TYPE get_static_type() { return ENGINE_WINDOW_RESIZE_EVENT; }
+    virtual EVENT_TYPE get_type() const override { return get_static_type(); }
 };
 
 class KeyEvent: public Event {

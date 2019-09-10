@@ -42,6 +42,11 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, 
     
 }
 
+void PerspectiveCamera::set_proj_matrix(float fov, float aspect, float near_plane, float far_plane) {
+    projection_matrix = glm::perspective(fov, aspect, near_plane, far_plane);
+    view_projection_matrix = projection_matrix * view_matrix;
+}
+
 void PerspectiveCamera::recalculate_view_matrix() {
     view_matrix = glm::lookAt(position, look_at, up);
     /*

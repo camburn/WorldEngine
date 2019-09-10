@@ -3,6 +3,8 @@
 #include <memory>
 #include "glm/glm.hpp"
 
+#include "Engine/event/event.hpp"
+#include "Engine/event/bus.hpp"
 #include "Engine/renderer/renderer_api.hpp"
 #include "Engine/renderer/camera.hpp"
 #include "Engine/renderer/shader.hpp"
@@ -14,13 +16,21 @@
 
 namespace engine {
 
+struct SceneData {
+    glm::vec4 clear_color;
+    int width;
+    int height;
+};
+
 class Renderer {
 public:
 
-    static void begin_scene(const std::shared_ptr<Camera> camera, const glm::vec4& clear_color);
+    static void begin_scene(const std::shared_ptr<Camera> camera, const SceneData data);
     static void end_scene();
 
     static void on_ui_render(bool draw);
+
+    static void update_display(int width, int height);
 
     static void submit(
         const std::shared_ptr<Shader>& shader,
@@ -32,10 +42,10 @@ public:
 
     inline static RendererAPI::API get_api() { return RendererAPI::get_api(); }
 private:
-    struct SceneData {
+    struct SceneState {
         glm::mat4 view_projection_matrix;
     };
-    static SceneData* scene_data;
+    static SceneState* scene_state;
     static RendererAPI* renderer_api;
 
     static void submit_node(

@@ -13,7 +13,7 @@ Window* Window::create(int width, int height) {
     return new WindowsWindow(width, height);
 }
 
-WindowsWindow::WindowsWindow(): width(1920), height(1080) {
+WindowsWindow::WindowsWindow(): width(500), height(500) {
     init("test");
 }
 
@@ -49,6 +49,8 @@ void WindowsWindow::init(std::string title) {
     context = new enginegl::OpenGLContext(window);
     context->init();
 
+    glfwSetWindowUserPointer(window, this);
+
     glfwSetWindowCloseCallback(window, 
         [](GLFWwindow* window){
             ENGINE_INFO("Window Close Callback");
@@ -60,6 +62,17 @@ void WindowsWindow::init(std::string title) {
         [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             ENGINE_TRACE("Key Pressed {0}, {1}", key, action);
             bus::publish(std::make_unique<KeyEvent>(key, action));
+        }
+    );
+    
+    // Connect the glfw callback to this window object
+    glfwSetWindowSizeCallback(window,
+        [](GLFWwindow* window, int new_width, int new_height) {
+            auto linux_window = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
+            bus::publish(std::make_unique<WindowResize>(new_width, new_height));
+            ENGINE_INFO("Window resized {0} x {1}", new_width, new_height);
+            linux_window->width = new_width;
+            linux_window->height = new_height;
         }
     );
 }

@@ -1,5 +1,6 @@
 #include "engine.hpp"
 #include <iostream>
+#include <memory>
 
 #include "imgui.h"
 
@@ -56,7 +57,12 @@ public:
         #endif
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
-        float aspect = 800/800;
+        
+        width = Application::get().get_window().get_width();
+        height = Application::get().get_window().get_height();
+        ENGINE_INFO("Window: {0} x {1}", width, height);
+        float aspect = (float)width / (float)height;
+
         camera.reset(new PerspectiveCamera { 45.0f, aspect, 0.1f, 100.0f });
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 1.0f));
@@ -233,7 +239,6 @@ public:
             }
         }
 
-
         if (camera_rotate) {
             float camX = sin(glfwGetTime()) * camera_radius;
             float camZ = cos(glfwGetTime()) * camera_radius;
@@ -266,8 +271,17 @@ public:
         //    glm::translate(glm::mat4(1.0f), light_position) *
         //    glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1))
         //);
-
-        Renderer::begin_scene(camera, glm::vec4{0.5f, 0.5f, 0.5f, 1.0f});
+        width = Application::get().get_window().get_width();
+        height = Application::get().get_window().get_height();
+        if (width != Application::get().get_window().get_width()
+            || height != Application::get().get_window().get_height()
+        ) {
+            width = Application::get().get_window().get_width();
+            height = Application::get().get_window().get_height();
+            float aspect = (float)width / (float)height;
+            std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
+        }
+        Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
 
         checker_texture->bind();
         //Renderer::submit_entity(texture_shader, square);
@@ -329,10 +343,13 @@ private:
     bool draw_gears = true;
 
     int render_mode = 0;
+
+    int width = 1200;
+    int height = 800;
 };
 
 int main() {
-    engine::Application application{800, 800};
+    engine::Application application{1200, 800};
     application.push_layer(new MyLayer());
     application.run();
     return 0;

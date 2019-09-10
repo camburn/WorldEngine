@@ -32,7 +32,7 @@ void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& ver
         GL_TRIANGLES,
         vertex_array->get_index_buffer()->get_count(),
         vertex_array->get_index_buffer()->get_type(),
-        (GLvoid*)vertex_array->get_index_buffer()->get_offset()
+        reinterpret_cast<const GLvoid *>(vertex_array->get_index_buffer()->get_offset())
     );
     vertex_array->unbind();
 }
