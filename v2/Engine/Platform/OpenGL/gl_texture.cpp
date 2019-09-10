@@ -24,6 +24,27 @@ GLTexture2D::GLTexture2D(const std::string path) {
     width = img_width;
     height = img_height;
 
+    GLenum format;
+    GLenum storage_format;
+    switch (channels)
+    {
+    case 1:
+        format = GL_RED;
+        storage_format = GL_RED;
+        break;
+    case 3:
+        format = GL_RGB;
+        storage_format = GL_RGB8;
+        break;
+    case 4:
+        format = GL_RGBA;
+        storage_format = GL_RGBA8;
+        break;
+    default:
+        ENGINE_ERROR("Unsupported texture component count");
+        return;
+    }
+
     #ifdef OPENGL_COMPATIBILITY
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -35,8 +56,8 @@ GLTexture2D::GLTexture2D(const std::string path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-        width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+    glTexImage2D(GL_TEXTURE_2D, 0, storage_format,
+        width, height, 0, format, GL_UNSIGNED_BYTE, data
     );
     glGenerateMipmap(GL_TEXTURE_2D);
     #else

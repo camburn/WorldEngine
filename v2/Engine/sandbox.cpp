@@ -65,7 +65,7 @@ public:
 
         camera.reset(new PerspectiveCamera { 45.0f, aspect, 0.1f, 100.0f });
 
-        camera->set_position(glm::vec3(0.0f, 0.0f, 1.0f));
+        camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
 
         // TODO: Connect mesh index information to the rendered::submit call
         // It requires object count and data type (uint/ushort)
@@ -78,13 +78,13 @@ public:
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         //monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
-        //square.reset( new CustomEntity());
+        square.reset( new CustomEntity());
         
         std::vector<glm::vec4> data = {
-            {  0.5f,  0.5f, 0.0f, 1.0f },
-            {  0.5f, -0.5f, 0.0f, 1.0f },
-            { -0.5f, -0.5f, 0.0f, 1.0f },
-            { -0.5f,  0.5f, 0.0f, 1.0f }
+            {  5.0f, 0.0f,  5.0f, 1.0f },
+            {  5.0f, 0.0f, -5.0f, 1.0f },
+            { -5.0f, 0.0f, -5.0f, 1.0f },
+            { -5.0f, 0.0f,  5.0f, 1.0f }
         };
         std::vector<glm::vec4> colors = {
             { 0.8f, 0.2f, 0.2f, 1.0f },
@@ -107,13 +107,13 @@ public:
 
         std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
-        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
-        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
-        //std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
-        //std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
+        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
+        std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
 
-        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        //square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
+        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
         entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
 
@@ -125,7 +125,16 @@ public:
         );
         //gearbox->add_uniform_data("u_model", glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.25)));
         
-        checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
+        //checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
+        dirt_albedo_texture = Texture2D::create(
+            "./assets/textures/dry-dirt1-albedo_small.png"
+        );
+        dirt_normal_texture = Texture2D::create(
+            "./assets/textures/dry-dirt1-normal_small.png"
+        );
+        dirt_rma_texture = Texture2D::create(
+            "./assets/textures/dry-dirt1-rma.png"
+        );
 
         for (auto& [name, entity]: entities) {
             entity->update_buffers(texture_shader);
@@ -249,7 +258,7 @@ public:
             float lightZ = cos(glfwGetTime()) * light_radius;
             light_position_b = glm::vec3(lightX, 0.0f, lightZ);
         }
-        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
 
         texture_shader->bind();
         //texture_shader->upload_u_vec3("u_lightpos[0]",
@@ -283,8 +292,11 @@ public:
         }
         Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
 
-        checker_texture->bind();
-        //Renderer::submit_entity(texture_shader, square);
+        dirt_albedo_texture->bind(0);
+        dirt_normal_texture->bind(1);
+        dirt_rma_texture->bind(2);
+        dirt_rma_texture->bind(3);
+        Renderer::submit_entity(texture_shader, square);
         
         for (auto& [name, entity]: entities) {
             if (entity->draw)
@@ -315,15 +327,18 @@ private:
 
     std::shared_ptr<Camera> camera;
 
-    //std::shared_ptr<Entity> square;
+    std::shared_ptr<Entity> square;
     std::shared_ptr<Entity> cube;
 
     std::map<std::string, std::shared_ptr<Entity>> entities;
 
     std::shared_ptr<Texture> checker_texture;
+    std::shared_ptr<Texture> dirt_rma_texture;
+    std::shared_ptr<Texture> dirt_albedo_texture;
+    std::shared_ptr<Texture> dirt_normal_texture;
 
     glm::mat4 model_matrix {1.0f};
-    glm::vec3 model_position {0.0f, 2.0f, 0.0f};
+    glm::vec3 model_position {0.0f, -5.0f, 0.0f};
     glm::vec3 light_position {5, 5, 5};
     glm::vec3 light_color {150, 150, 150};
     glm::vec3 light_position_b {1, 0, 0};
