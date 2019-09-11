@@ -137,5 +137,15 @@ public:
     static std::shared_ptr<IndexBuffer> create(void* indices, uint32_t count, uint32_t size, uint32_t offset);
 };
 
+class FrameBuffer {
+public: 
+    virtual ~FrameBuffer() = default;
+
+    virtual void bind() const = 0;
+    virtual void unbind() const = 0;
+
+    static std::shared_ptr<FrameBuffer> create(uint32_t width, uint32_t height);
+};
+
 }  // namespace
 #endif

@@ -132,6 +132,29 @@ TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, s
     return TextureObject {tex_id, texture_unit};
 }
 
+TextureObject process_default_texture(std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader) {
+    // No texture has been supplied - some require a default
+    Sampler sampler; //Use default sampler if one is not specified
+    Image image;
+    image.name = "default_" + name;
+    image.width = 2;
+    image.height = 2;
+    image.component = 3;
+    image.pixel_type = 5121;
+    image.image = {
+        0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff,
+    };
+    image.uri = "default_" + name;
+
+    GLuint tex_id = enginegl::buffer_image(sampler, image);
+    ENGINE_INFO("Loaded image - {0}: {1}: {2}", name, tex_id, image.uri);
+    GLint texture_unit = shader->uniform_texture_unit(name);
+    return TextureObject {tex_id, texture_unit};
+}
+
 MaterialObject process_material(std::shared_ptr<Model> &model, Material &material,
         const std::shared_ptr<engine::Shader> &shader) {
     MaterialObject material_object;
@@ -167,6 +190,10 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         material_object.textures.push_back(
             process_texture(model, model->textures[ao_index], "ambient", shader)
         );
+    } else if (shader->uniform_supported("ambient")) {
+        material_object.textures.push_back(
+            process_default_texture(model, "ambient", shader)
+        );
     }
     int emission_index = material.emissiveTexture.index;
     if (emission_index > -1 && shader->uniform_supported("emission")) {
@@ -174,7 +201,7 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
             process_texture(model, model->textures[emission_index], "emission", shader)
         );
     }
-    material_object.texture_id = -1;
+    //material_object.texture_id = -1;
     return material_object;
 }
 

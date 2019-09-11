@@ -10,8 +10,14 @@ std::shared_ptr<Texture2D> Texture2D::create(const std::string& path) {
     return std::make_shared<enginegl::GLTexture2D>(path);
 }
 
-//std::shared_ptr<Texture2D> Texture2D::create(const void* address) {
-//    return std::make_shared<enginegl::GLTexture2D>(address);
-//}
+std::shared_ptr<TextureHDR> TextureHDR::create(const std::string& path) {
+    ENGINE_INFO("Loading HDR Texture {0}", path);
+    return std::make_shared<enginegl::GLTextureHDR>(path);
+}
+
+std::shared_ptr<TextureCubeMap> TextureCubeMap::create(uint32_t width, uint32_t height) {
+    ENGINE_INFO("Creating Cube Map {0}");
+    return std::make_shared<enginegl::GLTextureCubeMap>(width, height);
+}
 
 } //namespace

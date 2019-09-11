@@ -49,12 +49,13 @@ class PerspectiveCamera : public Camera {
 public:
     PerspectiveCamera(float fov, float right, float bottom, float top);
     void set_proj_matrix(float fov, float aspect, float near_plane, float far_plane);
+    void set_view(glm::vec3 new_position, glm::vec3 new_look_at, glm::vec3 new_up);
 
     virtual void recalculate_view_matrix() override;
     virtual void on_ui_render(bool display) override;
 
 private:
-    glm::vec3 look_at  {0.0f, 0.0f, 0.0f};
+    glm::vec3 look_at {0.0f, 0.0f, 0.0f};
     glm::vec3 up {0.0f, 1.0f, 0.0f};
 };
 

@@ -28,7 +28,12 @@ void Renderer::submit(
     shader->bind();
     shader->upload_u_mat4("u_view_projection", scene_state->view_projection_matrix);
     shader->upload_u_mat4("u_model", model);
-    renderer_api->draw_indexed(vertex_array);
+    if (vertex_array->get_index_buffer()) {
+        renderer_api->draw_indexed(vertex_array);
+    } else {
+        renderer_api->draw_triangles(vertex_array);
+    }
+    
 }
 
 void Renderer::on_ui_render(bool draw){};

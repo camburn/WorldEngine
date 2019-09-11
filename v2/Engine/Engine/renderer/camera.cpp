@@ -36,15 +36,22 @@ void OrthographicCamera::on_ui_render(bool display) {
 }
 
 PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, float far_plane)
-        : Camera(glm::perspective(fov, aspect, near_plane, far_plane), 
+        : Camera(glm::perspective(glm::radians(fov), aspect, near_plane, far_plane), 
           glm::lookAt(glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0))) {
     view_projection_matrix = projection_matrix * view_matrix;
     
 }
 
 void PerspectiveCamera::set_proj_matrix(float fov, float aspect, float near_plane, float far_plane) {
-    projection_matrix = glm::perspective(fov, aspect, near_plane, far_plane);
+    projection_matrix = glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
     view_projection_matrix = projection_matrix * view_matrix;
+}
+
+void PerspectiveCamera::set_view(glm::vec3 new_position, glm::vec3 new_look_at, glm::vec3 new_up) {
+    position = new_position;
+    look_at = new_look_at;
+    up = new_up;
+    recalculate_view_matrix();
 }
 
 void PerspectiveCamera::recalculate_view_matrix() {

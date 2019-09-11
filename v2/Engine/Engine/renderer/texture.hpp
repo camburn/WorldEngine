@@ -18,8 +18,20 @@ public:
 class Texture2D: public Texture {
 public:
     static std::shared_ptr<Texture2D> create(const std::string& path);
-    //static std::shared_ptr<Texture2D> create(const void* address);
 };
+
+class TextureHDR: public Texture {
+public:
+    static std::shared_ptr<TextureHDR> create(const std::string& path);
+};
+
+class TextureCubeMap: public Texture {
+public:
+    virtual void set_data(uint32_t face_index) = 0;
+
+    static std::shared_ptr<TextureCubeMap> create(uint32_t width, uint32_t height);
+};
+
 
 
 } // namespace

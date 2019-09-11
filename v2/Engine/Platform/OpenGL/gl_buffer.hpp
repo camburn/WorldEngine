@@ -48,5 +48,20 @@ private:
     uint32_t offset;
 };
 
+class OpenGLFrameBuffer: public engine::FrameBuffer {
+public:
+    OpenGLFrameBuffer(uint32_t width, uint32_t height);
+
+    virtual ~OpenGLFrameBuffer();
+
+    virtual void bind() const override;
+    virtual void unbind() const override;
+
+private:
+    uint32_t buffer_size;
+    uint32_t frame_buffer;
+    uint32_t render_buffer;
+};
+
 } // Namespace
 #endif

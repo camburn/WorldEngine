@@ -28,7 +28,7 @@ struct TextureObject {
 struct MaterialObject {
     bool texture_set = false;
     std::vector<TextureObject> textures;
-    GLuint texture_id;
+    //GLuint texture_id;
     glm::vec4 color;
 };
 

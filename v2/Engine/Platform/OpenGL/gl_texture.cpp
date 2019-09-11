@@ -45,7 +45,6 @@ GLTexture2D::GLTexture2D(const std::string path) {
         return;
     }
 
-    #ifdef OPENGL_COMPATIBILITY
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 
@@ -60,7 +59,7 @@ GLTexture2D::GLTexture2D(const std::string path) {
         width, height, 0, format, GL_UNSIGNED_BYTE, data
     );
     glGenerateMipmap(GL_TEXTURE_2D);
-    #else
+    /*
     // Note Modern Opengl 4+ way to create textures
     glCreateTextures(GL_TEXTURE_2D, 1, &texture_id);
     
@@ -70,10 +69,10 @@ GLTexture2D::GLTexture2D(const std::string path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTextureSubImage2D(texture_id, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-    #endif
+    */
 
     textures.push_back(TexData{texture_id, (int)height, (int)width, path});
-
+    glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(data);
 }
 
@@ -92,6 +91,92 @@ void GLTexture2D::bind(uint32_t slot) const {
     #else
     glBindTextureUnit(slot, texture_id);
     #endif
+}
+
+GLTextureHDR::GLTextureHDR(const std::string path) { 
+    int img_width, img_height, channels;
+    //stbi_set_flip_vertically_on_load(true);
+    ENGINE_ASSERT(stbi_is_hdr(path.c_str()), "File is not a HDR file");
+    float* data = stbi_loadf(path.c_str(), &img_width, &img_height, &channels, 0);
+    ENGINE_ASSERT(data, "Failed to load image from path");
+    width = img_width;
+    height = img_height;
+
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    // Is this the devil that kills OpenGL 2.1 support? GL_RGB16F
+    
+    #ifdef OPENGL_COMPATIBILITY
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F_ARB, width, height, 0, GL_RGB, GL_FLOAT, data);
+    #else
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+    #endif
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(data);
+    textures.push_back(TexData{texture_id, (int)height, (int)width, path});
+}
+
+GLTextureHDR::~GLTextureHDR() {
+    glDeleteTextures(1, &texture_id);
+}
+
+void GLTextureHDR::bind(uint32_t slot) const {
+    #ifdef OPENGL_COMPATIBILITY
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    #else
+    glBindTextureUnit(slot, texture_id);
+    #endif
+}
+
+GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height) {
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    for (unsigned int i = 0; i < 6; ++i) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16,
+            width, height, 0, GL_RGB, GL_FLOAT, nullptr
+        );
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    textures.push_back(TexData{texture_id, (int)height, (int)width, "Cubemap"});
+}
+
+void GLTextureCubeMap::bind(uint32_t slot) const {
+    #ifdef OPENGL_COMPATIBILITY
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    #else
+    glBindTextureUnit(slot, texture_id);
+    #endif
+}
+
+GLTextureCubeMap::~GLTextureCubeMap() {
+    glDeleteTextures(1, &texture_id);
+}
+
+void GLTextureCubeMap::set_data(uint32_t face_index) {
+    ENGINE_ASSERT(face_index < 6, "Cube map only has 6 faces, index out of range");
+    // Load data into the cube map from the framebuffer
+    // This will have to be expanded to handle load from depth buffers aswell
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index, texture_id, 0
+    );
 }
 
 GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
@@ -136,6 +221,7 @@ GLuint buffer_image(tinygltf::Sampler &sampler, tinygltf::Image &image) {
     );
     glGenerateMipmap(GL_TEXTURE_2D);
     textures.push_back(TexData{texture_id, image.height, image.width, image.uri});
+    glBindTexture(GL_TEXTURE_2D, 0);
     return texture_id;
 }
 

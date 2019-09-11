@@ -87,4 +87,34 @@ void OpenGLIndexBuffer::unbind() const {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+// FrameBuffer
+
+OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height) {
+    glGenFramebuffers(1, &frame_buffer);
+    glGenRenderbuffers(1, &render_buffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
+
+    ENGINE_TRACE("Frame buffer {0} created", frame_buffer);
+}
+
+OpenGLFrameBuffer::~OpenGLFrameBuffer() {
+    glDeleteBuffers(1, &frame_buffer);
+    glDeleteBuffers(1, &render_buffer);
+    ENGINE_TRACE("Frame buffer {0} garbage collected", frame_buffer);
+}
+
+void OpenGLFrameBuffer::bind() const {
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
+}
+
+void OpenGLFrameBuffer::unbind() const {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
 } // Namespace

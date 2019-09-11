@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include <iostream>
 #include <memory>
+#include <tuple>
 
 #include "imgui.h"
 
@@ -38,9 +39,18 @@ public:
         std::string vs_file_texture = "./shaders/opengl2_vertex_texture.glsl";
         std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
 
+        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap.glsl";
+        std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap.glsl";
+
+        std::string vs_skybox = "./shaders/IBL/vertex_skybox.glsl";
+        std::string fs_skybox = "./shaders/IBL/fragment_skybox.glsl";
+
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
+        skybox.reset(new Shader{ vs_skybox, fs_skybox });
+
         #else
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/fragment_simple.glsl";
@@ -56,14 +66,106 @@ public:
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         #endif
 
-        //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
+        // --- IBL CALCULATION -- 
+        float vertices[] = {
+            // back face
+            -1.0f, -1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+             1.0f,  1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f, // 0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            -1.0f, -1.0f,  1.0f, // 0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, //-1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, //-1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, //-1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, //-1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, //-1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, //-1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f, // 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f, -1.0f, // 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, // 1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+             1.0f, -1.0f, -1.0f, // 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, // 1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f,  1.0f, // 1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+            // bottom face
+            -1.0f, -1.0f, -1.0f, // 0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f, // 0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+             1.0f, -1.0f,  1.0f, // 0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, // 0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, // 0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f, // 0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f, // 0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f , 1.0f, // 0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, // 0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+             1.0f,  1.0f,  1.0f, // 0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f, // 0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            -1.0f,  1.0f,  1.0f, // 0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+        };
+
+        cube_vao = VertexArray::create();
+        auto cube_vbo = VertexBuffer::create(vertices, sizeof(vertices));
+        cube_vbo->set_layout({
+            { engine::ShaderDataType::Float3, "position" },
+        });
+        cube_vao->add_vertex_buffer(cube_vbo);
+        cube_vao->set_array_count(36);
+
+        std::shared_ptr<PerspectiveCamera> ibl_camera( new PerspectiveCamera(90.0f, 1.0f, 0.1, 10.0f));
+        typedef std::tuple<glm::vec3, glm::vec3, glm::vec3> view_data;
+        std::vector<view_data> views = {
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+        };
         
+        ibl_equi_to_cube_shader->bind();
+        
+        auto hdr_map = TextureHDR::create(
+            "./assets/hdr/dirtroad.hdr"
+        );
+        
+        environment_map = TextureCubeMap::create(512, 512);
+        
+        auto fbo = FrameBuffer::create(512, 512);
+
+        hdr_map->bind(0);
+        fbo->bind();
+        for (unsigned int i = 0; i < 6; i++) {
+            // Why use a tuple over a struct?
+            auto view = views.at(i);
+            ibl_camera->set_view(std::get<0>(view), std::get<1>(view), std::get<2>(view));
+            Renderer::begin_scene(ibl_camera, { glm::vec4(1.0f), 512, 512 });
+            environment_map->set_data(i);
+
+            Renderer::submit(ibl_equi_to_cube_shader, cube_vao, glm::mat4(1.0f));
+        }
+        fbo->unbind();
+        
+        ibl_equi_to_cube_shader->unbind();
+        ibl_camera.reset();
+        
+        // --- END IBL ---
+
         width = Application::get().get_window().get_width();
         height = Application::get().get_window().get_height();
         ENGINE_INFO("Window: {0} x {1}", width, height);
         float aspect = (float)width / (float)height;
 
-        camera.reset(new PerspectiveCamera { 45.0f, aspect, 0.1f, 100.0f });
+        //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
+        camera.reset(new PerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
 
@@ -318,14 +420,26 @@ public:
             glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05))
         );
         Renderer::submit_entity(simple_shader, cube);
+
+        skybox->bind();
+        environment_map->bind(0);
+        skybox->upload_u_mat4("u_view", camera->get_view_matrix());
+        skybox->upload_u_mat4("u_projection", camera->get_projection_matrix());
+        //Renderer::submit(skybox, cube_vao, glm::mat4(1.0f));
+
     }
 
 private:
+    std::shared_ptr<Shader> ibl_equi_to_cube_shader;
+    std::shared_ptr<Shader> skybox;
+
     //std::shared_ptr<Shader> color_shader;
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> simple_shader;
 
     std::shared_ptr<Camera> camera;
+
+    std::shared_ptr<VertexArray> cube_vao;
 
     std::shared_ptr<Entity> square;
     std::shared_ptr<Entity> cube;
@@ -336,6 +450,8 @@ private:
     std::shared_ptr<Texture> dirt_rma_texture;
     std::shared_ptr<Texture> dirt_albedo_texture;
     std::shared_ptr<Texture> dirt_normal_texture;
+
+    std::shared_ptr<TextureCubeMap> environment_map;
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};

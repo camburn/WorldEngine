@@ -25,4 +25,8 @@ std::shared_ptr<IndexBuffer> IndexBuffer::create(void* indices, uint32_t count, 
     return std::make_shared<enginegl::OpenGLIndexBuffer>(indices, count, size, offset);
 }
 
+std::shared_ptr<FrameBuffer> FrameBuffer::create(uint32_t width, uint32_t height) {
+    return std::make_shared<enginegl::OpenGLFrameBuffer>(width, height);
+}
+
 } //namespace

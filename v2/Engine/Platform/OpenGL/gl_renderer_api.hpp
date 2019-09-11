@@ -21,6 +21,7 @@ public:
     virtual void map_texture_unit(const unsigned int tex_id, const unsigned int unit) override;
 
     virtual void draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) override;
+    virtual void draw_triangles(const std::shared_ptr<engine::VertexArray>& vertex_array) override;
 };
 
 } //namespace
