@@ -11,7 +11,15 @@
 
 namespace enginegl {
 
-class GLTexture2D: public engine::Texture2D {
+class GLTexture {
+public:
+    GLuint get_id() { return texture_id; }
+
+protected:
+    GLuint texture_id;
+};
+
+class GLTexture2D: public engine::Texture2D, public GLTexture {
 public:
     GLTexture2D(const std::string path);
     GLTexture2D(const void* address);
@@ -24,13 +32,12 @@ public:
     virtual void bind(uint32_t slot = 0) const override;
 
 private:
-    GLuint texture_id;
     uint32_t width;
     uint32_t height;
     std::string path;
 };
 
-class GLTextureHDR: public engine::TextureHDR {
+class GLTextureHDR: public engine::TextureHDR, public GLTexture {
 public:
     GLTextureHDR(const std::string path);
 
@@ -42,13 +49,12 @@ public:
     virtual void bind(uint32_t slot = 0) const override;
 
 private:
-    GLuint texture_id;
     uint32_t width;
     uint32_t height;
     std::string path;
 };
 
-class GLTextureCubeMap: public engine::TextureCubeMap {
+class GLTextureCubeMap: public engine::TextureCubeMap, public GLTexture {
 public:
     GLTextureCubeMap(uint32_t width, uint32_t height);
 
@@ -62,7 +68,22 @@ public:
     virtual void bind(uint32_t slot = 0) const override;
 
 private:
-    GLuint texture_id;
+    uint32_t width;
+    uint32_t height;
+};
+
+class GLTextureDepth: public engine::TextureDepth, public GLTexture {
+public:
+    GLTextureDepth(uint32_t width, uint32_t height);
+
+    virtual ~GLTextureDepth();
+
+    virtual uint32_t get_width() const override { return width; }
+    virtual uint32_t get_height() const override { return height; }
+
+    virtual void bind(uint32_t slot = 0) const override;
+
+private:
     uint32_t width;
     uint32_t height;
 };

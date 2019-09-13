@@ -32,7 +32,10 @@ public:
     static std::shared_ptr<TextureCubeMap> create(uint32_t width, uint32_t height);
 };
 
-
+class TextureDepth: public Texture {
+public:
+    static std::shared_ptr<TextureDepth> create(uint32_t width, uint32_t height);
+};
 
 } // namespace
 

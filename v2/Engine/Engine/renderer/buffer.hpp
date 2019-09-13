@@ -6,6 +6,8 @@
 //#include <cstdint>
 #include <map>
 
+#include "Engine/renderer/texture.hpp"
+
 namespace engine {
 
 enum class ShaderDataType {
@@ -145,6 +147,7 @@ public:
     virtual void unbind() const = 0;
 
     static std::shared_ptr<FrameBuffer> create(uint32_t width, uint32_t height);
+    static std::shared_ptr<FrameBuffer> create(const std::shared_ptr<TextureDepth>& texture);
 };
 
 }  // namespace

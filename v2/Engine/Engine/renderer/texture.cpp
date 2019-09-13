@@ -20,4 +20,9 @@ std::shared_ptr<TextureCubeMap> TextureCubeMap::create(uint32_t width, uint32_t 
     return std::make_shared<enginegl::GLTextureCubeMap>(width, height);
 }
 
+std::shared_ptr<TextureDepth> TextureDepth::create(uint32_t width, uint32_t height) {
+    ENGINE_INFO("Creating Cube Map {0}");
+    return std::make_shared<enginegl::GLTextureDepth>(width, height);
+}
+
 } //namespace

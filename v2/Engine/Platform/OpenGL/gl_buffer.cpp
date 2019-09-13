@@ -99,6 +99,8 @@ OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height) {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
 
     ENGINE_TRACE("Frame buffer {0} created", frame_buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 OpenGLFrameBuffer::~OpenGLFrameBuffer() {
@@ -115,6 +117,33 @@ void OpenGLFrameBuffer::bind() const {
 void OpenGLFrameBuffer::unbind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+OpenGLDepthMap::OpenGLDepthMap(const std::shared_ptr<GLTextureDepth>& texture) {
+    glGenFramebuffers(1, &frame_buffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture->get_id(), 0
+    );
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    ENGINE_TRACE("Depth map {0} created", frame_buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+OpenGLDepthMap::~OpenGLDepthMap() {
+    glDeleteBuffers(1, &frame_buffer);
+    ENGINE_TRACE("Depth map {0} garbage collected", frame_buffer);
+}
+
+void OpenGLDepthMap::bind() const {
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+}
+
+void OpenGLDepthMap::unbind() const {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 } // Namespace

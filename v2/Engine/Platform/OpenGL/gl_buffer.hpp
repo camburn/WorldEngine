@@ -2,6 +2,7 @@
 #define _GL_BUFFER_HPP
 #include "Engine/renderer/buffer.hpp"
 #include "Platform/OpenGL/gl_vertex_array.hpp"
+#include "Platform/OpenGL/gl_texture.hpp"
 
 namespace enginegl {
 
@@ -61,6 +62,20 @@ private:
     uint32_t buffer_size;
     uint32_t frame_buffer;
     uint32_t render_buffer;
+};
+
+class OpenGLDepthMap: public engine::FrameBuffer {
+public:
+    OpenGLDepthMap(const std::shared_ptr<GLTextureDepth>& texture);
+
+    virtual ~OpenGLDepthMap();
+
+    virtual void bind() const override;
+    virtual void unbind() const override;
+
+private:
+    uint32_t buffer_size;
+    uint32_t frame_buffer;
 };
 
 } // Namespace

@@ -45,7 +45,11 @@ public:
         std::string vs_skybox = "./shaders/IBL/vertex_skybox.glsl";
         std::string fs_skybox = "./shaders/IBL/fragment_skybox.glsl";
 
+        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map.glsl";
+        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map.glsl";
+
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
+        depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
         //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
@@ -121,14 +125,18 @@ public:
         cube_vao->set_array_count(36);
 
         std::shared_ptr<PerspectiveCamera> ibl_camera( new PerspectiveCamera(90.0f, 1.0f, 0.1, 10.0f));
-        typedef std::tuple<glm::vec3, glm::vec3, glm::vec3> view_data;
-        std::vector<view_data> views = {
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            std::make_tuple(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+        struct camera_position {
+            glm::vec3 position;
+            glm::vec3 look_at;
+            glm::vec3 up;
+        };
+        std::vector<camera_position> views = {
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)},
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)},
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+            {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)}
         };
         
         ibl_equi_to_cube_shader->bind();
@@ -146,7 +154,7 @@ public:
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
             auto view = views.at(i);
-            ibl_camera->set_view(std::get<0>(view), std::get<1>(view), std::get<2>(view));
+            ibl_camera->set_view(view.position, view.look_at, view.up);
             Renderer::begin_scene(ibl_camera, { glm::vec4(1.0f), 512, 512 });
             environment_map->set_data(i);
 
@@ -300,6 +308,7 @@ public:
         float time = (float)glfwGetTime();
         float delta_time = time - last_frame_time;
         last_frame_time = time;
+        // ===== CONTROLS =====
         {
             auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
             int state = glfwGetKey(window, GLFW_KEY_W);
@@ -361,6 +370,31 @@ public:
             light_position_b = glm::vec3(lightX, 0.0f, lightZ);
         }
         square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        // === END CONTROLS ===
+
+        // ===== SHADOW MAP =====
+        std::shared_ptr<OrthographicCamera> shadow_camera( new OrthographicCamera {-10.0f, 10.0f, -10.0f, 10.0f} );
+        shadow_camera->set_position(light_position);
+        int shadow_map_width, shadow_map_height = 512;
+        auto shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
+        auto shadow_map_buffer = FrameBuffer::create(shadow_map);
+        shadow_map->bind();
+        // Bind Shadow map shader here?!
+        depth_map_shader->bind();
+        shadow_map_buffer->bind();
+        // Render things here
+        Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
+        Renderer::submit_entity(depth_map_shader, square);
+        
+        for (auto& [name, entity]: entities) {
+            if (entity->draw)
+                Renderer::submit_entity(depth_map_shader, entity);
+        }
+        // Bind Shadow map shader here?!
+        depth_map_shader->unbind();
+        shadow_map_buffer->unbind();
+
+        // === END SHADOW MAP ===
 
         texture_shader->bind();
         //texture_shader->upload_u_vec3("u_lightpos[0]",
@@ -436,6 +470,7 @@ private:
     //std::shared_ptr<Shader> color_shader;
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> simple_shader;
+    std::shared_ptr<Shader> depth_map_shader;
 
     std::shared_ptr<Camera> camera;
 
