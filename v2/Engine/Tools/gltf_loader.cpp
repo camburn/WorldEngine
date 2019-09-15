@@ -132,7 +132,8 @@ TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, s
     return TextureObject {tex_id, texture_unit};
 }
 
-TextureObject process_default_texture(std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader) {
+TextureObject process_default_texture(
+    std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader, unsigned char color = 0xff) {
     // No texture has been supplied - some require a default
     Sampler sampler; //Use default sampler if one is not specified
     Image image;
@@ -142,10 +143,10 @@ TextureObject process_default_texture(std::shared_ptr<Model> &model, std::string
     image.component = 3;
     image.pixel_type = 5121;
     image.image = {
-        0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff,
+        color, color, color,
+        color, color, color,
+        color, color, color,
+        color, color, color,
     };
     image.uri = "default_" + name;
 
@@ -192,13 +193,17 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         );
     } else if (shader->uniform_supported("ambient")) {
         material_object.textures.push_back(
-            process_default_texture(model, "ambient", shader)
+            process_default_texture(model, "ambient", shader, 0xff)
         );
     }
     int emission_index = material.emissiveTexture.index;
     if (emission_index > -1 && shader->uniform_supported("emission")) {
         material_object.textures.push_back(
             process_texture(model, model->textures[emission_index], "emission", shader)
+        );
+    } else if (shader->uniform_supported("emission")) {
+        material_object.textures.push_back(
+            process_default_texture(model, "emission", shader, 0x00)
         );
     }
     //material_object.texture_id = -1;

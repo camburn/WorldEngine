@@ -65,9 +65,17 @@ public:
         std::string vs_file = "./shaders/vertex.glsl";
         std::string fs_file = "./shaders/fragment.glsl";
 
+        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap3.glsl";
+        std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap3.glsl";
+
+        std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
+        std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
+
         texture_shader.reset(new Shader{ vs_file, fs_file });
         //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
+        skybox.reset(new Shader{ vs_skybox, fs_skybox });
         #endif
 
         // --- IBL CALCULATION -- 
@@ -141,8 +149,8 @@ public:
         
         ibl_equi_to_cube_shader->bind();
         
-        auto hdr_map = TextureHDR::create(
-            "./assets/hdr/dirtroad.hdr"
+        hdr_map = TextureHDR::create(
+            "./assets/hdr/Arches_E_PineTree_3k.hdr"
         );
         
         environment_map = TextureCubeMap::create(512, 512);
@@ -154,10 +162,9 @@ public:
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
             auto view = views.at(i);
-            ibl_camera->set_view(view.position, view.look_at, view.up);
-            Renderer::begin_scene(ibl_camera, { glm::vec4(1.0f), 512, 512 });
+            ibl_camera->set_view(std::get<0>(view), std::get<1>(view), std::get<2>(view));
             environment_map->set_data(i);
-
+            Renderer::begin_scene(ibl_camera, { glm::vec4(1.0f), 512, 512 });
             Renderer::submit(ibl_equi_to_cube_shader, cube_vao, glm::mat4(1.0f));
         }
         fbo->unbind();
@@ -429,9 +436,9 @@ public:
         Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
 
         dirt_albedo_texture->bind(0);
-        dirt_normal_texture->bind(1);
-        dirt_rma_texture->bind(2);
-        dirt_rma_texture->bind(3);
+        dirt_normal_texture->bind(3);
+        dirt_rma_texture->bind(4);
+        dirt_rma_texture->bind(1);
         Renderer::submit_entity(texture_shader, square);
         
         for (auto& [name, entity]: entities) {
@@ -459,7 +466,7 @@ public:
         environment_map->bind(0);
         skybox->upload_u_mat4("u_view", camera->get_view_matrix());
         skybox->upload_u_mat4("u_projection", camera->get_projection_matrix());
-        //Renderer::submit(skybox, cube_vao, glm::mat4(1.0f));
+        Renderer::submit(skybox, cube_vao, glm::mat4(1.0f));
 
     }
 
@@ -485,6 +492,7 @@ private:
     std::shared_ptr<Texture> dirt_rma_texture;
     std::shared_ptr<Texture> dirt_albedo_texture;
     std::shared_ptr<Texture> dirt_normal_texture;
+    std::shared_ptr<Texture> hdr_map;
 
     std::shared_ptr<TextureCubeMap> environment_map;
 

@@ -1,6 +1,6 @@
 #version 460
 
-const int MAX_LIGHTS = 2;
+const int MAX_LIGHTS = 3;
 const float PI = 3.14159265359;
 
 in vec3 f_normal;
@@ -72,8 +72,7 @@ float geometry_smith(vec3 N, vec3 V, vec3 L, float roughness) {
     return ggx1 * ggx2;
 }
 
-vec3 fresnel_schlick(float cos_theta, vec3 F0)
-{
+vec3 fresnel_schlick(float cos_theta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
 }
 
@@ -91,6 +90,8 @@ void main() {
 
     vec3 F0 = vec3(0.4);
     F0 = mix(F0, albedo_sample.xyz, metallic);
+
+    vec3 light_dot = vec3(0.0);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -125,6 +126,7 @@ void main() {
         float NdotL = max(dot(N, L), 0.0);
 
         Lo += (kD * albedo_sample.xyz / PI + specular) * radiance * NdotL;
+        light_dot += radiance * NdotL + specular * u_lightcolor[i];
     }
 
     vec3 ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
@@ -146,7 +148,7 @@ void main() {
     else if (u_render_mode == 4) final_color = vec4(vec3(ambient_occlusion), 1);
     else if (u_render_mode == 5) final_color = vec4(emission_sample, 1);
     else if (u_render_mode == 6) final_color = vec4(Lo, 1);
-    else if (u_render_mode == 7) final_color = vec4(1); // lighting
+    else if (u_render_mode == 7) final_color = vec4(light_dot, 1); // lighting
     else if (u_render_mode == 8) final_color = vec4(1); // fresnel
     else if (u_render_mode == 9) final_color = vec4(1); // irradiance
     else if (u_render_mode == 10) final_color = vec4(1); // reflection

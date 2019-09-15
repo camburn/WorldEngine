@@ -13,7 +13,7 @@ out vec2 f_texcoord;
 
 void main() {
     f_texcoord = texcoord;
-    f_normal = normal.xyz;
+    f_normal = (u_model * normal).xyz;
     f_worldpos = (u_model * position).xyz;
     gl_Position = u_view_projection * u_model * position;
 }
