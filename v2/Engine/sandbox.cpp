@@ -52,9 +52,6 @@ public:
         std::string vs_file_simple = "./shaders/opengl2_vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/opengl2_fragment_simple.glsl";
 
-        std::string vs_file_color = "./shaders/opengl2_vertex.glsl";
-        std::string fs_file_color = "./shaders/opengl2_fragment.glsl";
-
         std::string vs_file_texture = "./shaders/opengl2_vertex_texture.glsl";
         std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
 
@@ -69,7 +66,6 @@ public:
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
-        //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
         skybox.reset(new Shader{ vs_skybox, fs_skybox });
@@ -78,15 +74,23 @@ public:
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/fragment_simple.glsl";
 
-        std::string vs_file_color = "./shaders/vertex_color.glsl";
-        std::string fs_file_color = "./shaders/fragment_color.glsl";
+        std::string vs_file_texture = "./shaders/vertex.glsl";
+        std::string fs_file_texture = "./shaders/fragment.glsl";
 
-        std::string vs_file = "./shaders/vertex.glsl";
-        std::string fs_file = "./shaders/fragment.glsl";
+        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap3.glsl";
+        std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap3.glsl";
 
-        texture_shader.reset(new Shader{ vs_file, fs_file });
-        //color_shader.reset(new Shader{ vs_file_color, fs_file_color });
+        std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
+        std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
+
+        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map3.glsl";
+        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map3.glsl";
+
+        texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
+        depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
+        skybox.reset(new Shader{ vs_skybox, fs_skybox });
         #endif
 
         // --- IBL CALCULATION -- 
