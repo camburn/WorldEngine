@@ -52,9 +52,10 @@ void Renderer::submit_node(
         shader->upload_u_vec4("u_color", prim.material.color);
         // Submit texture
         for (auto& texture: prim.material.textures) {
-            if (texture.texture_id != -1) {
-                renderer_api->map_texture_unit(texture.texture_id, texture.texture_unit);
-                used_texture_units.push_back(texture.texture_unit);
+            if (texture.texture_id != -1 && shader->uniform_supported(texture.u_name))  {
+                int texture_unit = shader->uniform_texture_unit(texture.u_name);
+                renderer_api->map_texture_unit(texture.texture_id, texture_unit);
+                used_texture_units.push_back(texture_unit);
             }
         }
         // Custom uniforms will override material ones, need to merge the

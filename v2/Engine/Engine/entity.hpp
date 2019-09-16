@@ -53,6 +53,8 @@ public:
     std::vector<GLuint> texture_ids;
     std::shared_ptr<Shader> allocated_shader;
     bool draw = true;
+    std::string name;
+
 protected:
     std::vector<std::shared_ptr<VertexArray>> vaos;
 };
@@ -60,6 +62,7 @@ protected:
 class CustomEntity: public Entity {
 public:
     CustomEntity(){}
+    ~CustomEntity() { ENGINE_INFO("Custom Entity {0} garbage collected", name); }
     void add_attribute_data(std::string name, std::vector<glm::vec4> &data);
     void add_attribute_data(std::string name, std::vector<glm::vec2> &data);
     void add_index_data(std::vector<uint32_t> &data);
@@ -91,6 +94,7 @@ private:
     std::shared_ptr<VertexBuffer> buffer;
     std::shared_ptr<IndexBuffer> index_buffer;
     int attribute_size = 0;
+    std::unordered_set<uint32_t> handled_shaders;
 
     void interlace_data(BufferLayout &layout, std::vector<float> &data);
 };
@@ -99,7 +103,7 @@ private:
 class GltfEntity: public Entity {
 public:
     GltfEntity(std::shared_ptr<tinygltf::Model> model_data);
-    ~GltfEntity() {}
+    ~GltfEntity() { ENGINE_INFO("GLTF Entity {0} garbage collected", name); }
 
     void update_buffers(const std::shared_ptr<Shader>& shader) override;
 
@@ -124,6 +128,7 @@ private:
     std::shared_ptr<tinygltf::Model> model;
     std::unordered_set<uint32_t> handled_shaders;
     NodeObject node_object;
+    bool buffered = false;
 };
 
 } // Namespace

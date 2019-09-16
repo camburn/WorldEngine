@@ -92,6 +92,7 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 }
 
 void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    if (handled_shaders.count(shader->get_id()) > 0 ) return;
     if (vaos.size() == 0) {
         vaos.emplace_back();
     }
@@ -115,6 +116,7 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     vao->set_index_buffer(index_buffer);
     buffers_set = true;
     shader->register_vertex_array(vao);
+    handled_shaders.emplace(shader->get_id());
 }
 
 void CustomEntity::render() {
@@ -148,13 +150,14 @@ GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
 }
 
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    if (buffered) return;
     if (handled_shaders.count(shader->get_id()) > 0 ) return;
     ModelObjects m_obj;
     node_object = gltf_to_opengl(m_obj, model, shader);
     texture_ids = m_obj.texture_ids;
     vaos = m_obj.vaos;
-    //vaos.push_back(m_obj.vao);
     handled_shaders.emplace(shader->get_id());
+    buffered = true;
 }
 
 void GltfEntity::render() {

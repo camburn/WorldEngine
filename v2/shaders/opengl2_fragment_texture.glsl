@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 const int MAX_LIGHTS = 3;
 const float PI = 3.14159265359;
@@ -6,6 +6,7 @@ const float PI = 3.14159265359;
 varying vec3 f_normal;
 varying vec3 f_worldpos;
 varying vec2 f_texcoord;
+varying vec4 f_frag_pos_light_space;
 
 uniform sampler2D albedo;
 uniform sampler2D normal;
@@ -17,6 +18,8 @@ uniform sampler2D normal;
 uniform sampler2D roughness_metallic;
 uniform sampler2D ambient;
 uniform sampler2D emission;
+
+uniform sampler2D shadow_map;
 
 // First light is always directional
 
@@ -76,6 +79,33 @@ float geometry_smith(vec3 N, vec3 V, vec3 L, float roughness) {
 
 vec3 fresnel_schlick(float cos_theta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
+}
+
+float shadow_calculation(vec4 frag_pos_light_space) {
+    vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+    proj_coords = proj_coords * 0.5 + 0.5;
+    //float closest_depth = texture2D(shadow_map, proj_coords.xy).r;
+    float current_depth = proj_coords.z;
+    // Light 0 is always the direction light
+    vec3 normal = normalize(f_normal);
+    vec3 light_dir = normalize(u_lightpos[0] - f_worldpos);
+    //float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005);
+    float bias = 0.0;
+    //float shadow = current_depth  - bias > closest_depth ? 1.0: 0.0;
+
+    float shadow = 0.0;
+    vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcf_depth = texture2D(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
+            shadow += current_depth - bias > pcf_depth ? 1.0: 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    if (proj_coords.z > 1.0) shadow = 0.0;
+
+    return shadow;
 }
 
 void main() {
@@ -141,7 +171,9 @@ void main() {
 
     color += emission_sample.xyz;
 
-    vec4 final_color = vec4(color, albedo_sample.a);
+    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5 );
+
+    vec4 final_color = vec4((color * shadow_color), albedo_sample.a);
 
     // Debug modes
     if (u_render_mode == 1) final_color = albedo_sample;
@@ -158,7 +190,7 @@ void main() {
     else if (u_render_mode == 12) final_color = vec4(texture2D(normal, f_texcoord).xyz, 1); // texture_normal
     else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
-    
+    else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
 
     gl_FragColor = final_color;
 }

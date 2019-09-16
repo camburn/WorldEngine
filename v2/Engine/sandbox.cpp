@@ -25,6 +25,25 @@
 
 using namespace engine;
 
+std::unordered_map<int, std::string> render_modes {
+    {0, "Complete"},
+    {1, "Albedo Map"},
+    {2, "Metallic Map"},
+    {3, "Roughness Map"},
+    {4, "Ambient Occlusion Map"},
+    {5, "Emission Map"},
+    {6, "Lo"},
+    {7, "Lighting"},
+    {8, "Fresnel"},
+    {9, "Irradiance"},
+    {10, "Reflection"},
+    {11, "Face Normals"},
+    {12, "Normal Map"},
+    {13, "Texture Coordinates"},
+    {14, "Transparency"},
+    {15, "Shadows"},
+};
+
 class MyLayer: public engine::Layer {
 public:
     MyLayer() {
@@ -173,6 +192,7 @@ public:
         float aspect = (float)width / (float)height;
 
         //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
+        shadow_camera.reset( new OrthographicCamera {-5.0f, 5.0f, -5.0f, 5.0f} );
         camera.reset(new PerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -182,13 +202,21 @@ public:
         entities["helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf"
         );
+        entities["helmet"]->name = "Damaged Helmet";
         entities["flight_helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
         );
+        entities["flight_helmet"]->name = "Flight Helmet";
+
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+
+        entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+        entities["cube"]->name = "Cube";
         //monkey = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
+        entities["monkey"]->name = "Monkey";
         square.reset( new CustomEntity());
+        square->name = "Square";
         
         std::vector<glm::vec4> data = {
             {  3.0f, 0.0f,  3.0f, 1.0f },
@@ -233,7 +261,11 @@ public:
             glm::translate(glm::mat4(1.0f), glm::vec3(3, 0, 0)) *
             glm::scale(glm::mat4(1.0f), glm::vec3(4, 4, 4))
         );
-        //gearbox->add_uniform_data("u_model", glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.25)));
+
+        entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
+        entities["cube"]->add_uniform_data("u_model", 
+            glm::translate(glm::mat4(1.0f), glm::vec3(1, -1.5, 1)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5))
+        );
         
         //checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
         dirt_albedo_texture = Texture2D::create(
@@ -249,6 +281,10 @@ public:
         for (auto& [name, entity]: entities) {
             entity->update_buffers(texture_shader);
         }
+
+        // SHADOW MAP SETUP
+        shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
+        shadow_map_buffer = FrameBuffer::create(shadow_map);
     }
 
     void on_attach() override {
@@ -257,8 +293,11 @@ public:
 
     void on_ui_render() override {
         ImGui::Begin("Entities");
-        ImGui::InputInt("Render Mode", &render_mode);
+        ImGui::Text("Render Mode: %s", render_modes[render_mode].c_str());
+        ImGui::InputInt("Change Mode", &render_mode);
+        
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
+        ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
         
         ImGui::SetNextItemWidth(50.f);
         ImGui::InputFloat("Camera radius", &camera_radius);
@@ -367,17 +406,13 @@ public:
         if (light_rotate) {
             float lightX = sin(glfwGetTime()) * light_radius;
             float lightZ = cos(glfwGetTime()) * light_radius;
-            light_position_b = glm::vec3(lightX, 0.0f, lightZ);
+            light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
         square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         // === END CONTROLS ===
 
         // ===== SHADOW MAP =====
-        std::shared_ptr<OrthographicCamera> shadow_camera( new OrthographicCamera {-10.0f, 10.0f, -10.0f, 10.0f} );
         shadow_camera->set_position(light_position);
-        int shadow_map_width, shadow_map_height = 512;
-        auto shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
-        auto shadow_map_buffer = FrameBuffer::create(shadow_map);
         shadow_map->bind();
         // Bind Shadow map shader here?!
         depth_map_shader->bind();
@@ -387,20 +422,15 @@ public:
         Renderer::submit_entity(depth_map_shader, square);
         
         for (auto& [name, entity]: entities) {
-            if (entity->draw)
+            if (entity->draw) {
                 Renderer::submit_entity(depth_map_shader, entity);
+            }
         }
-        // Bind Shadow map shader here?!
         depth_map_shader->unbind();
         shadow_map_buffer->unbind();
-
         // === END SHADOW MAP ===
 
         texture_shader->bind();
-        //texture_shader->upload_u_vec3("u_lightpos[0]",
-        //    std::vector<glm::vec3> { light_position, light_position_b });
-        //texture_shader->upload_u_vec3("u_lightcolor[0]",
-        //    std::vector<glm::vec3> { light_color, light_color_b });
         texture_shader->upload_u_vec3("u_lightpos[0]", light_position);
         texture_shader->upload_u_vec3("u_lightpos[1]", light_position_b);
         texture_shader->upload_u_vec3("u_lightpos[2]", light_position_c);
@@ -411,11 +441,6 @@ public:
         texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
         texture_shader->upload_u_int1("u_render_mode", render_mode);
 
-        //cube->add_uniform_data("u_color", glm::vec4(light_color, 1.0f));
-        //cube->add_uniform_data("u_model", 
-        //    glm::translate(glm::mat4(1.0f), light_position) *
-        //    glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.1))
-        //);
         width = Application::get().get_window().get_width();
         height = Application::get().get_window().get_height();
         if (width != Application::get().get_window().get_width()
@@ -426,7 +451,13 @@ public:
             float aspect = (float)width / (float)height;
             std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
         }
-        Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
+        if (use_shadow_cam) {
+            Renderer::begin_scene(shadow_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, shadow_map_width, shadow_map_height });
+        } else {
+            Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
+        }
+        texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
+        shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
 
         dirt_albedo_texture->bind(0);
         dirt_normal_texture->bind(1);
@@ -467,12 +498,12 @@ private:
     std::shared_ptr<Shader> ibl_equi_to_cube_shader;
     std::shared_ptr<Shader> skybox;
 
-    //std::shared_ptr<Shader> color_shader;
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> simple_shader;
     std::shared_ptr<Shader> depth_map_shader;
 
     std::shared_ptr<Camera> camera;
+    std::shared_ptr<OrthographicCamera> shadow_camera;
 
     std::shared_ptr<VertexArray> cube_vao;
 
@@ -486,12 +517,15 @@ private:
     std::shared_ptr<Texture> dirt_albedo_texture;
     std::shared_ptr<Texture> dirt_normal_texture;
 
+    std::shared_ptr<TextureDepth> shadow_map;
+    std::shared_ptr<FrameBuffer> shadow_map_buffer;
+
     std::shared_ptr<TextureCubeMap> environment_map;
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
-    glm::vec3 light_position {5, 5, 5};
-    glm::vec3 light_color {150, 150, 150};
+    glm::vec3 light_position {3, 3, 3};
+    glm::vec3 light_color {750, 750, 750};
     glm::vec3 light_position_b {1, 0, 0};
     glm::vec3 light_color_b {150, 0, 0};
     glm::vec3 light_position_c {-1, 0, 0};
@@ -507,11 +541,15 @@ private:
     bool camera_rotate = false;
     bool light_rotate = false;
     bool draw_gears = true;
+    bool use_shadow_cam = false;
 
     int render_mode = 0;
 
     int width = 1200;
     int height = 800;
+
+    int shadow_map_width = 1024;
+    int shadow_map_height = 1024;
 };
 
 int main() {
