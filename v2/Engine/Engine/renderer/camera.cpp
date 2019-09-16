@@ -18,10 +18,12 @@ OrthographicCamera::OrthographicCamera(float left, float right, float bottom, fl
 
 void OrthographicCamera::recalculate_view_matrix() {
     // Ortho camera only rotates on Z
-    glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * 
-        glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0, 0, 1));
+    //glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
+    //    glm::rotate(glm::mat4(1.0f),
+    //    glm::radians(rotation.z), glm::vec3(0, 0, 1));
+    glm::mat4 view_matrix = glm::lookAt(position, look_at, up);
 
-    view_matrix = glm::inverse(transform);
+    //view_matrix = glm::inverse(transform);
     view_projection_matrix = projection_matrix * view_matrix;
 }
 
@@ -33,6 +35,13 @@ void OrthographicCamera::on_ui_render(bool display) {
         ImGui::InputFloat3("Rotation", (float*)&rotation, 1, 0);
         ImGui::End();
     }
+}
+
+void OrthographicCamera::set_view(glm::vec3 new_position, glm::vec3 new_look_at, glm::vec3 new_up) {
+    position = new_position;
+    look_at = new_look_at;
+    up = new_up;
+    recalculate_view_matrix();
 }
 
 PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, float far_plane)

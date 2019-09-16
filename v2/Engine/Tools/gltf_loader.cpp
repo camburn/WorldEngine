@@ -128,8 +128,8 @@ TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, s
     Image image = model->images[texture.source];
     GLuint tex_id = enginegl::buffer_image(sampler, image);
     ENGINE_INFO("Loaded image - {0}: {1}: {2}", name, tex_id, image.uri);
-    GLint texture_unit = shader->uniform_texture_unit(name);
-    return TextureObject {tex_id, texture_unit};
+    //GLint texture_unit = shader->uniform_texture_unit(name);
+    return TextureObject {tex_id, -1, name};
 }
 
 TextureObject process_default_texture(
@@ -152,8 +152,8 @@ TextureObject process_default_texture(
 
     GLuint tex_id = enginegl::buffer_image(sampler, image);
     ENGINE_INFO("Loaded image - {0}: {1}: {2}", name, tex_id, image.uri);
-    GLint texture_unit = shader->uniform_texture_unit(name);
-    return TextureObject {tex_id, texture_unit};
+    //GLint texture_unit = shader->uniform_texture_unit(name);
+    return TextureObject {tex_id, -1, name};
 }
 
 MaterialObject process_material(std::shared_ptr<Model> &model, Material &material,
@@ -168,36 +168,36 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
     );
     // TODO: How to avoid hardcoding these names?
     int texture_index = material.pbrMetallicRoughness.baseColorTexture.index;
-    if (texture_index > -1 && shader->uniform_supported("albedo")) {
+    if (texture_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[texture_index], "albedo", shader)
         );
     }
     int normal_index = material.normalTexture.index;
-    if (normal_index > -1 && shader->uniform_supported("normal")) {
+    if (normal_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[normal_index], "normal", shader)
         );
     }
     int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
     // TODO: Handle when ambient is a seperate texture to roughness_metallic
-    if (mr_index > -1 && shader->uniform_supported("roughness_metallic") ) {
+    if (mr_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[mr_index], "roughness_metallic", shader)
         );
     }
     int ao_index = material.occlusionTexture.index;
-    if (ao_index > -1 && shader->uniform_supported("ambient")) {
+    if (ao_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[ao_index], "ambient", shader)
         );
-    } else if (shader->uniform_supported("ambient")) {
+    } else {
         material_object.textures.push_back(
             process_default_texture(model, "ambient", shader, 0xff)
         );
     }
     int emission_index = material.emissiveTexture.index;
-    if (emission_index > -1 && shader->uniform_supported("emission")) {
+    if (emission_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[emission_index], "emission", shader)
         );
@@ -206,7 +206,6 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
             process_default_texture(model, "emission", shader, 0x00)
         );
     }
-    //material_object.texture_id = -1;
     return material_object;
 }
 
@@ -300,6 +299,7 @@ MeshObject process_mesh(
             // We choose not buffer unsupported data?
             // Alternatively we could buffer it and only recreate the vertexattribpointers
             if (shader->attribute_supported(name)) {
+            //{
                 if (common_buffers.count(accessor.bufferView) == 0) {
                     auto vertex_buffer = process_buffer_view(model, buffer_view);  // This creates the VBOs
                     common_buffers[accessor.bufferView] = vertex_buffer;
@@ -371,6 +371,9 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
     common_index_buffers.clear();
     map_materials.clear();
     map_meshes.clear();
+
+    // TODO - Remove the shader dependency - this should just load all data
+    // the shader would make the decision on if the data is useful
 
     int counter = 0;
     for (Material &material: model->materials) {

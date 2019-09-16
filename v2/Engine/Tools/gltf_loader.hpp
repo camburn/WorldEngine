@@ -23,6 +23,7 @@ struct ModelObjects {
 struct TextureObject {
     GLuint texture_id;
     GLint texture_unit;
+    std::string u_name;
 };
 
 struct MaterialObject {
