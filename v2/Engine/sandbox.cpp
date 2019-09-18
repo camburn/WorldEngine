@@ -139,6 +139,8 @@ public:
             -1.0f,  1.0f,  1.0f, // 0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
         };
 
+        // TODO: IBL Is not working yet, the cube texture is not getting correctly populated
+
         cube_vao = VertexArray::create();
         auto cube_vbo = VertexBuffer::create(vertices, sizeof(vertices));
         cube_vbo->set_layout({
@@ -195,14 +197,11 @@ public:
         ENGINE_INFO("Window: {0} x {1}", width, height);
         float aspect = (float)width / (float)height;
 
-        //camera.reset(new OrthographicCamera {-2.0f, 2.0f, -2.0f, 2.0f} );
         shadow_camera.reset( new OrthographicCamera {-5.0f, 5.0f, -5.0f, 5.0f} );
         camera.reset(new PerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
 
-        // TODO: Connect mesh index information to the rendered::submit call
-        // It requires object count and data type (uint/ushort)
         entities["helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf"
         );

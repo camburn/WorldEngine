@@ -48,6 +48,7 @@ private:
         {"POSITION", "position"},
         {"NORMAL", "normal"},
         {"TEXCOORD_0", "texcoord"},
+        {"TANGENT", "tangent"}
     };
     
     struct Uniform {

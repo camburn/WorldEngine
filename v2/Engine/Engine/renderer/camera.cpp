@@ -9,8 +9,6 @@
 
 namespace engine {
 
-
-
 OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
         : Camera(glm::ortho(left, right, bottom, top, -10.0f, 10.0f), glm::mat4(1.0f)) {
     view_projection_matrix = projection_matrix * view_matrix;

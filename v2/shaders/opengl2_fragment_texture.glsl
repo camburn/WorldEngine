@@ -7,6 +7,8 @@ varying vec3 f_normal;
 varying vec3 f_worldpos;
 varying vec2 f_texcoord;
 varying vec4 f_frag_pos_light_space;
+varying vec3 f_tangent;
+varying vec3 f_binormal;
 
 uniform sampler2D albedo;
 uniform sampler2D normal;
@@ -117,7 +119,15 @@ void main() {
     float metallic = texture2D(roughness_metallic, f_texcoord).b;
     vec3 emission_sample = texture2D(emission, f_texcoord).xyz;
 
-    vec3 N = get_normal_from_map();
+    //vec3 N = get_normal_from_map();
+    vec3 N = normalize(f_normal);
+    {
+        mat3 TBN = transpose(mat3(f_tangent, f_binormal, f_normal));
+        N = texture2D(normal, f_texcoord).xyz;
+        N = normalize(N * 2.0 - 1.0);
+        N = normalize(N * TBN);
+    }
+
     vec3 V = normalize(u_camera_position - f_worldpos);
 
     vec3 F0 = vec3(0.4);
@@ -128,25 +138,27 @@ void main() {
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < u_lightpos.length(); i++) {  // Calculate per light radiance
-        vec3 L = normalize(u_lightpos[i] - f_worldpos);
-        vec3 H = normalize(V + L);
-        float distance = length(u_lightpos[i] - f_worldpos);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance;
-        if (i == 0) {
-            radiance = u_lightcolor[i];
-        } else {
-            //Attenuation is for a point light
-            radiance = u_lightcolor[i] * attenuation;
+        vec3 light = vec3(0.0);
+        vec3 radiance = u_lightcolor[i];
+
+        if (i == 0) {  // Directional light
+            light = -normalize(vec3(0) - u_lightpos[i]);
+        } else {  //Attenuation is for a point light
+            light = normalize(u_lightpos[i] - f_worldpos);
+            
+            float distance = length(u_lightpos[i] - f_worldpos);
+            float attenuation = 1.0 / (distance * distance);
+            radiance *= attenuation;
         }
         // Not using it results in a directional light
 
         //Cook-Torrance BRDF
-        float NDF = distribution_ggx(N, H, roughness);
-        float G = geometry_smith(N, V, L, roughness);
-        vec3 F = fresnel_schlick(max(dot(H, V), 0.0), F0);
+        vec3 high = normalize(V + light);
+        float NDF = distribution_ggx(N, high, roughness);
+        float G = geometry_smith(N, V, light, roughness);
+        vec3 F = fresnel_schlick(max(dot(high, V), 0.0), F0);
         vec3 nominator = NDF * G * F;
-        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;  // To prevent divide by zero
+        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, light), 0.0) + 0.001;  // To prevent divide by zero
         vec3 specular = nominator / denominator;
 
         // kS is equal to fresnel
@@ -155,7 +167,7 @@ void main() {
 
         kD *= 1.0 - metallic;
 
-        float NdotL = max(dot(N, L), 0.0);
+        float NdotL = max(dot(N, light), 0.0);
 
         Lo += (kD * albedo_sample.xyz / PI + specular) * radiance * NdotL;
         light_dot += radiance * NdotL + specular * u_lightcolor[i];

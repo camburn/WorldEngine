@@ -63,7 +63,9 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
             // We don't have that data
             ENGINE_ERROR("NOT IMPLEMENTED");
         } else {
-            ENGINE_ASSERT(0, "Entity missing attribute data required by shader - {0}", element.name);
+            ENGINE_ERROR("Entity missing attribute data required by shader - {0}", element.name);
+            return;
+            ENGINE_ASSERT(0, "Data required, cannot continue");
         }
     }
     //TODO: This only supports vec4 data

@@ -298,6 +298,7 @@ MeshObject process_mesh(
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
             // We choose not buffer unsupported data?
             // Alternatively we could buffer it and only recreate the vertexattribpointers
+            ENGINE_INFO("Primitive Supports {0}", name);
             if (shader->attribute_supported(name)) {
             //{
                 if (common_buffers.count(accessor.bufferView) == 0) {
