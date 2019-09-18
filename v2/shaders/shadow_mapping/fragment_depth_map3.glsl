@@ -5,6 +5,7 @@
 out vec4 out_color;
 
 void main() {
-    out_color = gl_FragCoord.z;
-    out_color += gl_FrontFacing ? BIAS: 0.0;
+    float value = gl_FragCoord.z;
+    value += gl_FrontFacing ? BIAS: 0.0;
+    out_color = vec4(value);
 }

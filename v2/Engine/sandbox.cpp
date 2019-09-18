@@ -177,9 +177,10 @@ public:
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
             auto view = views.at(i);
-            ibl_camera->set_view(std::get<0>(view), std::get<1>(view), std::get<2>(view));
-            environment_map->set_data(i);
+            ibl_camera->set_view(view.position, view.look_at, view.up);
             Renderer::begin_scene(ibl_camera, { glm::vec4(1.0f), 512, 512 });
+            environment_map->set_data(i);
+            
             Renderer::submit(ibl_equi_to_cube_shader, cube_vao, glm::mat4(1.0f));
         }
         fbo->unbind();
@@ -416,6 +417,7 @@ public:
 
         // ===== SHADOW MAP =====
         shadow_camera->set_position(light_position);
+        
         shadow_map->bind();
         // Bind Shadow map shader here?!
         depth_map_shader->bind();
@@ -534,7 +536,7 @@ private:
     glm::vec3 light_color_b {150, 0, 0};
     glm::vec3 light_position_c {-1, 0, 0};
     glm::vec3 light_color_c {0, 150, 0};
-    
+
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;
     float delta_time = 0.0f;
