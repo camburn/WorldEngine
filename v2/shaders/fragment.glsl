@@ -129,25 +129,27 @@ void main() {
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < u_lightpos.length(); i++) {  // Calculate per light radiance
-        vec3 L = normalize(u_lightpos[i] - f_worldpos);
-        vec3 H = normalize(V + L);
-        float distance = length(u_lightpos[i] - f_worldpos);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance;
-        if (i == 0) {
-            radiance = u_lightcolor[i];
-        } else {
-            //Attenuation is for a point light
-            radiance = u_lightcolor[i] * attenuation;
+        vec3 light = vec3(0.0);
+        vec3 radiance = u_lightcolor[i];
+
+        if (i == 0) {  // Directional light
+            light = -normalize(vec3(0) - u_lightpos[i]);
+        } else {  //Attenuation is for a point light
+            light = normalize(u_lightpos[i] - f_worldpos);
+            
+            float distance = length(u_lightpos[i] - f_worldpos);
+            float attenuation = 1.0 / (distance * distance);
+            radiance *= attenuation;
         }
         // Not using it results in a directional light
 
         //Cook-Torrance BRDF
-        float NDF = distribution_ggx(N, H, roughness);
-        float G = geometry_smith(N, V, L, roughness);
-        vec3 F = fresnel_schlick(max(dot(H, V), 0.0), F0);
+        vec3 high = normalize(V + light);
+        float NDF = distribution_ggx(N, high, roughness);
+        float G = geometry_smith(N, V, light, roughness);
+        vec3 F = fresnel_schlick(max(dot(high, V), 0.0), F0);
         vec3 nominator = NDF * G * F;
-        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;  // To prevent divide by zero
+        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, light), 0.0) + 0.001;  // To prevent divide by zero
         vec3 specular = nominator / denominator;
 
         // kS is equal to fresnel
@@ -156,7 +158,7 @@ void main() {
 
         kD *= 1.0 - metallic;
 
-        float NdotL = max(dot(N, L), 0.0);
+        float NdotL = max(dot(N, light), 0.0);
 
         Lo += (kD * albedo_sample.xyz / PI + specular) * radiance * NdotL;
         light_dot += radiance * NdotL + specular * u_lightcolor[i];
@@ -192,6 +194,7 @@ void main() {
     else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
+    else if (u_render_mode == 16) final_color = vec4(N, 1);
     
     out_color = final_color;
 }
