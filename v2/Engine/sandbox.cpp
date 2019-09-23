@@ -36,12 +36,13 @@ std::unordered_map<int, std::string> render_modes {
     {7, "Lighting"},
     {8, "Fresnel"},
     {9, "Irradiance"},
-    {10, "Reflection"},
+    {10, "Calculated Normal"},
     {11, "Face Normals"},
     {12, "Normal Map"},
     {13, "Texture Coordinates"},
     {14, "Transparency"},
     {15, "Shadows"},
+    {16, "Reflection"},
 };
 
 class MyLayer: public engine::Layer {
