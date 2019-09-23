@@ -21,6 +21,8 @@ uniform sampler2D emission;
 
 uniform sampler2D shadow_map;
 
+uniform samplerCube irradiance_map;
+
 // First light is always directional
 
 uniform vec3 u_camera_position;
@@ -164,7 +166,15 @@ void main() {
         light_dot += radiance * NdotL + specular * u_lightcolor[i];
     }
 
-    vec3 ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
+    // Ambient lighting (using IBL as the ambient term)
+    vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = texture(irradiance_map, N).rgb;
+    vec3 diffuse = irradiance * albedo_sample.xyz;
+    vec3 ambient_value = (kD * diffuse) * ambient_occlusion;
+
+    //ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
 
     vec3 color = ambient_value * Lo;
     // HDR tonemapping
@@ -186,15 +196,16 @@ void main() {
     else if (u_render_mode == 5) final_color = vec4(emission_sample, 1);
     else if (u_render_mode == 6) final_color = vec4(Lo, 1);
     else if (u_render_mode == 7) final_color = vec4(light_dot, 1); // lighting
-    else if (u_render_mode == 8) final_color = vec4(1); // fresnel
-    else if (u_render_mode == 9) final_color = vec4(1); // irradiance
-    else if (u_render_mode == 10) final_color = vec4(1); // reflection
+    else if (u_render_mode == 8) final_color = vec4(kS, 1); // fresnel
+    else if (u_render_mode == 9) final_color = vec4(irradiance, 1); // irradiance
+    else if (u_render_mode == 10) final_color = vec4(N, 1);
     else if (u_render_mode == 11) final_color = vec4(f_normal, 1); // normal
     else if (u_render_mode == 12) final_color = vec4(texture2D(normal, f_texcoord).xyz, 1); // texture_normal
     else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
-    else if (u_render_mode == 16) final_color = vec4(N, 1);
+    else if (u_render_mode == 16) final_color = vec4(1); // reflection
+    else if (u_render_mode == 17) final_color = vec4(ambient_value, 1); // reflection
     
     out_color = final_color;
 }

@@ -86,6 +86,9 @@ public:
         std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap3.glsl";
         std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap3.glsl";
 
+        std::string vs_file_convolution_map = "./shaders/IBL/vertex_convolution_cubemap.glsl";
+        std::string fs_file_convolution_map = "./shaders/IBL/fragment_convolution_cubemap.glsl";
+
         std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
         std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
 
@@ -96,6 +99,7 @@ public:
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
         ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
+        convolution_shader.reset(new Shader{ vs_file_convolution_map, fs_file_convolution_map });
         skybox.reset(new Shader{ vs_skybox, fs_skybox });
         #endif
 
@@ -165,6 +169,7 @@ public:
             Renderer::submit(ibl_equi_to_cube_shader, cube_vao, glm::mat4(1.0f));
         }
         fbo->unbind();
+        hdr_map->unbind();
         
         ibl_equi_to_cube_shader->unbind();
 
@@ -187,8 +192,7 @@ public:
 
         fbo_small->unbind();
         convolution_shader->unbind();
-        
-
+        environment_map->unbind();
         // --- END IBL ---
 
         width = Application::get().get_window().get_width();
@@ -464,10 +468,6 @@ public:
         shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
         irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
 
-        ENGINE_INFO("Shadow Map texture unit: {0}", texture_shader->uniform_texture_unit("shadow_map"));
-        ENGINE_INFO("Irradiance Map texture unit: {0}", texture_shader->uniform_texture_unit("irradiance_map"));
-        ENGINE_INFO("Albedo Map texture unit: {0}", texture_shader->uniform_texture_unit("albedo"));
-
         dirt_albedo_texture->bind(texture_shader->uniform_texture_unit("albedo"));
         dirt_normal_texture->bind(texture_shader->uniform_texture_unit("normal"));
         dirt_rma_texture->bind(texture_shader->uniform_texture_unit("roughness_metallic"));
@@ -494,9 +494,10 @@ public:
             glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05))
         );
         Renderer::submit_entity(simple_shader, cube);
+        texture_shader->unbind();
 
         skybox->bind();
-        irradiance_map->bind(0);
+        irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
         skybox->upload_u_mat4("u_view", camera->get_view_matrix());
         skybox->upload_u_mat4("u_projection", camera->get_projection_matrix());
         Renderer::submit(skybox, cube_vao, glm::mat4(1.0f));

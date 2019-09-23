@@ -216,7 +216,7 @@ void main() {
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
     else if (u_render_mode == 16) final_color = vec4(1); // reflection
-    else if (u_render_mode == 16) final_color = vec4(ambient_value, 1); // reflection
+    else if (u_render_mode == 17) final_color = vec4(ambient_value, 1); // reflection
 
     gl_FragColor = final_color;
 }

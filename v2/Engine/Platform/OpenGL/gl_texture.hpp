@@ -30,6 +30,7 @@ public:
     virtual uint32_t get_height() const override { return height; }
 
     virtual void bind(uint32_t slot = 0) const override;
+    virtual void unbind() override;
 
 private:
     uint32_t width;
@@ -47,7 +48,7 @@ public:
     virtual uint32_t get_height() const override { return height; }
 
     virtual void bind(uint32_t slot = 0) const override;
-
+    virtual void unbind() override;
 private:
     uint32_t width;
     uint32_t height;
@@ -66,7 +67,7 @@ public:
     virtual uint32_t get_height() const override { return height; }
 
     virtual void bind(uint32_t slot = 0) const override;
-
+    virtual void unbind() override;
 private:
     uint32_t width;
     uint32_t height;
@@ -82,7 +83,7 @@ public:
     virtual uint32_t get_height() const override { return height; }
 
     virtual void bind(uint32_t slot = 0) const override;
-
+    virtual void unbind() override;
 private:
     uint32_t width;
     uint32_t height;

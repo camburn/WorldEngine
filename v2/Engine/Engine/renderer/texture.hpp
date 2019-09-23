@@ -13,6 +13,7 @@ public:
     virtual uint32_t get_height() const = 0;
 
     virtual void bind(uint32_t slot = 0) const = 0;
+    virtual void unbind() = 0;
 };
 
 class Texture2D: public Texture {

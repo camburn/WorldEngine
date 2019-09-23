@@ -49,7 +49,7 @@ void Shader::bind() {
     glUseProgram(shader_id);
 
     for (auto& [name, uniform]: uniforms) {
-        if (uniform.type == GL_SAMPLER_2D) {
+        if (uniform.type == GL_SAMPLER_2D || uniform.type == GL_SAMPLER_CUBE) {
             upload_u_int1(uniform.name, uniform.texture_unit);
         }
     }

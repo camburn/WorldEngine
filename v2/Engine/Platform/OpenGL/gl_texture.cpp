@@ -95,6 +95,10 @@ void GLTexture2D::bind(uint32_t slot) const {
     #endif
 }
 
+void GLTexture2D::unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 GLTextureHDR::GLTextureHDR(const std::string path) { 
     int img_width, img_height, channels;
     stbi_set_flip_vertically_on_load(1);
@@ -141,6 +145,10 @@ void GLTextureHDR::bind(uint32_t slot) const {
     #endif
 }
 
+void GLTextureHDR::unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 GLTextureDepth::GLTextureDepth(uint32_t width, uint32_t height) {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -170,6 +178,10 @@ void GLTextureDepth::bind(uint32_t slot) const {
     #endif
 }
 
+void GLTextureDepth::unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height) {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
@@ -196,6 +208,10 @@ void GLTextureCubeMap::bind(uint32_t slot) const {
     #else
     glBindTextureUnit(slot, texture_id);
     #endif
+}
+
+void GLTextureCubeMap::unbind() {
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 GLTextureCubeMap::~GLTextureCubeMap() {
