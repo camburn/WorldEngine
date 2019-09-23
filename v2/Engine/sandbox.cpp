@@ -184,6 +184,7 @@ public:
             Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), 32, 32 });
             Renderer::submit(convolution_shader, cube_vao, glm::mat4(1.0f));
         }
+
         fbo_small->unbind();
         convolution_shader->unbind();
         
@@ -461,7 +462,7 @@ public:
         }
         texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
         shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
-        //irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
+        irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
 
         ENGINE_INFO("Shadow Map texture unit: {0}", texture_shader->uniform_texture_unit("shadow_map"));
         ENGINE_INFO("Irradiance Map texture unit: {0}", texture_shader->uniform_texture_unit("irradiance_map"));
