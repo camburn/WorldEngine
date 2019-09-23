@@ -16,12 +16,12 @@ std::shared_ptr<TextureHDR> TextureHDR::create(const std::string& path) {
 }
 
 std::shared_ptr<TextureCubeMap> TextureCubeMap::create(uint32_t width, uint32_t height) {
-    ENGINE_INFO("Creating Cube Map {0}");
+    ENGINE_INFO("Creating Cube Map {0}x{1}", width, height);
     return std::make_shared<enginegl::GLTextureCubeMap>(width, height);
 }
 
 std::shared_ptr<TextureDepth> TextureDepth::create(uint32_t width, uint32_t height) {
-    ENGINE_INFO("Creating Cube Map {0}");
+    ENGINE_INFO("Creating Depth Map {0}x{1}", width, height);
     return std::make_shared<enginegl::GLTextureDepth>(width, height);
 }
 

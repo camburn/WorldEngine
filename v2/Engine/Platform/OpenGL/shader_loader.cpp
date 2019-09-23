@@ -85,8 +85,14 @@ GLuint build_program(std::string vs, std::string fs) {
         return 0;
     }
 
-    glValidateProgram(program_id);
-    glGetProgramiv(program_id, GL_VALIDATE_STATUS, &valid);
+    // TODO: Validation checks current state, it should be called only on debug
+    // just before a using the shader
+    // In this case having to seperate samplers (sampler2D + samplerCube) which
+    // by default are all bound to texture unit 0 will fail. It requries setup
+    // of texture units first.
+
+    //glValidateProgram(program_id);
+    //glGetProgramiv(program_id, GL_VALIDATE_STATUS, &valid);
     if (!valid) {
         CheckMessage(program_id);
         ENGINE_ERROR("Shader failed validation");

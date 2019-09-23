@@ -7,8 +7,8 @@ varying vec3 f_normal;
 varying vec3 f_worldpos;
 varying vec2 f_texcoord;
 varying vec4 f_frag_pos_light_space;
-varying vec3 f_tangent;
-varying vec3 f_binormal;
+//varying vec3 f_tangent;
+//varying vec3 f_binormal;
 
 uniform sampler2D albedo;
 uniform sampler2D normal;
@@ -22,6 +22,8 @@ uniform sampler2D ambient;
 uniform sampler2D emission;
 
 uniform sampler2D shadow_map;
+
+uniform samplerCube irradiance_map;
 
 // First light is always directional
 
@@ -119,7 +121,8 @@ void main() {
     float metallic = texture2D(roughness_metallic, f_texcoord).b;
     vec3 emission_sample = texture2D(emission, f_texcoord).xyz;
 
-    //vec3 N = get_normal_from_map();
+    vec3 N = get_normal_from_map();
+    /* The calculate Normal loots nicer than the Normal generated via Tangents
     vec3 N = normalize(f_normal);
     {
         mat3 TBN = transpose(mat3(f_tangent, f_binormal, f_normal));
@@ -127,6 +130,7 @@ void main() {
         N = normalize(N * 2.0 - 1.0);
         N = normalize(N * TBN);
     }
+    */
 
     vec3 V = normalize(u_camera_position - f_worldpos);
 
@@ -173,7 +177,15 @@ void main() {
         light_dot += radiance * NdotL + specular * u_lightcolor[i];
     }
 
-    vec3 ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
+    // Ambient lighting (using IBL as the ambient term)
+    vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
+    vec3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    vec3 irradiance = textureCube(irradiance_map, N).rgb;
+    vec3 diffuse = irradiance * albedo_sample.xyz;
+    vec3 ambient_value = (kD * diffuse) * ambient_occlusion;
+
+    ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
 
     vec3 color = ambient_value * Lo;
     // HDR tonemapping
@@ -183,7 +195,7 @@ void main() {
 
     color += emission_sample.xyz;
 
-    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5 );
+    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
 
     vec4 final_color = vec4((color * shadow_color), albedo_sample.a);
 
@@ -195,8 +207,8 @@ void main() {
     else if (u_render_mode == 5) final_color = vec4(emission_sample, 1);
     else if (u_render_mode == 6) final_color = vec4(Lo, 1);
     else if (u_render_mode == 7) final_color = vec4(light_dot, 1); // lighting
-    else if (u_render_mode == 8) final_color = vec4(1); // fresnel
-    else if (u_render_mode == 9) final_color = vec4(1); // irradiance
+    else if (u_render_mode == 8) final_color = vec4(kS, 1); // fresnel
+    else if (u_render_mode == 9) final_color = vec4(irradiance, 1); // irradiance
     else if (u_render_mode == 10) final_color = vec4(N, 1);
     else if (u_render_mode == 11) final_color = vec4(f_normal, 1); // normal
     else if (u_render_mode == 12) final_color = vec4(texture2D(normal, f_texcoord).xyz, 1); // texture_normal
@@ -204,6 +216,7 @@ void main() {
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
     else if (u_render_mode == 16) final_color = vec4(1); // reflection
+    else if (u_render_mode == 16) final_color = vec4(ambient_value, 1); // reflection
 
     gl_FragColor = final_color;
 }

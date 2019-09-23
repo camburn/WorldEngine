@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "stb_image.h"
 
+
 namespace enginegl {
 
 struct TexData {
@@ -74,6 +75,7 @@ GLTexture2D::GLTexture2D(const std::string path) {
     textures.push_back(TexData{texture_id, (int)height, (int)width, path});
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(data);
+    stbi_set_flip_vertically_on_load(0);
 }
 
 GLTexture2D::GLTexture2D(const void* address) {
@@ -95,7 +97,7 @@ void GLTexture2D::bind(uint32_t slot) const {
 
 GLTextureHDR::GLTextureHDR(const std::string path) { 
     int img_width, img_height, channels;
-    //stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(1);
     ENGINE_ASSERT(stbi_is_hdr(path.c_str()), "File is not a HDR file");
     float* data = stbi_loadf(path.c_str(), &img_width, &img_height, &channels, 0);
     ENGINE_ASSERT(data, "Failed to load image from path");
@@ -107,7 +109,7 @@ GLTextureHDR::GLTextureHDR(const std::string path) {
 
     //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -123,6 +125,7 @@ GLTextureHDR::GLTextureHDR(const std::string path) {
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(data);
     textures.push_back(TexData{texture_id, (int)height, (int)width, path});
+    stbi_set_flip_vertically_on_load(0);
 }
 
 GLTextureHDR::~GLTextureHDR() {
@@ -179,7 +182,7 @@ GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height) {
 
     for (unsigned int i = 0; i < 6; ++i) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16,
-            width, height, 0, GL_RGB, GL_FLOAT, nullptr
+            width, height, 0, GL_RGB, GL_FLOAT, (void*)nullptr
         );
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
