@@ -6,6 +6,12 @@
 
 namespace engine {
 
+enum Filter {
+    LINEAR,
+    NEAREST,
+    LINEAR_MIPMAP_LINEAR
+};
+
 class Texture {
 public:
     virtual ~Texture() = default;
@@ -28,9 +34,14 @@ public:
 
 class TextureCubeMap: public Texture {
 public:
-    virtual void set_data(uint32_t face_index) = 0;
+    virtual void set_data(uint32_t face_index, uint32_t mip = 0) = 0;
 
-    static std::shared_ptr<TextureCubeMap> create(uint32_t width, uint32_t height);
+    static std::shared_ptr<TextureCubeMap> create(
+        uint32_t width, uint32_t height,
+        bool generate_mipmaps = false,
+        engine::Filter min_filter = engine::LINEAR,
+        engine::Filter mag_filter = engine::LINEAR
+    );
 };
 
 class TextureDepth: public Texture {

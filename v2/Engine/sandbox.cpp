@@ -57,24 +57,36 @@ public:
         std::string vs_file_texture = "./shaders/opengl2_vertex_texture.glsl";
         std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
 
-        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap.glsl";
+        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map.glsl";
+        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map.glsl";
+
+        // IBL Shaders
+        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_cubemap.glsl";
         std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap.glsl";
 
-        std::string vs_file_convolution_map = "./shaders/IBL/vertex_convolution_cubemap.glsl";
+        std::string vs_file_convolution_map = "./shaders/IBL/vertex_cubemap.glsl";
         std::string fs_file_convolution_map = "./shaders/IBL/fragment_convolution_cubemap.glsl";
+
+        std::string vs_file_prefilter = "./shaders/IBL/vertex_cubemap.glsl";
+        std::string fs_file_prefilter = "./shaders/IBL/fragment_prefilter.glsl";
+
+        std::string vs_file_brdf = "./shaders/IBL/vertex_brdf.glsl";
+        std::string fs_file_brdf = "./shaders/IBL/fragment_brdf.glsl";
 
         std::string vs_skybox = "./shaders/IBL/vertex_skybox.glsl";
         std::string fs_skybox = "./shaders/IBL/fragment_skybox.glsl";
 
-        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map.glsl";
-        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map.glsl";
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
         simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+
+        // IBL Shaders
         ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
         convolution_shader.reset(new Shader{ vs_file_convolution_map, fs_file_convolution_map });
-        skybox.reset(new Shader{ vs_skybox, fs_skybox });
+        prefilter_shader.reset(new Shader{ vs_file_prefilter, fs_file_prefilter });
+        brdf_shader.reset(new Shader{ vs_file_brdf, fs_file_brdf });
+        skybox_shader.reset(new Shader{ vs_skybox, fs_skybox });
 
         #else
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
@@ -158,7 +170,8 @@ public:
         auto fbo = FrameBuffer::create(512, 512);
         fbo->bind();
 
-        environment_map = TextureCubeMap::create(512, 512);
+        environment_map = TextureCubeMap::create(
+            512, 512, true, NEAREST, LINEAR);
         hdr_map->bind(0);
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
@@ -170,7 +183,6 @@ public:
         }
         fbo->unbind();
         hdr_map->unbind();
-        
         ibl_equi_to_cube_shader->unbind();
 
         // Cubemap Convolution
@@ -193,6 +205,40 @@ public:
         fbo_small->unbind();
         convolution_shader->unbind();
         environment_map->unbind();
+
+        // pre-filter
+        // FIXME: This is displaying black why?
+        prefilter_shader->bind();
+        auto fbo_filter = FrameBuffer::create(128, 128);
+        fbo_filter->bind();
+        
+        environment_map->bind(0);
+        prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR, LINEAR);
+        unsigned int max_mip_levels = 5;
+        for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
+            unsigned int mip_width = 128 * std::pow(0.5, mip);
+            unsigned int mip_height = 128 * std::pow(0.5, mip);
+            std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
+
+            float roughness = (float)mip / (float)(max_mip_levels - 1);
+            prefilter_shader->upload_u_float1("roughness", roughness);
+            ENGINE_INFO("Pre Filter roughness: {0} - {1}x{2}", roughness, mip_width, mip_height);
+            for (unsigned int i = 0; i < 6; i++) {
+                auto view = views.at(i);
+                std::static_pointer_cast<PerspectiveCamera>(ibl_camera)->set_view(view.position, view.look_at, view.up);
+                prefilter_map->set_data(i, mip);
+                Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), (int)mip_width, (int)mip_height });
+                Renderer::submit(prefilter_shader, cube_vao, glm::mat4(1.0f));
+            }
+        }
+
+        fbo_filter->unbind();
+        environment_map->unbind();
+        prefilter_shader->unbind();
+
+        // Generate 2D LUT from BRDF equations
+        // TODO
+
         // --- END IBL ---
 
         width = Application::get().get_window().get_width();
@@ -302,10 +348,12 @@ public:
         ImGui::Begin("Entities");
         ImGui::Text("Render Mode: %s", render_modes[render_mode].c_str());
         ImGui::InputInt("Change Mode", &render_mode);
-        
+        ImGui::InputInt("Skybox Mode", &skybox_mode);
+        ImGui::Checkbox("Render Skybox", &render_skybox);
+
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
         ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
-        
+
         ImGui::SetNextItemWidth(50.f);
         ImGui::InputFloat("Camera radius", &camera_radius);
         ImGui::InputFloat3("Dir Light Position", &light_position.x);
@@ -496,18 +544,23 @@ public:
         Renderer::submit_entity(simple_shader, cube);
         texture_shader->unbind();
 
-        skybox->bind();
-        irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
-        skybox->upload_u_mat4("u_view", camera->get_view_matrix());
-        skybox->upload_u_mat4("u_projection", camera->get_projection_matrix());
-        Renderer::submit(skybox, cube_vao, glm::mat4(1.0f));
-
+        if (render_skybox) {
+            skybox_shader->bind();
+            if (skybox_mode == 0) environment_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
+            else if (skybox_mode == 1) irradiance_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
+            else if (skybox_mode == 2) prefilter_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
+            skybox_shader->upload_u_mat4("u_view", camera->get_view_matrix());
+            skybox_shader->upload_u_mat4("u_projection", camera->get_projection_matrix());
+            Renderer::submit(skybox_shader, cube_vao, glm::mat4(1.0f));
+        }
     }
 
 private:
     std::shared_ptr<Shader> ibl_equi_to_cube_shader;
     std::shared_ptr<Shader> convolution_shader;
-    std::shared_ptr<Shader> skybox;
+    std::shared_ptr<Shader> prefilter_shader;
+    std::shared_ptr<Shader> brdf_shader;
+    std::shared_ptr<Shader> skybox_shader;
 
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> simple_shader;
@@ -535,6 +588,7 @@ private:
 
     std::shared_ptr<TextureCubeMap> environment_map;
     std::shared_ptr<TextureCubeMap> irradiance_map;
+    std::shared_ptr<TextureCubeMap> prefilter_map;
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
@@ -556,8 +610,10 @@ private:
     bool light_rotate = false;
     bool draw_gears = true;
     bool use_shadow_cam = false;
+    bool render_skybox = true;
 
     int render_mode = 0;
+    int skybox_mode = 0;
 
     int width = 1200;
     int height = 800;

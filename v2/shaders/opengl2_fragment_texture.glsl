@@ -85,6 +85,10 @@ vec3 fresnel_schlick(float cos_theta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
 }
 
+vec3 fresnel_schlick_roughness(float cos_theta, vec3 F0, float roughness) {
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cos_theta, 5.0);
+}
+
 float shadow_calculation(vec4 frag_pos_light_space) {
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
@@ -178,14 +182,14 @@ void main() {
     }
 
     // Ambient lighting (using IBL as the ambient term)
-    vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
+    vec3 kS = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
+    //kD *= 1.0 - metallic;
     vec3 irradiance = textureCube(irradiance_map, N).rgb;
     vec3 diffuse = irradiance * albedo_sample.xyz;
     vec3 ambient_value = (kD * diffuse) * ambient_occlusion;
 
-    ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
+    //ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
 
     vec3 color = ambient_value * Lo;
     // HDR tonemapping

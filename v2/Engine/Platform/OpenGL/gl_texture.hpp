@@ -57,9 +57,14 @@ private:
 
 class GLTextureCubeMap: public engine::TextureCubeMap, public GLTexture {
 public:
-    GLTextureCubeMap(uint32_t width, uint32_t height);
+    GLTextureCubeMap(
+        uint32_t width, uint32_t height,
+        bool generate_mipmaps,
+        engine::Filter min_filter,
+        engine::Filter mag_filter
+    );
 
-    virtual void set_data(uint32_t face_index) override;
+    virtual void set_data(uint32_t face_index, uint32_t mip = 0) override;
 
     virtual ~GLTextureCubeMap();
 

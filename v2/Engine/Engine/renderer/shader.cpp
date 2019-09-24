@@ -94,6 +94,13 @@ void Shader::upload_u_int1(const std::string& u_name, const GLint& value) {
     glUniform1i(location, value);
 }
 
+void Shader::upload_u_float1(const std::string& u_name, const GLfloat& value) {
+    if (!uniform_supported(u_name))
+        return;
+    GLuint location = uniform_location(u_name);
+    glUniform1f(location, value);
+}
+
 bool Shader::attribute_supported(std::string name) {
     name = GLTF_TO_SHADER_ATTRIBUTE[name];
     for (auto & [index, attribute]: attributes) {

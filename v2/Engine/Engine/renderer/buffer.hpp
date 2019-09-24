@@ -145,6 +145,7 @@ public:
 
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
+    virtual void resize(uint32_t width, uint32_t height) = 0;
 
     static std::shared_ptr<FrameBuffer> create(uint32_t width, uint32_t height);
     static std::shared_ptr<FrameBuffer> create(const std::shared_ptr<TextureDepth>& texture);

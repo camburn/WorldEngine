@@ -98,7 +98,7 @@ OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height) {
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
 
-    ENGINE_TRACE("Frame buffer {0} created", frame_buffer);
+    ENGINE_TRACE("Frame buffer {0} {1}x{2} created", frame_buffer, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
@@ -107,6 +107,12 @@ OpenGLFrameBuffer::~OpenGLFrameBuffer() {
     glDeleteBuffers(1, &frame_buffer);
     glDeleteBuffers(1, &render_buffer);
     ENGINE_TRACE("Frame buffer {0} garbage collected", frame_buffer);
+}
+
+void OpenGLFrameBuffer::resize(uint32_t width, uint32_t height) {
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
 }
 
 void OpenGLFrameBuffer::bind() const {

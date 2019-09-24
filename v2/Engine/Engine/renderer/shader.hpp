@@ -33,6 +33,7 @@ public:
     void upload_u_vec3(const std::string& u_name, const glm::vec3& vec);
     void upload_u_vec3(const std::string& u_name, const std::vector<glm::vec3>& vecs);
     void upload_u_int1(const std::string& u_name, const GLint& value);
+    void upload_u_float1(const std::string& u_name, const GLfloat& value);
 
     BufferLayout attribute_layout();
     bool attribute_supported(std::string name);
