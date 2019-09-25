@@ -32,6 +32,14 @@ void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec4> &
     attribute_data_vec4[name] = data;
 }
 
+void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec3> &data) {
+    if (attribute_size <= 0) {
+        attribute_size = data.size();
+    }
+    ENGINE_ASSERT(data.size() == attribute_size, "Attributes require the same number of elements");
+    attribute_data_vec3[name] = data;
+}
+
 void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec2> &data) {
     if (attribute_size <= 0) {
         attribute_size = data.size();
@@ -94,13 +102,18 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 }
 
 void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
-    if (handled_shaders.count(shader->get_id()) > 0 ) return;
-    if (vaos.size() == 0) {
-        vaos.emplace_back();
-    }
-    auto &vao = vaos[0];
-    if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
-    ENGINE_DEBUG("Generating vertex array and buffer for Entity");
+    //if (handled_shaders.count(shader->get_id()) > 0 ) return;
+    //if (vaos.size() == 0) {
+    //    vaos.emplace_back();
+    //}
+    //auto &vao = vaos[0];
+    //if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
+    if (vaos.size() > 0) return;
+    //if (shader_vaos.count(shader->get_id()) > 0 ) {
+    //    return;
+    //}
+
+    ENGINE_DEBUG("Generating vertex array and buffer for CustomEntity {0}", name);
     // TODO: Shader should cache entities that have buffered data already
     BufferLayout layout = shader->attribute_layout();
 
@@ -108,8 +121,7 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     std::vector<float> data;
     interlace_data(layout, data);
 
-    vao = VertexArray::create();
-    int sze = sizeof(data);
+    auto vao = VertexArray::create(draw_mode);
     buffer = VertexBuffer::create(&data[0], data.size() * sizeof(float));
     buffer->set_layout(layout);
     index_buffer = IndexBuffer::create(&index_data[0], index_data.size());
@@ -119,6 +131,9 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     buffers_set = true;
     shader->register_vertex_array(vao);
     handled_shaders.emplace(shader->get_id());
+
+    shader_vaos.emplace(shader->get_id(), vao);
+    vaos.push_back(vao);
 }
 
 void CustomEntity::render() {
@@ -134,7 +149,7 @@ std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
     tinygltf::TinyGLTF loader;
     std::string err;
     std::string warn;
-
+    ENGINE_INFO("Loading GLTF - {0}", file_name);
     bool ret = loader.LoadASCIIFromFile(model.get(), &err, &warn, file_name);
     //bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename); // for binary glTF(.glb)
 

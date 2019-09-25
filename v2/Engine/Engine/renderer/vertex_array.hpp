@@ -10,12 +10,19 @@ namespace engine {
 
 static unsigned int array_id = 10000;
 
+enum class DrawMode {
+    TRIANGLES,
+    TRIANGLE_STRIP
+};
+
 class VertexArray {
 public:
     VertexArray(): id(array_id++) {}
     virtual ~VertexArray() {}
     virtual void bind() const = 0;
     virtual void unbind() const = 0;
+
+    virtual uint32_t mode() const = 0;
 
     virtual uint32_t get_id() const = 0;
 
@@ -28,8 +35,10 @@ public:
     virtual const std::vector<std::shared_ptr<VertexBuffer>>& get_vertex_buffers() const = 0;
     virtual const std::shared_ptr<IndexBuffer>& get_index_buffer() const = 0;
 
-    static std::shared_ptr<VertexArray> create();
-    static std::shared_ptr<VertexArray> create(unsigned int vao);
+    static std::shared_ptr<VertexArray> create(DrawMode mode = DrawMode::TRIANGLES);
+    static std::shared_ptr<VertexArray> create(unsigned int vao, DrawMode mode = DrawMode::TRIANGLES);
+protected:
+    DrawMode draw_mode;
 private:
     const unsigned int id;
 };

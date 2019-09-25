@@ -32,12 +32,14 @@ GLenum shader_to_gl_type(const engine::ShaderDataType type) {
     return shader_to_gl_types[type];
 }
 
-OpenGLVertexArray::OpenGLVertexArray (GLuint vao) {
+OpenGLVertexArray::OpenGLVertexArray (GLuint vao, engine::DrawMode mode) {
+    draw_mode = mode;
     vao_id = vao;
 }
 
-OpenGLVertexArray::OpenGLVertexArray () {
+OpenGLVertexArray::OpenGLVertexArray (engine::DrawMode mode) {
     glGenVertexArrays(1, &vao_id);
+    draw_mode = mode;
     // Too new
     // glCreateVertexArrays(1, &vao_id);
     ENGINE_TRACE("Vertex array {0} created", vao_id);
@@ -54,6 +56,12 @@ void OpenGLVertexArray::bind() const {
 
 void OpenGLVertexArray::unbind() const {
     glBindVertexArray(0);
+}
+
+uint32_t OpenGLVertexArray::mode() const {
+    if (draw_mode == engine::DrawMode::TRIANGLES) return GL_TRIANGLES;
+    if (draw_mode == engine::DrawMode::TRIANGLE_STRIP) return GL_TRIANGLE_STRIP;
+    return GL_TRIANGLES;
 }
 
 void OpenGLVertexArray::describe_layout(const std::shared_ptr<engine::VertexBuffer>& vertex_buffer) const {

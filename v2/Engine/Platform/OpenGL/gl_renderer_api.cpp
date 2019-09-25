@@ -29,7 +29,7 @@ void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& ver
     ENGINE_ASSERT(vertex_array->get_index_buffer(), "Index buffer not set on Vertex Array");
     vertex_array->bind();
     glDrawElements(
-        GL_TRIANGLES,
+        vertex_array->mode(),
         vertex_array->get_index_buffer()->get_count(),
         vertex_array->get_index_buffer()->get_type(),
         reinterpret_cast<const GLvoid *>(vertex_array->get_index_buffer()->get_offset())

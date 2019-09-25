@@ -7,14 +7,14 @@
 
 namespace engine {
 
-std::shared_ptr<VertexArray> generate_sphere() {
-    std::vector<glm::vec3> positions;
+std::shared_ptr<CustomEntity> generate_sphere() {
+    std::vector<glm::vec4> positions;
+    std::vector<glm::vec4> normals;
     std::vector<glm::vec2> uv;
-    std::vector<glm::vec3> normals;
     std::vector<uint32_t> indices;
 
-    const unsigned int X_SEGMENTS = 64;
-    const unsigned int Y_SEGMENTS = 64;
+    const unsigned int X_SEGMENTS = 8;
+    const unsigned int Y_SEGMENTS = 8;
     const float PI = 3.14159265359;
     for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
     {
@@ -26,9 +26,9 @@ std::shared_ptr<VertexArray> generate_sphere() {
             float yPos = std::cos(ySegment * PI);
             float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
-            positions.push_back(glm::vec3(xPos, yPos, zPos));
+            positions.push_back(glm::vec4(xPos, yPos, zPos, 1.0f));
             uv.push_back(glm::vec2(xSegment, ySegment));
-            normals.push_back(glm::vec3(xPos, yPos, zPos));
+            normals.push_back(glm::vec4(xPos, yPos, zPos, 0.0f));
         }
     }
 
@@ -39,7 +39,7 @@ std::shared_ptr<VertexArray> generate_sphere() {
         {
             for (int x = 0; x <= X_SEGMENTS; ++x)
             {
-                indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                indices.push_back(y * (X_SEGMENTS + 1) + x);
                 indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
             }
         }
@@ -48,25 +48,24 @@ std::shared_ptr<VertexArray> generate_sphere() {
             for (int x = X_SEGMENTS; x >= 0; --x)
             {
                 indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                indices.push_back(y * (X_SEGMENTS + 1) + x);
             }
         }
         oddRow = !oddRow;
     }
     uint32_t indexCount = indices.size();
 
-    auto cube_vao = VertexArray::create();
-    auto cube_vbo = VertexBuffer::create(&positions.at(0), sizeof(positions));
-    auto cube_ibo = IndexBuffer::create(&indices.at(0), indices.size());
+    std::shared_ptr<CustomEntity> entity( new CustomEntity(DrawMode::TRIANGLE_STRIP));
 
-    cube_vbo->set_layout({
-        { engine::ShaderDataType::Float3, "position" },
-        { engine::ShaderDataType::Float3, "normal" },
-        { engine::ShaderDataType::Float3, "texcoord" },
-    });
-    cube_vao->add_vertex_buffer(cube_vbo);
-    cube_vao->set_index_buffer(cube_ibo);
-    return cube_vao;
+    entity->add_attribute_data("position", positions);
+    entity->add_attribute_data("normal", normals);
+    entity->add_attribute_data("texcoord", uv);
+    entity->add_index_data(indices);
+    entity->name = "Sphere";
+
+    entity->add_uniform_data("u_model", glm::mat4(1.0f) );
+
+    return entity;
 }
 
 }

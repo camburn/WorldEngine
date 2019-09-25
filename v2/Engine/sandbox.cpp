@@ -14,6 +14,7 @@
 #include "Engine/renderer/camera.hpp"
 #include "Engine/entity.hpp"
 #include "Tools/gltf_loader.hpp"
+#include "Tools/generate_sphere.hpp"
 #include "Engine/renderer/texture.hpp"
 
 #include <GLFW/glfw3.h>
@@ -266,8 +267,20 @@ public:
 
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube";
-        entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
-        entities["monkey"]->name = "Monkey";
+        //entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
+        //entities["monkey"]->name = "Monkey";
+
+        entities["sphere"] = generate_sphere();
+        sphere_albedo_texture = Texture2D::create(
+            "./assets/textures/rusted_iron/rustediron2_basecolor.png"
+        );
+        sphere_normal_texture = Texture2D::create(
+            "./assets/textures/rusted_iron/rustediron2_normal.png"
+        );
+        sphere_rma_texture = Texture2D::create(
+            "./assets/textures/rusted_iron/out2.png"
+        );
+
         square.reset( new CustomEntity());
         square->name = "Square";
         
@@ -306,7 +319,7 @@ public:
         square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
-        entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
+        //entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
 
         entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
@@ -334,6 +347,7 @@ public:
         for (auto& [name, entity]: entities) {
             entity->update_buffers(texture_shader);
         }
+        square->update_buffers(texture_shader);
 
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
@@ -523,8 +537,15 @@ public:
         Renderer::submit_entity(texture_shader, square);
         
         for (auto& [name, entity]: entities) {
-            if (entity->draw)
+            if (entity->draw) {
+                if (name == "sphere") {
+                    sphere_albedo_texture->bind(texture_shader->uniform_texture_unit("albedo"));
+                    sphere_normal_texture->bind(texture_shader->uniform_texture_unit("normal"));
+                    sphere_rma_texture->bind(texture_shader->uniform_texture_unit("roughness_metallic"));
+                    sphere_rma_texture->bind(texture_shader->uniform_texture_unit("ambient"));
+                }
                 Renderer::submit_entity(texture_shader, entity);
+            }
         }
 
         // Draw light positions
@@ -582,6 +603,10 @@ private:
     std::shared_ptr<Texture> dirt_albedo_texture;
     std::shared_ptr<Texture> dirt_normal_texture;
     std::shared_ptr<Texture> hdr_map;
+
+    std::shared_ptr<Texture> sphere_albedo_texture;
+    std::shared_ptr<Texture> sphere_normal_texture;
+    std::shared_ptr<Texture> sphere_rma_texture;
 
     std::shared_ptr<TextureDepth> shadow_map;
     std::shared_ptr<FrameBuffer> shadow_map_buffer;

@@ -12,12 +12,14 @@ namespace enginegl {
 
 class OpenGLVertexArray: public engine::VertexArray {
 public:
-    OpenGLVertexArray ();
-    OpenGLVertexArray (GLuint vao);
+    OpenGLVertexArray (engine::DrawMode mode);
+    OpenGLVertexArray (GLuint vao, engine::DrawMode mode);
     ~OpenGLVertexArray ();
 
     virtual void bind() const override;
     virtual void unbind() const override;
+
+    virtual uint32_t mode() const override;
 
     virtual uint32_t get_id() const override { return vao_id; }
 

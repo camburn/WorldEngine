@@ -87,7 +87,6 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
             shader, entity, std::static_pointer_cast<GltfEntity>(entity)->get_node(),
             entity->uniform_mat4_data["u_model"]
         );
-
         return;
     }
 
@@ -107,6 +106,10 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
     for (auto const &vao: *entity) {
         renderer_api->draw_indexed(vao);
     }
+    //auto const &vao = std::dynamic_pointer_cast<CustomEntity>(entity)->get_shader_vaos(shader->get_id());
+    //if (vao) {
+    //    renderer_api->draw_indexed(vao);
+    //}
     // TODO: Smart stuff to build an appropriate VAO for the bound shader if not available
 
     //shader->bind();

@@ -62,8 +62,10 @@ protected:
 class CustomEntity: public Entity {
 public:
     CustomEntity(){}
+    CustomEntity(engine::DrawMode mode): draw_mode(mode) {}
     ~CustomEntity() { ENGINE_INFO("Custom Entity {0} garbage collected", name); }
     void add_attribute_data(std::string name, std::vector<glm::vec4> &data);
+    void add_attribute_data(std::string name, std::vector<glm::vec3> &data);
     void add_attribute_data(std::string name, std::vector<glm::vec2> &data);
     void add_index_data(std::vector<uint32_t> &data);
 
@@ -86,7 +88,14 @@ public:
     void set_scale(glm::vec3 value) override { scale = value; }
     void set_rotation(glm::quat value) override { rotation = value; }
 
+    std::shared_ptr<VertexArray> get_shader_vaos(uint32_t shader_id) {
+        if (shader_vaos.count(shader_id) > 0)
+            return shader_vaos.at(shader_id);
+        return nullptr;
+    }
+
 private:
+    DrawMode draw_mode = DrawMode::TRIANGLES;
     glm::vec3 translation;
     glm::vec3 scale;
     glm::quat rotation;
@@ -95,6 +104,7 @@ private:
     std::shared_ptr<IndexBuffer> index_buffer;
     int attribute_size = 0;
     std::unordered_set<uint32_t> handled_shaders;
+    std::map<uint32_t, std::shared_ptr<VertexArray>> shader_vaos;
 
     void interlace_data(BufferLayout &layout, std::vector<float> &data);
 };

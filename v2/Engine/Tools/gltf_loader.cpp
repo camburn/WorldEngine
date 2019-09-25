@@ -180,7 +180,7 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         );
     }
     int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
-    // TODO: Handle when ambient is a seperate texture to roughness_metallic
+    // TODO: Handle when roughness is seperate to metallic?
     if (mr_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[mr_index], "roughness_metallic", shader)
