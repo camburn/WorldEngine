@@ -77,6 +77,32 @@ public:
         std::string vs_skybox = "./shaders/IBL/vertex_skybox.glsl";
         std::string fs_skybox = "./shaders/IBL/fragment_skybox.glsl";
 
+        #else
+        std::string vs_file_simple = "./shaders/vertex_simple.glsl";
+        std::string fs_file_simple = "./shaders/fragment_simple.glsl";
+
+        std::string vs_file_texture = "./shaders/vertex.glsl";
+        std::string fs_file_texture = "./shaders/fragment.glsl";
+
+        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map3.glsl";
+        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map3.glsl";
+
+        // IBL Shaders
+        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_cubemap3.glsl";
+        std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap3.glsl";
+
+        std::string vs_file_convolution_map = "./shaders/IBL/vertex_cubemap3.glsl";
+        std::string fs_file_convolution_map = "./shaders/IBL/fragment_convolution_cubemap3.glsl";
+
+        std::string vs_file_prefilter = "./shaders/IBL/vertex_cubemap3.glsl";
+        std::string fs_file_prefilter = "./shaders/IBL/fragment_prefilter3.glsl";
+
+        std::string vs_file_brdf = "./shaders/IBL/vertex_brdf3.glsl";
+        std::string fs_file_brdf = "./shaders/IBL/fragment_brdf3.glsl";
+
+        std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
+        std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
+        #endif
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
@@ -89,32 +115,6 @@ public:
         brdf_shader.reset(new Shader{ vs_file_brdf, fs_file_brdf });
         skybox_shader.reset(new Shader{ vs_skybox, fs_skybox });
 
-        #else
-        std::string vs_file_simple = "./shaders/vertex_simple.glsl";
-        std::string fs_file_simple = "./shaders/fragment_simple.glsl";
-
-        std::string vs_file_texture = "./shaders/vertex.glsl";
-        std::string fs_file_texture = "./shaders/fragment.glsl";
-
-        std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_equi_to_cubemap3.glsl";
-        std::string fs_file_ibl_equi_to_cube = "./shaders/IBL/fragment_equi_to_cubemap3.glsl";
-
-        std::string vs_file_convolution_map = "./shaders/IBL/vertex_convolution_cubemap.glsl";
-        std::string fs_file_convolution_map = "./shaders/IBL/fragment_convolution_cubemap.glsl";
-
-        std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
-        std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
-
-        std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map3.glsl";
-        std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map3.glsl";
-
-        texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
-        depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
-        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
-        ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
-        convolution_shader.reset(new Shader{ vs_file_convolution_map, fs_file_convolution_map });
-        skybox.reset(new Shader{ vs_skybox, fs_skybox });
-        #endif
 
         // --- IBL CALCULATION -- 
 
