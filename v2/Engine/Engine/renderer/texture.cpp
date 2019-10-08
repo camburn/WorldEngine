@@ -6,8 +6,12 @@
 namespace engine {
 
 std::shared_ptr<Texture2D> Texture2D::create(const std::string& path) {
-    ENGINE_INFO("Loading Texture {0}", path);
+    ENGINE_INFO("Loading Texture2D {0}", path);
     return std::make_shared<enginegl::GLTexture2D>(path);
+}
+std::shared_ptr<Texture2D> Texture2D::create(uint32_t width, uint32_t height) {
+    ENGINE_INFO("Creating Texture2D {0}x{1}",  width, height);
+    return std::make_shared<enginegl::GLTexture2D>(width, height);
 }
 
 std::shared_ptr<TextureHDR> TextureHDR::create(const std::string& path) {

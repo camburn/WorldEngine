@@ -49,6 +49,21 @@ std::unordered_map<int, std::string> render_modes {
 
 class MyLayer: public engine::Layer {
 public:
+
+    struct camera_position {
+        glm::vec3 position;
+        glm::vec3 look_at;
+        glm::vec3 up;
+    };
+    std::vector<camera_position> views = {
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)},
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)},
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)}
+    };
+
     MyLayer() {
 
         #ifdef OPENGL_COMPATIBILITY
@@ -147,7 +162,7 @@ public:
         cube_vao->add_vertex_buffer(cube_vbo);
         cube_vao->set_index_buffer(cube_ibo);
 
-        ibl_camera.reset(new PerspectiveCamera(90.0f, 1.0f, 0.1, 10.0f));
+        ibl_camera.reset(new PerspectiveCamera(90.0f, 1.0f, 0.1f, 10.0f));
         
         struct camera_position {
             glm::vec3 position;
@@ -171,8 +186,7 @@ public:
         auto fbo = FrameBuffer::create(512, 512);
         fbo->bind();
 
-        environment_map = TextureCubeMap::create(
-            512, 512, true, NEAREST, LINEAR);
+        environment_map = TextureCubeMap::create(512, 512, false, NEAREST, LINEAR);
         hdr_map->bind(0);
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
@@ -185,6 +199,9 @@ public:
         fbo->unbind();
         hdr_map->unbind();
         ibl_equi_to_cube_shader->unbind();
+
+        // Generate Mipmaps for environment map
+        std::static_pointer_cast<TextureCubeMap>(environment_map)->generate_mipmaps();
 
         // Cubemap Convolution
         convolution_shader->bind();
@@ -209,16 +226,19 @@ public:
 
         // pre-filter
         // FIXME: This is displaying black why?
+
+        prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR_MIPMAP_LINEAR, LINEAR);
+
         prefilter_shader->bind();
-        auto fbo_filter = FrameBuffer::create(128, 128);
-        fbo_filter->bind();
+        fbo_filter = FrameBuffer::create(128, 128);
         
         environment_map->bind(0);
-        prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR, LINEAR);
+        fbo_filter->bind();
+        
         unsigned int max_mip_levels = 5;
         for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
-            unsigned int mip_width = 128 * std::pow(0.5, mip);
-            unsigned int mip_height = 128 * std::pow(0.5, mip);
+            unsigned int mip_width = 128 * std::pow(0.5f, mip);
+            unsigned int mip_height = 128 * std::pow(0.5f, mip);
             std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
@@ -239,6 +259,55 @@ public:
 
         // Generate 2D LUT from BRDF equations
         // TODO
+        std::vector<glm::vec2> quad_texcoords {
+            // positions        // texture Coords
+            {1.0f, 1.0f},
+            {1.0f, 0.0f},
+            {0.0f, 0.0f},
+            {0.0f, 1.0f}
+        };
+        std::vector<glm::vec4> quad_vertices {
+            // positions        // texture Coords
+            {-1.0f,  1.0f, 0.0f, 1.0f},
+            {-1.0f, -1.0f, 0.0f, 1.0f},
+            { 1.0f,  1.0f, 0.0f, 1.0f},
+            { 1.0f, -1.0f, 0.0f, 1.0f},
+        };
+        std::vector<uint32_t> quad_indices {
+            0, 1, 3, 0, 3, 2
+        };
+
+        std::shared_ptr<Entity> quad( new CustomEntity());
+
+        std::static_pointer_cast<CustomEntity>(quad)->add_attribute_data("position", quad_vertices);
+        std::static_pointer_cast<CustomEntity>(quad)->add_attribute_data("texcoord", quad_texcoords);
+        std::static_pointer_cast<CustomEntity>(quad)->add_index_data(quad_indices);
+        std::static_pointer_cast<CustomEntity>(quad)->name = "Quad";
+        /*
+        auto quad_vao = VertexArray::create(DrawMode::TRIANGLE_STRIP);
+
+        auto quad_vbo = VertexBuffer::create(quad_vertices, sizeof(quad_vertices));
+        //auto cube_ibo = IndexBuffer::create(indices, sizeof(indices) / sizeof(uint32_t));
+        quad_vbo->set_layout({
+            { engine::ShaderDataType::Float3, "position" },
+            { engine::ShaderDataType::Float3, "texcoord" },
+        });
+        
+        quad_vao->add_vertex_buffer(quad_vbo);
+        */
+        fbo_filter->bind();
+        brdf_map = Texture2D::create(512, 512);
+        //brdf_map->bind(0);
+
+        std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(512, 512);
+        std::static_pointer_cast<Texture2D>(brdf_map)->set_data();
+
+        brdf_shader->bind();
+        Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), (int)512, (int)512 });
+        //Renderer::submit(brdf_shader, quad_vao, glm::mat4(1.0f));
+        Renderer::submit_entity(brdf_shader, quad);
+
+        fbo_filter->unbind();
 
         // --- END IBL ---
 
@@ -412,6 +481,36 @@ public:
         entities["helmet"]->on_ui_render(true);
     }
 
+    void pre_filter() {
+        prefilter_shader->bind();
+        //fbo_filter = FrameBuffer::create(128, 128);
+        fbo_filter->bind();
+        
+        environment_map->bind(0);
+        //prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR_MIPMAP_LINEAR, LINEAR);
+        unsigned int max_mip_levels = 5;
+        for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
+            unsigned int mip_width = 128 * std::pow(0.5f, mip);
+            unsigned int mip_height = 128 * std::pow(0.5f, mip);
+            std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
+
+            float roughness = (float)mip / (float)(max_mip_levels - 1);
+            prefilter_shader->upload_u_float1("roughness", roughness);
+            ENGINE_INFO("Pre Filter roughness: {0} - {1}x{2}", roughness, mip_width, mip_height);
+            for (unsigned int i = 0; i < 6; i++) {
+                auto view = views.at(i);
+                std::static_pointer_cast<PerspectiveCamera>(ibl_camera)->set_view(view.position, view.look_at, view.up);
+                prefilter_map->set_data(i, mip);
+                Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), (int)mip_width, (int)mip_height });
+                Renderer::submit(prefilter_shader, cube_vao, glm::mat4(1.0f));
+            }
+        }
+
+        fbo_filter->unbind();
+        environment_map->unbind();
+        prefilter_shader->unbind();
+    }
+
     void on_update() override {
         float time = (float)glfwGetTime();
         float delta_time = time - last_frame_time;
@@ -468,8 +567,8 @@ public:
         }
 
         if (camera_rotate) {
-            float camX = sin(glfwGetTime()) * camera_radius;
-            float camZ = cos(glfwGetTime()) * camera_radius;
+            float camX = sin((float)glfwGetTime()) * camera_radius;
+            float camZ = cos((float)glfwGetTime()) * camera_radius;
             camera->set_position(glm::vec3(camX, 0.0f, camZ));
         }
         if (light_rotate) {
@@ -479,6 +578,8 @@ public:
         }
         square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         // === END CONTROLS ===
+
+        //pre_filter();
 
         // ===== SHADOW MAP =====
         shadow_camera->set_position(light_position);
@@ -577,6 +678,8 @@ public:
     }
 
 private:
+    std::shared_ptr<FrameBuffer> fbo_filter;
+
     std::shared_ptr<Shader> ibl_equi_to_cube_shader;
     std::shared_ptr<Shader> convolution_shader;
     std::shared_ptr<Shader> prefilter_shader;
@@ -603,6 +706,7 @@ private:
     std::shared_ptr<Texture> dirt_albedo_texture;
     std::shared_ptr<Texture> dirt_normal_texture;
     std::shared_ptr<Texture> hdr_map;
+    std::shared_ptr<Texture> brdf_map;
 
     std::shared_ptr<Texture> sphere_albedo_texture;
     std::shared_ptr<Texture> sphere_normal_texture;

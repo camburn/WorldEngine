@@ -24,7 +24,10 @@ public:
 
 class Texture2D: public Texture {
 public:
+    virtual void set_data() = 0;
+
     static std::shared_ptr<Texture2D> create(const std::string& path);
+    static std::shared_ptr<Texture2D> create(uint32_t width, uint32_t height);
 };
 
 class TextureHDR: public Texture {
@@ -35,6 +38,7 @@ public:
 class TextureCubeMap: public Texture {
 public:
     virtual void set_data(uint32_t face_index, uint32_t mip = 0) = 0;
+    virtual void generate_mipmaps() = 0;
 
     static std::shared_ptr<TextureCubeMap> create(
         uint32_t width, uint32_t height,

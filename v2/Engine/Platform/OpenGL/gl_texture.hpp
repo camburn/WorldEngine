@@ -23,11 +23,14 @@ class GLTexture2D: public engine::Texture2D, public GLTexture {
 public:
     GLTexture2D(const std::string path);
     GLTexture2D(const void* address);
+    GLTexture2D(uint32_t width, uint32_t height);
 
     virtual ~GLTexture2D();
 
     virtual uint32_t get_width() const override { return width; }
     virtual uint32_t get_height() const override { return height; }
+
+    virtual void set_data() override;
 
     virtual void bind(uint32_t slot = 0) const override;
     virtual void unbind() override;
@@ -65,6 +68,7 @@ public:
     );
 
     virtual void set_data(uint32_t face_index, uint32_t mip = 0) override;
+    virtual void generate_mipmaps() override;
 
     virtual ~GLTextureCubeMap();
 

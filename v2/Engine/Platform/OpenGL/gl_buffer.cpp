@@ -110,7 +110,7 @@ OpenGLFrameBuffer::~OpenGLFrameBuffer() {
 }
 
 void OpenGLFrameBuffer::resize(uint32_t width, uint32_t height) {
-    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    //glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
     glBindRenderbuffer(GL_RENDERBUFFER, render_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
 }

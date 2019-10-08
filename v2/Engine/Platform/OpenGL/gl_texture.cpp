@@ -78,6 +78,26 @@ GLTexture2D::GLTexture2D(const std::string path) {
     stbi_set_flip_vertically_on_load(0);
 }
 
+GLTexture2D::GLTexture2D(uint32_t width, uint32_t height) {
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, width, height, 0, GL_RG, GL_FLOAT, 0);
+
+    textures.push_back(TexData{texture_id, (int)height, (int)width, "CustomTexture"});
+}
+
+void GLTexture2D::set_data() {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D, texture_id, 0
+    );
+}
+
 GLTexture2D::GLTexture2D(const void* address) {
 
 }
@@ -216,6 +236,11 @@ GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height,
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     textures.push_back(TexData{texture_id, (int)height, (int)width, "Cubemap"});
+}
+
+void GLTextureCubeMap::generate_mipmaps() {
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 void GLTextureCubeMap::bind(uint32_t slot) const {

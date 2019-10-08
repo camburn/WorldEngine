@@ -1,7 +1,7 @@
 #version 460
 
 in vec3 f_localpos;
-out vec3 out_color;
+out vec4 out_color;
 uniform samplerCube environment_map;
 
 void main() {
@@ -9,5 +9,5 @@ void main() {
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));
 
-    out_color = color;
+    out_color = vec4(color, 1);
 }
