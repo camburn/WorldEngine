@@ -102,10 +102,18 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
     for (auto const &tex_id: entity->texture_ids) {
         renderer_api->map_texture(tex_id);
     }
-    // TODO: Draw triangles if no indices
-    for (auto const &vao: *entity) {
-        renderer_api->draw_indexed(vao);
+    if (std::static_pointer_cast<CustomEntity>(entity)->elements_set()) {
+        for (auto const &vao: *entity) {
+            renderer_api->draw_indexed(vao);
+        }
     }
+    else {
+        for (auto const &vao: *entity) {
+            renderer_api->draw_triangles(vao);
+        }
+    }
+    // TODO: Draw triangles if no indices
+
     //auto const &vao = std::dynamic_pointer_cast<CustomEntity>(entity)->get_shader_vaos(shader->get_id());
     //if (vao) {
     //    renderer_api->draw_indexed(vao);

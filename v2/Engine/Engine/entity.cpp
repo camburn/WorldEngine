@@ -102,16 +102,7 @@ void CustomEntity::interlace_data(BufferLayout &layout, std::vector<float> &data
 }
 
 void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
-    //if (handled_shaders.count(shader->get_id()) > 0 ) return;
-    //if (vaos.size() == 0) {
-    //    vaos.emplace_back();
-    //}
-    //auto &vao = vaos[0];
-    //if (vao != nullptr && shader->is_vertex_array_registered(vao)) return;
     if (vaos.size() > 0) return;
-    //if (shader_vaos.count(shader->get_id()) > 0 ) {
-    //    return;
-    //}
 
     ENGINE_DEBUG("Generating vertex array and buffer for CustomEntity {0}", name);
     // TODO: Shader should cache entities that have buffered data already
@@ -124,10 +115,15 @@ void CustomEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     auto vao = VertexArray::create(draw_mode);
     buffer = VertexBuffer::create(&data[0], data.size() * sizeof(float));
     buffer->set_layout(layout);
-    index_buffer = IndexBuffer::create(&index_data[0], index_data.size());
+    if (index_data.size() > 0) {
+        index_buffer = IndexBuffer::create(&index_data[0], index_data.size());
+        vao->set_index_buffer(index_buffer);
+    } else {
+        vao->set_array_count(attribute_size);
+    }
 
     vao->add_vertex_buffer(buffer);
-    vao->set_index_buffer(index_buffer);
+
     buffers_set = true;
     shader->register_vertex_array(vao);
     handled_shaders.emplace(shader->get_id());
@@ -158,6 +154,7 @@ std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
     if (!ret) ENGINE_ASSERT(false, "Failed to parse glTF");
 
     std::shared_ptr<GltfEntity> entity = std::make_shared<GltfEntity>(model);
+    entity->file_name = file_name;
 
     return entity; 
 }
@@ -170,6 +167,7 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     if (buffered) return;
     if (handled_shaders.count(shader->get_id()) > 0 ) return;
     ModelObjects m_obj;
+    ENGINE_INFO("Processing GLtf - {0}", file_name);
     node_object = gltf_to_opengl(m_obj, model, shader);
     texture_ids = m_obj.texture_ids;
     vaos = m_obj.vaos;

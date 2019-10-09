@@ -21,6 +21,9 @@ uniform sampler2D emission;
 
 uniform sampler2D shadow_map;
 
+// IBL Materials
+uniform sampler2D brdf_map;
+uniform samplerCube prefilter_map;
 uniform samplerCube irradiance_map;
 
 // First light is always directional
@@ -84,6 +87,10 @@ vec3 fresnel_schlick(float cos_theta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
 }
 
+vec3 fresnel_schlick_roughness(float cos_theta, vec3 F0, float roughness) {
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cos_theta, 5.0);
+}
+
 float shadow_calculation(vec4 frag_pos_light_space) {
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
@@ -122,6 +129,7 @@ void main() {
 
     vec3 N = get_normal_from_map();
     vec3 V = normalize(u_camera_position - f_worldpos);
+    vec3 R = reflect(-V, N);
 
     vec3 F0 = vec3(0.4);
     F0 = mix(F0, albedo_sample.xyz, metallic);
@@ -167,14 +175,21 @@ void main() {
     }
 
     // Ambient lighting (using IBL as the ambient term)
-    vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
+    vec3 F = fresnel_schlick_roughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kS = F;
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
     vec3 irradiance = texture(irradiance_map, N).rgb;
     vec3 diffuse = irradiance * albedo_sample.xyz;
-    vec3 ambient_value = (kD * diffuse) * ambient_occlusion;
+    
+    // IBL Specular Component
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefiltered_color = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 brdf = texture(brdf_map, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 specular = prefiltered_color * (F * brdf.x + brdf.y);
 
-    //ambient_value = vec3(0.03) * albedo_sample.xyz * ambient_occlusion;
+    // Final ambient value
+    vec3 ambient_value = (kD * diffuse * specular) * ambient_occlusion;
 
     vec3 color = ambient_value * Lo;
     // HDR tonemapping
@@ -204,8 +219,10 @@ void main() {
     else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
-    else if (u_render_mode == 16) final_color = vec4(1); // reflection
-    else if (u_render_mode == 17) final_color = vec4(ambient_value, 1); // reflection
+    else if (u_render_mode == 16) final_color = vec4(R, 1); // reflection
+    else if (u_render_mode == 17) final_color = vec4(specular, 1); // Specular
+    else if (u_render_mode == 18) final_color = vec4(ambient_value, 1); // Ambient color
+    else if (u_render_mode == 19) final_color = vec4(diffuse, 1); // diffuse
     
     out_color = final_color;
 }

@@ -367,7 +367,6 @@ Node - Mesh + relative_transform
 */
 
 NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, const std::shared_ptr<engine::Shader> &shader) {
-    ENGINE_INFO("Processing GLtf");
     common_buffers.clear();
     common_index_buffers.clear();
     map_materials.clear();

@@ -13,8 +13,8 @@ std::shared_ptr<CustomEntity> generate_sphere() {
     std::vector<glm::vec2> uv;
     std::vector<uint32_t> indices;
 
-    const unsigned int X_SEGMENTS = 8;
-    const unsigned int Y_SEGMENTS = 8;
+    const unsigned int X_SEGMENTS = 64;
+    const unsigned int Y_SEGMENTS = 64;
     const float PI = 3.14159265359;
     for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
     {
@@ -39,16 +39,14 @@ std::shared_ptr<CustomEntity> generate_sphere() {
         {
             for (int x = 0; x <= X_SEGMENTS; ++x)
             {
-                indices.push_back(y * (X_SEGMENTS + 1) + x);
                 indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                indices.push_back(y * (X_SEGMENTS + 1) + x);
             }
-        }
-        else
-        {
+        } else {
             for (int x = X_SEGMENTS; x >= 0; --x)
             {
-                indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
                 indices.push_back(y * (X_SEGMENTS + 1) + x);
+                indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
             }
         }
         oddRow = !oddRow;

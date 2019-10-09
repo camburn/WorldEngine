@@ -39,7 +39,15 @@ void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& ver
 
 void GLRendererAPI::draw_triangles(const std::shared_ptr<engine::VertexArray>& vertex_array) {
     vertex_array->bind();
-    glDrawArrays(GL_TRIANGLES, 0, vertex_array->get_array_count() );
+    if (vertex_array->get_drawmode() == engine::DrawMode::TRIANGLES) {
+        glDrawArrays(GL_TRIANGLES, 0, vertex_array->get_array_count() );
+    }
+    else if (vertex_array->get_drawmode() == engine::DrawMode::TRIANGLE_STRIP) {
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertex_array->get_array_count() );
+    }
+    else {
+        ENGINE_WARN("Draw mode not supported");
+    }
     vertex_array->unbind();
 }
 

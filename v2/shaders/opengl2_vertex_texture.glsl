@@ -17,7 +17,7 @@ varying vec4 f_frag_pos_light_space;
 //varying vec3 f_binormal;
 
 void main() {
-    f_normal = (u_model * normal).xyz;
+    f_normal = (mat3(u_model) * normal.xyz);
 
     // Calculte Tangent Bitangent Normal Matrix
     //vec3 vertex_binormal = cross(normal.xyz, tangent);

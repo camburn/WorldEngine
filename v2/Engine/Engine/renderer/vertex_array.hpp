@@ -31,6 +31,7 @@ public:
 
     virtual void set_array_count(const uint32_t count) = 0;
     virtual uint32_t get_array_count() = 0;
+    DrawMode get_drawmode() { return draw_mode; };
 
     virtual const std::vector<std::shared_ptr<VertexBuffer>>& get_vertex_buffers() const = 0;
     virtual const std::shared_ptr<IndexBuffer>& get_index_buffer() const = 0;

@@ -44,7 +44,10 @@ std::unordered_map<int, std::string> render_modes {
     {14, "Transparency"},
     {15, "Shadows"},
     {16, "Reflection"},
-    {17, "Ambient"}
+    {17, "Specular"},
+    {18, "Ambient"},
+    {19, "Diffuse"},
+    {20, "kD"},
 };
 
 class MyLayer: public engine::Layer {
@@ -225,7 +228,6 @@ public:
         environment_map->unbind();
 
         // pre-filter
-        // FIXME: This is displaying black why?
 
         prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR_MIPMAP_LINEAR, LINEAR);
 
@@ -261,10 +263,10 @@ public:
         // TODO
         std::vector<glm::vec2> quad_texcoords {
             // positions        // texture Coords
-            {1.0f, 1.0f},
-            {1.0f, 0.0f},
+            {0.0f, 1.0f},
             {0.0f, 0.0f},
-            {0.0f, 1.0f}
+            {1.0f, 1.0f},
+            {1.0f, 0.0f}
         };
         std::vector<glm::vec4> quad_vertices {
             // positions        // texture Coords
@@ -273,28 +275,13 @@ public:
             { 1.0f,  1.0f, 0.0f, 1.0f},
             { 1.0f, -1.0f, 0.0f, 1.0f},
         };
-        std::vector<uint32_t> quad_indices {
-            0, 1, 3, 0, 3, 2
-        };
 
-        std::shared_ptr<Entity> quad( new CustomEntity());
+        std::shared_ptr<Entity> quad( new CustomEntity(engine::DrawMode::TRIANGLE_STRIP));
 
         std::static_pointer_cast<CustomEntity>(quad)->add_attribute_data("position", quad_vertices);
         std::static_pointer_cast<CustomEntity>(quad)->add_attribute_data("texcoord", quad_texcoords);
-        std::static_pointer_cast<CustomEntity>(quad)->add_index_data(quad_indices);
         std::static_pointer_cast<CustomEntity>(quad)->name = "Quad";
-        /*
-        auto quad_vao = VertexArray::create(DrawMode::TRIANGLE_STRIP);
 
-        auto quad_vbo = VertexBuffer::create(quad_vertices, sizeof(quad_vertices));
-        //auto cube_ibo = IndexBuffer::create(indices, sizeof(indices) / sizeof(uint32_t));
-        quad_vbo->set_layout({
-            { engine::ShaderDataType::Float3, "position" },
-            { engine::ShaderDataType::Float3, "texcoord" },
-        });
-        
-        quad_vao->add_vertex_buffer(quad_vbo);
-        */
         fbo_filter->bind();
         brdf_map = Texture2D::create(512, 512);
         //brdf_map->bind(0);
@@ -304,10 +291,13 @@ public:
 
         brdf_shader->bind();
         Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), (int)512, (int)512 });
-        //Renderer::submit(brdf_shader, quad_vao, glm::mat4(1.0f));
         Renderer::submit_entity(brdf_shader, quad);
 
         fbo_filter->unbind();
+
+        brdf_map = Texture2D::create(
+            "./assets/textures/BRDF_LUT.tga"
+        );
 
         // --- END IBL ---
 
@@ -334,12 +324,18 @@ public:
 
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
+        entities["sample_mra"] = GltfEntity::load_from_file(
+            "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/EnvironmentTest/glTF/EnvironmentTest.gltf"
+        );
+        entities["sample_mra"]->name = "MetalRoughSpheres";
+
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube";
         //entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
         //entities["monkey"]->name = "Monkey";
 
         entities["sphere"] = generate_sphere();
+        entities["sphere"]->name = "Sphere";
         sphere_albedo_texture = Texture2D::create(
             "./assets/textures/rusted_iron/rustediron2_basecolor.png"
         );
@@ -397,6 +393,9 @@ public:
             glm::scale(glm::mat4(1.0f), glm::vec3(4, 4, 4))
         );
 
+        entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
+        entities["sphere"]->add_uniform_data("u_model", glm::mat4(1.0f));
+        
         entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
         entities["cube"]->add_uniform_data("u_model",
             glm::translate(glm::mat4(1.0f), glm::vec3(1, -1.5, 1)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5))
@@ -433,6 +432,7 @@ public:
         ImGui::InputInt("Change Mode", &render_mode);
         ImGui::InputInt("Skybox Mode", &skybox_mode);
         ImGui::Checkbox("Render Skybox", &render_skybox);
+        ImGui::Checkbox("Cast Shadows", &cast_shadows);
 
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
         ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
@@ -611,6 +611,7 @@ public:
         
         texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
         texture_shader->upload_u_int1("u_render_mode", render_mode);
+        texture_shader->upload_u_int1("u_cast_shadows", cast_shadows);
 
         width = Application::get().get_window().get_width();
         height = Application::get().get_window().get_height();
@@ -630,6 +631,9 @@ public:
         texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
         shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
         irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
+        prefilter_map->bind(texture_shader->uniform_texture_unit("prefilter_map"));
+        brdf_map->bind(texture_shader->uniform_texture_unit("brdf_map"));
+
 
         dirt_albedo_texture->bind(texture_shader->uniform_texture_unit("albedo"));
         dirt_normal_texture->bind(texture_shader->uniform_texture_unit("normal"));
@@ -722,11 +726,11 @@ private:
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
     glm::vec3 light_position {3, 3, 3};
-    glm::vec3 light_color {750, 750, 750};
-    glm::vec3 light_position_b {1, 0, 0};
-    glm::vec3 light_color_b {150, 0, 0};
-    glm::vec3 light_position_c {-1, 0, 0};
-    glm::vec3 light_color_c {0, 150, 0};
+    glm::vec3 light_color {100, 100, 100};
+    glm::vec3 light_position_b {2, 0, 0};
+    glm::vec3 light_color_b {50, 25, 25};
+    glm::vec3 light_position_c {-2, 0, 0};
+    glm::vec3 light_color_c {25, 50, 25};
 
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;
@@ -740,6 +744,7 @@ private:
     bool draw_gears = true;
     bool use_shadow_cam = false;
     bool render_skybox = true;
+    bool cast_shadows = true;
 
     int render_mode = 0;
     int skybox_mode = 0;

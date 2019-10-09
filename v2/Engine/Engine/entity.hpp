@@ -83,6 +83,8 @@ public:
     glm::vec3 get_translation() override { return translation; }
     glm::vec3 get_scale() override { return scale; }
     glm::quat get_rotation() override { return rotation; }
+    DrawMode get_drawmode() { return draw_mode; }
+    bool elements_set() { return index_buffer != nullptr; }
 
     void set_translation(glm::vec3 value) override { translation = value; }
     void set_scale(glm::vec3 value) override { scale = value; }
@@ -131,6 +133,8 @@ public:
     void set_translation(glm::vec3 value) override { node_object.set_translation(value); }
     void set_scale(glm::vec3 value) override { node_object.set_scale(value); }
     void set_rotation(glm::quat value) override { node_object.set_rotation(value); }
+
+    std::string file_name = "";
 
 private:
     std::vector<std::shared_ptr<VertexBuffer>> buffers;
