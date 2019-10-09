@@ -324,10 +324,10 @@ public:
 
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
-        entities["sample_mra"] = GltfEntity::load_from_file(
-            "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/EnvironmentTest/glTF/EnvironmentTest.gltf"
-        );
-        entities["sample_mra"]->name = "MetalRoughSpheres";
+        //entities["sample_mra"] = GltfEntity::load_from_file(
+        //    "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/EnvironmentTest/glTF/EnvironmentTest.gltf"
+        //);
+        //entities["sample_mra"]->name = "MetalRoughSpheres";
 
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube";
@@ -401,7 +401,7 @@ public:
             glm::scale(glm::mat4(1.0f), glm::vec3(4, 4, 4))
         );
 
-        entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
+        //entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
         entities["sphere"]->set_translation(glm::vec3(-3, 0, 0));
 
         entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
