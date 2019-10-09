@@ -6,6 +6,8 @@
 #include <unordered_set>
 
 #include <glm/glm.hpp>
+#include<glm/gtc/quaternion.hpp>
+#include<glm/common.hpp>
 #include "tiny_gltf.h"
 
 #include "Engine/renderer/shader.hpp"
@@ -49,7 +51,7 @@ public:
 
     std::shared_ptr<VertexArray> get_vao(uint32_t index);
     std::map<std::string, glm::vec4> uniform_vec4_data;
-    std::map<std::string, glm::mat4> uniform_mat4_data;
+    std::map<std::string, glm::mat4> uniform_mat4_data { {"u_model", glm::mat4(1.0f) }};
     std::vector<GLuint> texture_ids;
     std::shared_ptr<Shader> allocated_shader;
     bool draw = true;
@@ -73,6 +75,12 @@ public:
 
     void render() override;
 
+    void recalculate_modelmat() {
+        uniform_mat4_data["u_model"] = glm::translate(glm::mat4(1.0f), translation) *
+            glm::toMat4(rotation) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+    }
+
     virtual void on_ui_render(bool display) override;
 
     std::map<std::string, std::vector<glm::vec4>> attribute_data_vec4;
@@ -83,12 +91,17 @@ public:
     glm::vec3 get_translation() override { return translation; }
     glm::vec3 get_scale() override { return scale; }
     glm::quat get_rotation() override { return rotation; }
+    glm::mat4 get_modelmat() { return uniform_mat4_data["u_model"] ; }
     DrawMode get_drawmode() { return draw_mode; }
     bool elements_set() { return index_buffer != nullptr; }
 
-    void set_translation(glm::vec3 value) override { translation = value; }
-    void set_scale(glm::vec3 value) override { scale = value; }
-    void set_rotation(glm::quat value) override { rotation = value; }
+    void add_texture(std::string sampler_name, std::shared_ptr<Texture> texture) { 
+        textures.emplace(sampler_name, texture); 
+    }
+
+    void set_translation(glm::vec3 value) override { translation = value; recalculate_modelmat(); }
+    void set_scale(glm::vec3 value) override { scale = value; recalculate_modelmat(); }
+    void set_rotation(glm::quat value) override { rotation = value; recalculate_modelmat(); }
 
     std::shared_ptr<VertexArray> get_shader_vaos(uint32_t shader_id) {
         if (shader_vaos.count(shader_id) > 0)
@@ -96,18 +109,19 @@ public:
         return nullptr;
     }
 
+    std::map<std::string, std::shared_ptr<Texture>> textures;
+
 private:
     DrawMode draw_mode = DrawMode::TRIANGLES;
-    glm::vec3 translation;
-    glm::vec3 scale;
-    glm::quat rotation;
+    glm::vec3 translation {0.0f, 0.0f, 0.0f};
+    glm::vec3 scale {1.0f, 1.0f, 1.0f};
+    glm::quat rotation {1.0f, 0.0f, 0.0f, 0.0f};
     bool buffers_set = false;
     std::shared_ptr<VertexBuffer> buffer;
     std::shared_ptr<IndexBuffer> index_buffer;
     int attribute_size = 0;
     std::unordered_set<uint32_t> handled_shaders;
     std::map<uint32_t, std::shared_ptr<VertexArray>> shader_vaos;
-
     void interlace_data(BufferLayout &layout, std::vector<float> &data);
 };
 

@@ -95,7 +95,16 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
         shader->upload_u_vec4(name, data);
     }
     for (auto const &[name, data]: entity->uniform_mat4_data) {
+        // TODO: This is not nice, need to move the model matrix into entity
         shader->upload_u_mat4(name, data);
+    }
+    std::vector<uint32_t> units;
+    for (auto const &[name, texture]: std::static_pointer_cast<CustomEntity>(entity)->textures) {
+        if (shader->uniform_supported(name)) {
+            uint32_t unit = shader->uniform_texture_unit(name);
+            texture->bind(unit);
+            units.push_back(unit);
+        }
     }
     // When do we update buffers?
     entity->update_buffers(shader);
@@ -111,6 +120,9 @@ void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_
         for (auto const &vao: *entity) {
             renderer_api->draw_triangles(vao);
         }
+    }
+    for (auto unit: units) {
+        renderer_api->map_texture_unit(0, unit);
     }
     // TODO: Draw triangles if no indices
 

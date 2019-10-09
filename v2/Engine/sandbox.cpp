@@ -331,8 +331,6 @@ public:
 
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube";
-        //entities["monkey"] = GltfEntity::load_from_file("./assets/gltf/Monkey/monkey.gltf");
-        //entities["monkey"]->name = "Monkey";
 
         entities["sphere"] = generate_sphere();
         entities["sphere"]->name = "Sphere";
@@ -345,9 +343,21 @@ public:
         sphere_rma_texture = Texture2D::create(
             "./assets/textures/rusted_iron/out2.png"
         );
+        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+            "albedo", sphere_albedo_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+            "normal", sphere_normal_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+            "roughness_metallic", sphere_rma_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+            "ambient", sphere_rma_texture
+        );
 
-        square.reset( new CustomEntity());
-        square->name = "Square";
+        entities["square"].reset( new CustomEntity());
+        entities["square"]->name = "Square";
         
         std::vector<glm::vec4> data = {
             {  3.0f, 0.0f,  3.0f, 1.0f },
@@ -376,15 +386,13 @@ public:
 
         std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("position", data);
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("normal", normals);
-        std::static_pointer_cast<CustomEntity>(square)->add_attribute_data("texcoord", texcoords);
-        std::static_pointer_cast<CustomEntity>(square)->add_index_data(i_data);
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("position", data);
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("normal", normals);
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("texcoord", texcoords);
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_index_data(i_data);
 
-        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        square->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
-
-        //entities["monkey"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), glm::vec3(-3, 0, 0)));
+        entities["square"]->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
         entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
@@ -394,28 +402,32 @@ public:
         );
 
         entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
-        entities["sphere"]->add_uniform_data("u_model", glm::mat4(1.0f));
-        
+        entities["sphere"]->set_translation(glm::vec3(-3, 0, 0));
+
         entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
         entities["cube"]->add_uniform_data("u_model",
             glm::translate(glm::mat4(1.0f), glm::vec3(1, -1.5, 1)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5))
         );
-        
+        dirt_albedo_texture = Texture2D::create("./assets/textures/dry-dirt1-albedo_small.png");
+        dirt_normal_texture = Texture2D::create("./assets/textures/dry-dirt1-normal_small.png");
+        dirt_rma_texture = Texture2D::create("./assets/textures/dry-dirt1-rma.png");
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+            "albedo", dirt_albedo_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+            "normal", dirt_normal_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+            "roughness_metallic", dirt_rma_texture
+        );
+        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+            "ambient", dirt_rma_texture
+        );
         //checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
-        dirt_albedo_texture = Texture2D::create(
-            "./assets/textures/dry-dirt1-albedo_small.png"
-        );
-        dirt_normal_texture = Texture2D::create(
-            "./assets/textures/dry-dirt1-normal_small.png"
-        );
-        dirt_rma_texture = Texture2D::create(
-            "./assets/textures/dry-dirt1-rma.png"
-        );
 
         for (auto& [name, entity]: entities) {
             entity->update_buffers(texture_shader);
         }
-        square->update_buffers(texture_shader);
 
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
@@ -576,7 +588,8 @@ public:
             float lightZ = cos(glfwGetTime()) * light_radius;
             light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
-        square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
+        entities["square"]->set_translation(model_position);
         // === END CONTROLS ===
 
         //pre_filter();
@@ -590,7 +603,6 @@ public:
         shadow_map_buffer->bind();
         // Render things here
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
-        Renderer::submit_entity(depth_map_shader, square);
         
         for (auto& [name, entity]: entities) {
             if (entity->draw) {
@@ -634,21 +646,8 @@ public:
         prefilter_map->bind(texture_shader->uniform_texture_unit("prefilter_map"));
         brdf_map->bind(texture_shader->uniform_texture_unit("brdf_map"));
 
-
-        dirt_albedo_texture->bind(texture_shader->uniform_texture_unit("albedo"));
-        dirt_normal_texture->bind(texture_shader->uniform_texture_unit("normal"));
-        dirt_rma_texture->bind(texture_shader->uniform_texture_unit("roughness_metallic"));
-        dirt_rma_texture->bind(texture_shader->uniform_texture_unit("ambient"));
-        Renderer::submit_entity(texture_shader, square);
-        
         for (auto& [name, entity]: entities) {
             if (entity->draw) {
-                if (name == "sphere") {
-                    sphere_albedo_texture->bind(texture_shader->uniform_texture_unit("albedo"));
-                    sphere_normal_texture->bind(texture_shader->uniform_texture_unit("normal"));
-                    sphere_rma_texture->bind(texture_shader->uniform_texture_unit("roughness_metallic"));
-                    sphere_rma_texture->bind(texture_shader->uniform_texture_unit("ambient"));
-                }
                 Renderer::submit_entity(texture_shader, entity);
             }
         }
@@ -700,7 +699,6 @@ private:
 
     std::shared_ptr<VertexArray> cube_vao;
 
-    std::shared_ptr<Entity> square;
     std::shared_ptr<Entity> cube;
 
     std::map<std::string, std::shared_ptr<Entity>> entities;
