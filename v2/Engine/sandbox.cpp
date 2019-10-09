@@ -493,36 +493,6 @@ public:
         entities["helmet"]->on_ui_render(true);
     }
 
-    void pre_filter() {
-        prefilter_shader->bind();
-        //fbo_filter = FrameBuffer::create(128, 128);
-        fbo_filter->bind();
-        
-        environment_map->bind(0);
-        //prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR_MIPMAP_LINEAR, LINEAR);
-        unsigned int max_mip_levels = 5;
-        for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
-            unsigned int mip_width = 128 * std::pow(0.5f, mip);
-            unsigned int mip_height = 128 * std::pow(0.5f, mip);
-            std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
-
-            float roughness = (float)mip / (float)(max_mip_levels - 1);
-            prefilter_shader->upload_u_float1("roughness", roughness);
-            ENGINE_INFO("Pre Filter roughness: {0} - {1}x{2}", roughness, mip_width, mip_height);
-            for (unsigned int i = 0; i < 6; i++) {
-                auto view = views.at(i);
-                std::static_pointer_cast<PerspectiveCamera>(ibl_camera)->set_view(view.position, view.look_at, view.up);
-                prefilter_map->set_data(i, mip);
-                Renderer::begin_scene(ibl_camera, { glm::vec4(0.0f), (int)mip_width, (int)mip_height });
-                Renderer::submit(prefilter_shader, cube_vao, glm::mat4(1.0f));
-            }
-        }
-
-        fbo_filter->unbind();
-        environment_map->unbind();
-        prefilter_shader->unbind();
-    }
-
     void on_update() override {
         float time = (float)glfwGetTime();
         float delta_time = time - last_frame_time;
@@ -591,8 +561,6 @@ public:
         //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         entities["square"]->set_translation(model_position);
         // === END CONTROLS ===
-
-        //pre_filter();
 
         // ===== SHADOW MAP =====
         shadow_camera->set_position(light_position);
