@@ -295,7 +295,7 @@ public:
 
         fbo_filter->unbind();
 
-        brdf_map = Texture2D::create(
+        brdf_map_file = Texture2D::create(
             "./assets/textures/BRDF_LUT.tga"
         );
 
@@ -445,6 +445,7 @@ public:
         ImGui::InputInt("Skybox Mode", &skybox_mode);
         ImGui::Checkbox("Render Skybox", &render_skybox);
         ImGui::Checkbox("Cast Shadows", &cast_shadows);
+        ImGui::Checkbox("Generated BRDF LUT", &use_generated_brdf);
 
         ImGui::Checkbox("Rotate Camera", &camera_rotate);
         ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
@@ -612,7 +613,12 @@ public:
         shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
         irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
         prefilter_map->bind(texture_shader->uniform_texture_unit("prefilter_map"));
-        brdf_map->bind(texture_shader->uniform_texture_unit("brdf_map"));
+        if (use_generated_brdf) {
+            brdf_map->bind(texture_shader->uniform_texture_unit("brdf_map"));
+        } else {
+            brdf_map_file->bind(texture_shader->uniform_texture_unit("brdf_map"));
+        }
+        
 
         for (auto& [name, entity]: entities) {
             if (entity->draw) {
@@ -677,6 +683,7 @@ private:
     std::shared_ptr<Texture> dirt_normal_texture;
     std::shared_ptr<Texture> hdr_map;
     std::shared_ptr<Texture> brdf_map;
+    std::shared_ptr<Texture> brdf_map_file;
 
     std::shared_ptr<Texture> sphere_albedo_texture;
     std::shared_ptr<Texture> sphere_normal_texture;
@@ -711,6 +718,7 @@ private:
     bool use_shadow_cam = false;
     bool render_skybox = true;
     bool cast_shadows = true;
+    bool use_generated_brdf = true;
 
     int render_mode = 0;
     int skybox_mode = 0;
