@@ -67,6 +67,13 @@ static std::map<int, engine::ShaderDataType> ACCESSOR_TO_SHADER_TYPE {
     {TINYGLTF_TYPE_SCALAR , engine::ShaderDataType::Int},
     {TINYGLTF_TYPE_MAT3 , engine::ShaderDataType::Mat3},
     {TINYGLTF_TYPE_MAT4 , engine::ShaderDataType::Mat4},
+    {TINYGLTF_PARAMETER_TYPE_BYTE, engine::ShaderDataType::Char},           // (5120)
+    {TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE, engine::ShaderDataType::uChar}, // (5121)
+    {TINYGLTF_PARAMETER_TYPE_SHORT, engine::ShaderDataType::Short},         // (5122)
+    {TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT, engine::ShaderDataType::uShort}, // (5123)
+    {TINYGLTF_PARAMETER_TYPE_INT, engine::ShaderDataType::Int},             // (5124)
+    {TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT, engine::ShaderDataType::uInt},   // (5125)
+    {TINYGLTF_PARAMETER_TYPE_FLOAT, engine::ShaderDataType::Float},         // (5126)
 };
 std::map<int, std::string> BUFFER_VIEW_TARGET {
     {34962, "ARRAY_BUFFER"},
@@ -133,7 +140,9 @@ TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, s
 }
 
 TextureObject process_default_texture(
-    std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader, unsigned char color = 0xff) {
+        std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader, 
+        unsigned char red, unsigned char green, unsigned char blue
+    ) {
     // No texture has been supplied - some require a default
     Sampler sampler; //Use default sampler if one is not specified
     Image image;
@@ -142,19 +151,25 @@ TextureObject process_default_texture(
     image.height = 2;
     image.component = 3;
     image.pixel_type = 5121;
+    // TODO: Support 4 channel texture
     image.image = {
-        color, color, color,
-        color, color, color,
-        color, color, color,
-        color, color, color,
+        red, green, blue,
+        red, green, blue,
+        red, green, blue,
+        red, green, blue,
     };
-    image.uri = "default_" + name;
+    image.uri = "default_" + std::to_string((int)red) + std::to_string((int)green) + std::to_string((int)blue) + "_" + name;
 
     GLuint tex_id = enginegl::buffer_image(sampler, image);
     ENGINE_INFO("Loaded image - {0}: {1}: {2}", name, tex_id, image.uri);
     //GLint texture_unit = shader->uniform_texture_unit(name);
     return TextureObject {tex_id, -1, name};
 }
+
+TextureObject process_default_texture(
+    std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader, unsigned char color = 0xff) {
+        return process_default_texture(model, name, shader, color, color, color);
+    }
 
 MaterialObject process_material(std::shared_ptr<Model> &model, Material &material,
         const std::shared_ptr<engine::Shader> &shader) {
@@ -172,11 +187,30 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         material_object.textures.push_back(
             process_texture(model, model->textures[texture_index], "albedo", shader)
         );
+    } else {
+        // Extract material color - 
+        auto color = material.pbrMetallicRoughness.baseColorFactor;
+        unsigned char red = (unsigned char)(color[0] * 0xff);
+        unsigned char green = (unsigned char)(color[1] * 0xff);
+        unsigned char blue = (unsigned char)(color[2] * 0xff);
+
+        material_object.textures.push_back(
+            process_default_texture(model, "albedo", shader, red, green, blue)
+        );
     }
     int normal_index = material.normalTexture.index;
     if (normal_index > -1) {
         material_object.textures.push_back(
             process_texture(model, model->textures[normal_index], "normal", shader)
+        );
+    } else {
+        // Default normal map (normals perpendicular to surface)
+        unsigned char red = 0x80;
+        unsigned char green = 0x80;
+        unsigned char blue = 0xff;
+
+        material_object.textures.push_back(
+            process_default_texture(model, "normal", shader, red, green, blue)
         );
     }
     int mr_index = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
@@ -214,12 +248,15 @@ std::shared_ptr<engine::IndexBuffer> process_indices(std::shared_ptr<Model> &mod
         ACCESSOR_COMPONENT_TYPE[accessor.componentType],
         accessor.count, buffer_view.byteLength, accessor.byteOffset
     );
-    int type = accessor.componentType; // TODO: Set the component type of the IndexBuffer
+    //int type = accessor.componentType; // TODO: Set the component type of the IndexBuffer
+    engine::ShaderDataType type = ACCESSOR_TO_SHADER_TYPE[accessor.componentType];
+    // Convert GLtf component type to shader type
     return engine::IndexBuffer::create(
         &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
         accessor.count,
         buffer_view.byteLength,
-        accessor.byteOffset
+        accessor.byteOffset,
+        type
     );
 }
 

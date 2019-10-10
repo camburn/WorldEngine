@@ -44,35 +44,39 @@ void OpenGLVertexBuffer::read_data() {
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(std::shared_ptr<OpenGLIndexBuffer> &other, uint32_t count, uint32_t offset): count(count), offset(offset) {
     index_buffer = other->index_buffer;
-    type = engine::ShaderDataType::uShort;
+    type = other->get_type();
 }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size, uint32_t offset): count(count), offset(offset) {
-    // Initialiser for unkown data type
-    type = engine::ShaderDataType::uShort; // TODO: this is broken, need to resolve type correctly
+OpenGLIndexBuffer::OpenGLIndexBuffer(
+        void *indices, uint32_t count, uint32_t size, uint32_t offset, engine::ShaderDataType type
+        ) : count(count), offset(offset), type(type)
+    {
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
     ENGINE_TRACE("Index buffer {0} created", index_buffer);
 }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(void *indices, uint32_t count, uint32_t size): count(count), offset(0) {
-    // Initialiser for unkown data type
-    type = engine::ShaderDataType::uShort; // TODO: this is broken, need to resolve type correctly
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
-    ENGINE_TRACE("Index buffer {0} created", index_buffer);
-}
+OpenGLIndexBuffer::OpenGLIndexBuffer(
+        void *indices, uint32_t count, uint32_t size, uint32_t offset
+        ) : OpenGLIndexBuffer(
+            indices, count, size, offset, engine::ShaderDataType::uShort
+        )
+    { }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count): count(count), offset(0) {
-    // Initialiser for floating uint32_t sized data
-    type = engine::ShaderDataType::uInt;
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
-    ENGINE_TRACE("Index buffer {0} created", index_buffer);
-}
+
+OpenGLIndexBuffer::OpenGLIndexBuffer(
+        void *indices, uint32_t count, uint32_t size
+        ): OpenGLIndexBuffer(
+            indices, count, size, 0, engine::ShaderDataType::uShort
+        )
+    { }
+
+OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count
+        ): OpenGLIndexBuffer(
+            indices, count, count * sizeof(uint32_t), 0, engine::ShaderDataType::uInt
+        )
+    { }
 
 OpenGLIndexBuffer::~OpenGLIndexBuffer() {
     glDeleteBuffers(1, &index_buffer);

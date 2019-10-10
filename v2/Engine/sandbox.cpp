@@ -58,6 +58,7 @@ public:
         glm::vec3 look_at;
         glm::vec3 up;
     };
+
     std::vector<camera_position> views = {
         {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
         {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
@@ -324,10 +325,9 @@ public:
 
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
-        //entities["sample_mra"] = GltfEntity::load_from_file(
-        //    "/home/campbell.blackburn1/Projects/glTF-Sample-Models/2.0/EnvironmentTest/glTF/EnvironmentTest.gltf"
-        //);
-        //entities["sample_mra"]->name = "MetalRoughSpheres";
+        entities["sample_mra"] = GltfEntity::load_from_file("./assets/glTF/EnvironmentTest.gltf");
+        entities["sample_mra"]->name = "MetalRoughSpheres";
+        entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube";
@@ -401,7 +401,6 @@ public:
             glm::scale(glm::mat4(1.0f), glm::vec3(4, 4, 4))
         );
 
-        //entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
         entities["sphere"]->set_translation(glm::vec3(-3, 0, 0));
 
         entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
@@ -427,6 +426,7 @@ public:
 
         for (auto& [name, entity]: entities) {
             entity->update_buffers(texture_shader);
+            entity->draw = false;
         }
 
         // SHADOW MAP SETUP
@@ -618,7 +618,6 @@ public:
         } else {
             brdf_map_file->bind(texture_shader->uniform_texture_unit("brdf_map"));
         }
-        
 
         for (auto& [name, entity]: entities) {
             if (entity->draw) {

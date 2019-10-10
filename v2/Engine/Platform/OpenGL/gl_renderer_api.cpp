@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 
 #include "gl_renderer_api.hpp"
+#include "gl_vertex_array.hpp"
 
 
 namespace glengine {
@@ -28,10 +29,11 @@ void GLRendererAPI::map_texture_unit(const unsigned int tex_id, const unsigned i
 void GLRendererAPI::draw_indexed(const std::shared_ptr<engine::VertexArray>& vertex_array) {
     ENGINE_ASSERT(vertex_array->get_index_buffer(), "Index buffer not set on Vertex Array");
     vertex_array->bind();
+    GLenum gl_type = enginegl::shader_to_gl_type(vertex_array->get_index_buffer()->get_type());
     glDrawElements(
         vertex_array->mode(),
         vertex_array->get_index_buffer()->get_count(),
-        vertex_array->get_index_buffer()->get_type(),
+        gl_type,
         reinterpret_cast<const GLvoid *>(vertex_array->get_index_buffer()->get_offset())
     );
     vertex_array->unbind();

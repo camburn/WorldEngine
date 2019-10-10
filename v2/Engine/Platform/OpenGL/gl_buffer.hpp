@@ -32,6 +32,7 @@ public:
     OpenGLIndexBuffer(std::shared_ptr<OpenGLIndexBuffer> &other, uint32_t count, uint32_t offset);
     OpenGLIndexBuffer(void* indices, uint32_t count, uint32_t size);
     OpenGLIndexBuffer(void* indices, uint32_t count, uint32_t size, uint32_t offset);
+    OpenGLIndexBuffer(void* indices, uint32_t count, uint32_t size, uint32_t offset, engine::ShaderDataType type);
 
     virtual ~OpenGLIndexBuffer();
 
@@ -39,7 +40,7 @@ public:
     virtual void unbind() const override;
 
     virtual uint32_t get_count() const override { return count; }
-    virtual int get_type() const override { return enginegl::shader_to_gl_type(type); }
+    virtual engine::ShaderDataType get_type() const override { return type; }
     virtual uint32_t get_offset() const override { return offset; }
 
 private:
