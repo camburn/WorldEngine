@@ -188,7 +188,7 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
             process_texture(model, model->textures[texture_index], "albedo", shader)
         );
     } else {
-        // Extract material color - 
+        // Use a the base color - Default for this is 1,1,1,1
         auto color = material.pbrMetallicRoughness.baseColorFactor;
         unsigned char red = (unsigned char)(color[0] * 0xff);
         unsigned char green = (unsigned char)(color[1] * 0xff);

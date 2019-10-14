@@ -143,8 +143,8 @@ void main() {
     vec3 V = normalize(u_camera_position - f_worldpos);
     vec3 R = reflect(-V, N);
 
-    vec3 F0 = vec3(0.4);
-    F0 = mix(F0, albedo_sample.xyz, metallic);
+    const vec3 f_dielectric = vec3(0.04);
+    vec3 F0 = mix(f_dielectric, albedo_sample.xyz, metallic);
 
     vec3 light_dot = vec3(0.0);
 

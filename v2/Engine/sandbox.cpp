@@ -325,7 +325,7 @@ public:
 
         cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
-        entities["sample_mra"] = GltfEntity::load_from_file("./assets/glTF/EnvironmentTest.gltf");
+        entities["sample_mra"] = GltfEntity::load_from_file("./assets/gltf/EnvironmentTest/EnvironmentTest.gltf");
         entities["sample_mra"]->name = "MetalRoughSpheres";
         entities["sample_mra"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
@@ -439,53 +439,175 @@ public:
     }
 
     void on_ui_render() override {
-        ImGui::Begin("Entities");
-        ImGui::Text("Render Mode: %s", render_modes[render_mode].c_str());
-        ImGui::InputInt("Change Mode", &render_mode);
-        ImGui::InputInt("Skybox Mode", &skybox_mode);
-        ImGui::Checkbox("Render Skybox", &render_skybox);
-        ImGui::Checkbox("Cast Shadows", &cast_shadows);
-        ImGui::Checkbox("Generated BRDF LUT", &use_generated_brdf);
+        static bool p_open = true;
 
-        ImGui::Checkbox("Rotate Camera", &camera_rotate);
-        ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
+        static bool opt_fullscreen_persistant = true;
+        static ImGuiDockNodeFlags opt_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+        bool opt_fullscreen = opt_fullscreen_persistant;
 
-        ImGui::SetNextItemWidth(50.f);
-        ImGui::InputFloat("Camera radius", &camera_radius);
-        ImGui::InputFloat3("Dir Light Position", &light_position.x);
-        ImGui::InputFloat3("Dir Light Color", &light_color.r);
-        ImGui::Separator();
-        ImGui::InputFloat("Light A radius", &light_radius);
-        ImGui::Checkbox("Rotate Light A", &light_rotate);
-        ImGui::InputFloat3("Point Light Position A", &light_position_b.x);
-        ImGui::InputFloat3("Point Light Color A", &light_color_b.r);
-        ImGui::Separator();
-        ImGui::InputFloat3("Point Light Position B", &light_position_c.x);
-        ImGui::InputFloat3("Point Light Color B", &light_color_c.r);
-        glm::vec3 camera_pos = camera->get_position();
-        ImGui::InputFloat3("Camera Position", &camera_pos.x);
-        
-        ImGui::Separator();
-        ImGui::Text("Entities");
-        for (auto& [name, entity]: entities) {
-            if (ImGui::TreeNode(name.c_str())) {
-                glm::vec3 translation = entity->get_translation();
-                glm::vec3 scale = entity->get_scale();
-                glm::quat rotation = entity->get_rotation();
-
-                ImGui::InputFloat3("Translation", &translation.x);
-                ImGui::InputFloat3("Scale", &scale.x);
-                ImGui::InputFloat4("Rotation", &rotation.x);
-                ImGui::Checkbox("Draw", &entity->draw);
-
-                entity->set_translation(translation);
-                entity->set_scale(scale);
-                entity->set_rotation(rotation);
-
-                ImGui::TreePop();
-            }
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        if (opt_fullscreen)
+        {
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImVec2 test = {viewport->Size.x, viewport->Size.y};
+            ImGui::SetNextWindowPos(viewport->Pos);
+            ImGui::SetNextWindowSize(test);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
         }
-        ImGui::End();
+        if (opt_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+            window_flags |= ImGuiWindowFlags_NoBackground;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("DockSpace Demo", &p_open, window_flags);
+        ImGui::PopStyleVar();
+
+        if (opt_fullscreen)
+            ImGui::PopStyleVar(2);
+
+        // Dockspace
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+        {
+            ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), opt_flags);
+        }
+
+        if (show_scene_window) {
+            ImGui::Begin("Scene Settings", &show_scene_window);
+            ImGui::Text("Render Mode: %s", render_modes[render_mode].c_str());
+            ImGui::InputInt("Change Mode", &render_mode);
+            ImGui::InputInt("Skybox Mode", &skybox_mode);
+            ImGui::Checkbox("Render Skybox", &render_skybox);
+            ImGui::Checkbox("Cast Shadows", &cast_shadows);
+            ImGui::Checkbox("Generated BRDF LUT", &use_generated_brdf);
+
+            ImGui::Checkbox("Rotate Camera", &camera_rotate);
+            ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
+
+            ImGui::SetNextItemWidth(50.f);
+            
+            ImGui::InputFloat("Camera radius", &camera_radius);
+            glm::vec3 camera_pos = camera->get_position();
+            ImGui::InputFloat3("Camera Position", &camera_pos.x);
+
+            int misc_flags = ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoInputs;
+            ImGui::Separator();
+            ImGui::Text("Direction Light");
+            ImGui::InputFloat3("Position", &light_position.x);
+            ImGui::ColorEdit3("Color", &light_color.r, misc_flags);
+            ImGui::Separator();
+            ImGui::Text("Point Light A");
+            ImGui::InputFloat("Light A radius", &light_radius);
+            ImGui::Checkbox("Rotate Light A", &light_rotate);
+            ImGui::InputFloat3("Position A", &light_position_b.x);
+            ImGui::ColorEdit3("Colour A", &light_color_b.r, misc_flags);
+            ImGui::Separator();
+            ImGui::Text("Point Light B");
+            ImGui::InputFloat3("Position B", &light_position_c.x);
+            ImGui::ColorEdit3("Colour B", &light_color_c.r, misc_flags);
+            
+            ImGui::End(); // Scene Settings
+        }
+        
+        if (show_entity_window) {
+            ImGui::Begin("Entities", &show_entity_window);
+
+
+            // New selectable menu
+            static int selected = 0;
+            static std::string selected_name = "";
+            ImGui::BeginChild("left pane", ImVec2(100, 0), true);
+            int index = 0;
+            for (auto& [name, entity]: entities) {
+                if (ImGui::Selectable(name.c_str(), selected == index)) {
+                    selected = index;
+                    selected_name = name;
+                }
+                ImGui::SameLine();
+                ImGui::Checkbox("Draw", &entity->draw);
+                index ++;
+            }
+            ImGui::EndChild();
+            ImGui::SameLine();
+
+            ImGui::BeginGroup();
+            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+            if (entities.count(selected_name) > 0) {
+            auto &entity = entities.at(selected_name);
+            ImGui::Text("MyObject: %s", entity->name.c_str());
+                ImGui::Separator();
+                if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+                {
+                    if (ImGui::BeginTabItem("Description"))
+                    {
+                        ImGui::Checkbox("Draw", &entity->draw);
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Details"))
+                    {
+                        glm::vec3 translation = entity->get_translation();
+                        glm::vec3 scale = entity->get_scale();
+                        glm::quat rotation = entity->get_rotation();
+
+                        ImGui::InputFloat3("Translation", &translation.x);
+                        ImGui::InputFloat3("Scale", &scale.x);
+                        ImGui::InputFloat4("Rotation", &rotation.x);
+                        entity->set_translation(translation);
+                        entity->set_scale(scale);
+                        entity->set_rotation(rotation);
+
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+            }
+            ImGui::EndChild();
+            ImGui::EndGroup();
+            
+
+            ImGui::Separator();
+            for (auto& [name, entity]: entities) {
+                if (ImGui::TreeNode(name.c_str())) {
+                    glm::vec3 translation = entity->get_translation();
+                    glm::vec3 scale = entity->get_scale();
+                    glm::quat rotation = entity->get_rotation();
+
+                    ImGui::InputFloat3("Translation", &translation.x);
+                    ImGui::InputFloat3("Scale", &scale.x);
+                    ImGui::InputFloat4("Rotation", &rotation.x);
+                    ImGui::Checkbox("Draw", &entity->draw);
+
+                    entity->set_translation(translation);
+                    entity->set_scale(scale);
+                    entity->set_rotation(rotation);
+
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::End();
+        }
+
+        if (ImGui::BeginMenuBar())  // Main Dockspace menu
+        {
+            if (ImGui::BeginMenu("Docking")) {
+                if (ImGui::MenuItem("Flag: Test", "", (opt_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          opt_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+                ImGui::Separator();
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Windows")) {
+                ImGui::MenuItem("Entities", NULL, &show_entity_window);
+                ImGui::MenuItem("Scene Settings", NULL, &show_scene_window);
+                
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        ImGui::End(); // Dockspace Demo
 
         texture_shader->on_ui_render(true);
         camera->on_ui_render(true);
@@ -586,9 +708,10 @@ public:
         texture_shader->upload_u_vec3("u_lightpos[0]", light_position);
         texture_shader->upload_u_vec3("u_lightpos[1]", light_position_b);
         texture_shader->upload_u_vec3("u_lightpos[2]", light_position_c);
-        texture_shader->upload_u_vec3("u_lightcolor[0]", light_color);
-        texture_shader->upload_u_vec3("u_lightcolor[1]", light_color_b);
-        texture_shader->upload_u_vec3("u_lightcolor[2]", light_color_c);
+        // Convert lights to HDR dynamic range - max value is therefore 255
+        texture_shader->upload_u_vec3("u_lightcolor[0]", light_color * 255.0f);
+        texture_shader->upload_u_vec3("u_lightcolor[1]", light_color_b * 255.0f);
+        texture_shader->upload_u_vec3("u_lightcolor[2]", light_color_c * 255.0f);
         
         texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
         texture_shader->upload_u_int1("u_render_mode", render_mode);
@@ -628,7 +751,7 @@ public:
         // Draw light positions
         simple_shader->bind();
         cube->add_uniform_data("u_color", glm::vec4(light_color_b, 1.0f));
-        cube->add_uniform_data("u_model", 
+        cube->add_uniform_data("u_model",
             glm::translate(glm::mat4(1.0f), light_position_b) *
             glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05))
         );
@@ -698,11 +821,11 @@ private:
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
     glm::vec3 light_position {3, 3, 3};
-    glm::vec3 light_color {100, 100, 100};
+    glm::vec3 light_color {0.4, 0.4, 0.4};
     glm::vec3 light_position_b {2, 0, 0};
-    glm::vec3 light_color_b {50, 25, 25};
+    glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};
-    glm::vec3 light_color_c {25, 50, 25};
+    glm::vec3 light_color_c {0.1, 0.2, 0.1};
 
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;
@@ -720,13 +843,17 @@ private:
     bool use_generated_brdf = true;
 
     int render_mode = 0;
-    int skybox_mode = 0;
+    int skybox_mode = 1;
 
     int width = 1200;
     int height = 800;
 
     int shadow_map_width = 1024;
     int shadow_map_height = 1024;
+
+    // Window flags
+    bool show_entity_window = true;
+    bool show_scene_window = true;
 };
 
 int main() {
