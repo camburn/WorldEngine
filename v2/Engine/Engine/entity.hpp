@@ -6,10 +6,11 @@
 #include <unordered_set>
 
 #include <glm/glm.hpp>
-#include<glm/gtc/quaternion.hpp>
-#include<glm/common.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/common.hpp>
 #include "tiny_gltf.h"
 
+#include "Engine/transform.hpp"
 #include "Engine/renderer/shader.hpp"
 #include "Engine/renderer/buffer.hpp"
 #include "Engine/renderer/vertex_array.hpp"
@@ -18,11 +19,7 @@
 
 namespace engine {
 
-//                  vec4      vec3     vec2
-// Attribute data - Vertices, normals, UV coordinates,
-
-// Uniform data - Model matrix, Material Properties
-
+//  TODO Rename to mesh:
 class Entity {
 public:
     virtual void add_uniform_data(std::string name, glm::vec4 data);
@@ -56,6 +53,8 @@ public:
     std::shared_ptr<Shader> allocated_shader;
     bool draw = true;
     std::string name;
+
+    Transform transform;
 
 protected:
     std::vector<std::shared_ptr<VertexArray>> vaos;

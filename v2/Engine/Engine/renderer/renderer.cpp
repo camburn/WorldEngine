@@ -76,7 +76,10 @@ void Renderer::submit_node(
     }
 }
 
-void Renderer::submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity){
+void Renderer::submit_entity(
+        const std::shared_ptr<Shader>& shader,
+        std::shared_ptr<Entity> &entity
+    ){
     shader->bind();
     // send global uniforms
     shader->upload_u_mat4("u_view_projection", scene_state->view_projection_matrix);

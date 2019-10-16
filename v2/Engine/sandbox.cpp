@@ -7,6 +7,7 @@
 
 #include "Engine/application.hpp"
 #include "Engine/layer.hpp"
+#include "Engine/objects.hpp"
 #include "Engine/renderer/shader.hpp"
 #include "Engine/renderer/buffer.hpp"
 #include "Engine/renderer/vertex_array.hpp"
@@ -317,6 +318,11 @@ public:
         entities["helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf"
         );
+
+        Object helmet_obj;
+        helmet_obj.attach_mesh(entities["helmet"]);
+        helmet_obj.transform().set_translation(glm::vec3(3, 0, 0));
+
         entities["helmet"]->name = "Damaged Helmet";
         entities["flight_helmet"] = GltfEntity::load_from_file(
             "./assets/gltf/FlightHelmet/FlightHelmet.gltf"
@@ -514,28 +520,35 @@ public:
         }
         
         if (show_entity_window) {
-            ImGui::Begin("Entities", &show_entity_window);
-
+            ImGui::Begin("Scene Browser", &show_entity_window);
 
             // New selectable menu
             static int selected = 0;
             static std::string selected_name = "";
-            ImGui::BeginChild("left pane", ImVec2(100, 0), true);
+
+            ImGui::Text("Name");
+            ImGui::SameLine(ImGui::GetWindowWidth()-100);
+            ImGui::Text("Enabled");
+
+            ImGui::BeginChild("left pane", ImVec2(0, 0), true);
+
             int index = 0;
             for (auto& [name, entity]: entities) {
-                if (ImGui::Selectable(name.c_str(), selected == index)) {
+                if (ImGui::Selectable(name.c_str(), selected == index, 0, ImVec2(ImGui::GetWindowWidth()-100, 18))) {
                     selected = index;
                     selected_name = name;
                 }
-                ImGui::SameLine();
-                ImGui::Checkbox("Draw", &entity->draw);
+                ImGui::SameLine(ImGui::GetWindowWidth()-50);
+                ImGui::Checkbox(("##" + name).c_str(), &entity->draw);
                 index ++;
             }
             ImGui::EndChild();
-            ImGui::SameLine();
+            ImGui::End();
+            //ImGui::SameLine();
 
-            ImGui::BeginGroup();
-            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+            //ImGui::BeginGroup();
+            //ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+            ImGui::Begin("Entity Properties");
             if (entities.count(selected_name) > 0) {
             auto &entity = entities.at(selected_name);
             ImGui::Text("MyObject: %s", entity->name.c_str());
@@ -565,29 +578,9 @@ public:
                     ImGui::EndTabBar();
                 }
             }
-            ImGui::EndChild();
-            ImGui::EndGroup();
-            
+            //ImGui::EndChild();
+            //ImGui::EndGroup();
 
-            ImGui::Separator();
-            for (auto& [name, entity]: entities) {
-                if (ImGui::TreeNode(name.c_str())) {
-                    glm::vec3 translation = entity->get_translation();
-                    glm::vec3 scale = entity->get_scale();
-                    glm::quat rotation = entity->get_rotation();
-
-                    ImGui::InputFloat3("Translation", &translation.x);
-                    ImGui::InputFloat3("Scale", &scale.x);
-                    ImGui::InputFloat4("Rotation", &rotation.x);
-                    ImGui::Checkbox("Draw", &entity->draw);
-
-                    entity->set_translation(translation);
-                    entity->set_scale(scale);
-                    entity->set_rotation(rotation);
-
-                    ImGui::TreePop();
-                }
-            }
             ImGui::End();
         }
 
