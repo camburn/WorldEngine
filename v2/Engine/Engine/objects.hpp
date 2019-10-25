@@ -4,6 +4,7 @@
 #include "Engine/entity.hpp"
 #include "Engine/transform.hpp"
 #include "Engine/renderer/camera.hpp"
+#include "Engine/renderer/lights.hpp"
 
 namespace engine {
 
@@ -21,9 +22,11 @@ public:
     };
 
     Transform& transform() { return _transform; }
-    const std::shared_ptr<Entity>& mesh() { return _mesh; }
+    std::shared_ptr<Entity>& mesh() { return _mesh; }
+    Light& light() { return *_light; }
 
-    void attach_mesh(std::shared_ptr<Entity> mesh);
+    void attach(std::shared_ptr<Entity> mesh);
+    void attach(std::shared_ptr<Light> light);
 
     virtual void update() {}; // Simulation step
 
@@ -32,13 +35,15 @@ public:
     void draw_deferred() {}; // What about shaders?
     // Only the renderer cares about shaders?
 
+    const Type type() { return _type;}
+
     std::string name;
 private:
-    Transform _transform;
-    Type type {EMPTY};
+    Transform _transform {};
+    Type _type {EMPTY};
     std::shared_ptr<Entity> _mesh {nullptr};
     std::shared_ptr<Camera> camera {nullptr};
-    //std::shared_ptr<Light> entity nullptr;
+    std::shared_ptr<Light> _light {nullptr};
 };
 
 

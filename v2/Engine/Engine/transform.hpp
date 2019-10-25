@@ -13,15 +13,18 @@ class Transform {
 public:
     Transform() {}
     Transform(glm::vec3 translation, glm::vec3 scale, glm::quat rotation)
-        : translation(translation), scale(scale), rotation(rotation) {}
+        : translation(translation), scale(scale), rotation(rotation) {
+            state_changed = true;
+        }
     Transform(glm::mat4 model) {
         glm::vec3 skew;
         glm::vec4 perspective;
         glm::decompose(model, scale, rotation, translation, skew, perspective);
+        state_changed = true;
     }
-    void set_translation(glm::vec3 translation) { state_changed = true; translation = translation; }
-    void set_scale(glm::vec3 scale) { state_changed = true; scale = scale; }
-    void set_rotation(glm::quat rotation) { state_changed = true; rotation = rotation; }
+    void set_translation(glm::vec3 value) { state_changed = true; translation = value; }
+    void set_scale(glm::vec3 value) { state_changed = true; scale = value; }
+    void set_rotation(glm::quat value) { state_changed = true; rotation = value; }
 
     glm::vec3 get_translation() { return translation; }
     glm::vec3 get_scale() { return scale; }

@@ -78,17 +78,19 @@ void Renderer::submit_node(
 
 void Renderer::submit_entity(
         const std::shared_ptr<Shader>& shader,
-        std::shared_ptr<Entity> &entity
+        std::shared_ptr<Entity> &entity,
+        Transform &transform
     ){
     shader->bind();
     // send global uniforms
     shader->upload_u_mat4("u_view_projection", scene_state->view_projection_matrix);
-    
+
+    glm::mat4 u_model = transform.get_model_matrix();
     entity->update_buffers(shader);
     if (std::dynamic_pointer_cast<GltfEntity>(entity)) {
         submit_node(
             shader, entity, std::static_pointer_cast<GltfEntity>(entity)->get_node(),
-            entity->uniform_mat4_data["u_model"]
+            u_model
         );
         return;
     }
@@ -98,8 +100,15 @@ void Renderer::submit_entity(
         shader->upload_u_vec4(name, data);
     }
     for (auto const &[name, data]: entity->uniform_mat4_data) {
-        // TODO: This is not nice, need to move the model matrix into entity
+        // TODO: Currently if a seperate model matrix is defined, it will
+        // override the object matrix - should be added
+        if (name == "u_model") {
+            u_model *= data;
+            shader->upload_u_mat4(name, u_model);
+            continue;
+        }
         shader->upload_u_mat4(name, data);
+        
     }
     std::vector<uint32_t> units;
     for (auto const &[name, texture]: std::static_pointer_cast<CustomEntity>(entity)->textures) {

@@ -33,14 +33,6 @@ public:
 
     virtual void on_ui_render(bool display) = 0;
 
-    virtual glm::vec3 get_translation() = 0;
-    virtual glm::vec3 get_scale() = 0;
-    virtual glm::quat get_rotation() = 0;
-
-    virtual void set_translation(glm::vec3 value) = 0;
-    virtual void set_scale(glm::vec3 value) = 0;
-    virtual void set_rotation(glm::quat value) = 0;
-
     std::vector<std::shared_ptr<VertexArray>>::iterator begin() { return vaos.begin(); }
     std::vector<std::shared_ptr<VertexArray>>::iterator end() { return vaos.end(); }
     std::vector<std::shared_ptr<VertexArray>>::const_iterator begin() const { return vaos.begin(); }
@@ -74,12 +66,6 @@ public:
 
     void render() override;
 
-    void recalculate_modelmat() {
-        uniform_mat4_data["u_model"] = glm::translate(glm::mat4(1.0f), translation) *
-            glm::toMat4(rotation) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-    }
-
     virtual void on_ui_render(bool display) override;
 
     std::map<std::string, std::vector<glm::vec4>> attribute_data_vec4;
@@ -87,21 +73,12 @@ public:
     std::map<std::string, std::vector<glm::vec2>> attribute_data_vec2;
     std::vector<uint32_t> index_data;
 
-    glm::vec3 get_translation() override { return translation; }
-    glm::vec3 get_scale() override { return scale; }
-    glm::quat get_rotation() override { return rotation; }
-    glm::mat4 get_modelmat() { return uniform_mat4_data["u_model"] ; }
     DrawMode get_drawmode() { return draw_mode; }
     bool elements_set() { return index_buffer != nullptr; }
 
     void add_texture(std::string sampler_name, std::shared_ptr<Texture> texture) { 
         textures.emplace(sampler_name, texture); 
     }
-
-    void set_translation(glm::vec3 value) override { translation = value; recalculate_modelmat(); }
-    void set_scale(glm::vec3 value) override { scale = value; recalculate_modelmat(); }
-    void set_rotation(glm::quat value) override { rotation = value; recalculate_modelmat(); }
-
     std::shared_ptr<VertexArray> get_shader_vaos(uint32_t shader_id) {
         if (shader_vaos.count(shader_id) > 0)
             return shader_vaos.at(shader_id);
@@ -138,14 +115,6 @@ public:
 
     virtual void on_ui_render(bool display) override;
     NodeObject &get_node() { return node_object; }
-
-    glm::vec3 get_translation() override { return node_object.get_translation(); }
-    glm::vec3 get_scale() override { return node_object.get_scale(); }
-    glm::quat get_rotation() override { return node_object.get_rotation(); }
-
-    void set_translation(glm::vec3 value) override { node_object.set_translation(value); }
-    void set_scale(glm::vec3 value) override { node_object.set_scale(value); }
-    void set_rotation(glm::quat value) override { node_object.set_rotation(value); }
 
     std::string file_name = "";
 

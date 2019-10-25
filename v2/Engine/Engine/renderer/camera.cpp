@@ -46,7 +46,6 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near_plane, 
         : Camera(glm::perspective(glm::radians(fov), aspect, near_plane, far_plane), 
           glm::lookAt(glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0))) {
     view_projection_matrix = projection_matrix * view_matrix;
-    
 }
 
 void PerspectiveCamera::set_proj_matrix(float fov, float aspect, float near_plane, float far_plane) {

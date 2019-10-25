@@ -3,6 +3,7 @@
 #include <memory>
 #include "glm/glm.hpp"
 
+#include "Engine/transform.hpp"
 #include "Engine/event/event.hpp"
 #include "Engine/event/bus.hpp"
 #include "Engine/renderer/renderer_api.hpp"
@@ -38,7 +39,10 @@ public:
         const glm::mat4& model
     );
 
-    static void submit_entity(const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity);
+    static void submit_entity(
+        const std::shared_ptr<Shader>& shader, std::shared_ptr<Entity> &entity,
+        Transform &transform
+    );
 
     inline static RendererAPI::API get_api() { return RendererAPI::get_api(); }
 private:
