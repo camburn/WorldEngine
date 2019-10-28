@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 in vec3 f_normal;
 in vec4 f_fragpos;

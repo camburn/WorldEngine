@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 in vec3 f_localpos;
 uniform sampler2D equirectangular_map;

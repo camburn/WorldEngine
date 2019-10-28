@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 const int MAX_LIGHTS = 3;
 const float PI = 3.14159265359;
@@ -29,9 +29,20 @@ uniform samplerCube irradiance_map;
 // First light is always directional
 
 uniform vec3 u_camera_position;
-uniform vec3 u_lightpos[MAX_LIGHTS];
-uniform vec3 u_lightcolor[MAX_LIGHTS];
+//uniform vec3 u_lightpos[MAX_LIGHTS];
+//uniform vec3 u_lightcolor[MAX_LIGHTS];
 
+struct Light {
+    vec3 color;
+    vec3 position;
+    bool cast_shadows;
+    bool enabled;
+    bool direction;
+};
+
+uniform Light u_lights[MAX_LIGHTS];
+
+uniform int u_cast_shadows = 1;
 uniform int u_render_mode = 0;
 
 out vec4 out_color;
@@ -98,7 +109,7 @@ float shadow_calculation(vec4 frag_pos_light_space) {
     float current_depth = proj_coords.z;
     // Light 0 is always the direction light
     vec3 normal = normalize(f_normal);
-    vec3 light_dir = normalize(u_lightpos[0] - f_worldpos);
+    vec3 light_dir = normalize(u_lights[0].position - f_worldpos);
     //float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005);
     float bias = 0.0;
     //float shadow = current_depth  - bias > closest_depth ? 1.0: 0.0;
@@ -131,23 +142,27 @@ void main() {
     vec3 V = normalize(u_camera_position - f_worldpos);
     vec3 R = reflect(-V, N);
 
-    vec3 F0 = vec3(0.4);
-    F0 = mix(F0, albedo_sample.xyz, metallic);
+    const vec3 f_dielectric = vec3(0.04);
+     vec3 F0 = mix(f_dielectric, albedo_sample.xyz, metallic);
 
     vec3 light_dot = vec3(0.0);
 
+
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for (int i = 0; i < u_lightpos.length(); i++) {  // Calculate per light radiance
+    for (int i = 0; i < u_lights.length(); i++) {  // Calculate per light radiance
+        if (u_lights[i].enabled == false) {
+            continue;
+        }
         vec3 light = vec3(0.0);
-        vec3 radiance = u_lightcolor[i];
+        vec3 radiance = u_lights[i].color;
 
-        if (i == 0) {  // Directional light
-            light = -normalize(vec3(0) - u_lightpos[i]);
+        if (u_lights[i].direction) {  // Directional light
+            light = -normalize(vec3(0) - u_lights[i].position);
         } else {  //Attenuation is for a point light
-            light = normalize(u_lightpos[i] - f_worldpos);
+            light = normalize(u_lights[i].position - f_worldpos);
             
-            float distance = length(u_lightpos[i] - f_worldpos);
+            float distance = length(u_lights[i].position - f_worldpos);
             float attenuation = 1.0 / (distance * distance);
             radiance *= attenuation;
         }
@@ -171,7 +186,7 @@ void main() {
         float NdotL = max(dot(N, light), 0.0);
 
         Lo += (kD * albedo_sample.xyz / PI + specular) * radiance * NdotL;
-        light_dot += radiance * NdotL + specular * u_lightcolor[i];
+        light_dot += radiance * NdotL + specular * u_lights[i].color;
     }
 
     // Ambient lighting (using IBL as the ambient term)
@@ -189,7 +204,7 @@ void main() {
     vec3 specular = prefiltered_color * (F * brdf.x + brdf.y);
 
     // Final ambient value
-    vec3 ambient_value = (kD * diffuse * specular) * ambient_occlusion;
+    vec3 ambient_value = (kD * diffuse + specular) * ambient_occlusion;
 
     vec3 color = ambient_value * Lo;
     // HDR tonemapping
@@ -199,9 +214,12 @@ void main() {
 
     color += emission_sample.xyz;
 
-    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5 );
+    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
 
     vec4 final_color = vec4((color * shadow_color), albedo_sample.a);
+    if (u_cast_shadows == 0 ) {
+        final_color = vec4(color, albedo_sample.a);
+    }
 
     // Debug modes
     if (u_render_mode == 1) final_color = albedo_sample;
@@ -223,6 +241,7 @@ void main() {
     else if (u_render_mode == 17) final_color = vec4(specular, 1); // Specular
     else if (u_render_mode == 18) final_color = vec4(ambient_value, 1); // Ambient color
     else if (u_render_mode == 19) final_color = vec4(diffuse, 1); // diffuse
-    
+    else if (u_render_mode == 20) final_color = vec4(kD, 1); // kD
+
     out_color = final_color;
 }
