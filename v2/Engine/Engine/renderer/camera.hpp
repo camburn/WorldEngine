@@ -1,7 +1,9 @@
 #ifndef _CAMERA_HPP
 #define _CAMERA_HPP
 
-//#define M_PI 3.14159f
+#ifndef M_PI
+#define M_PI 3.14159f
+#endif
 
 #include "Engine/application.hpp"
 #include <GLFW/glfw3.h>
