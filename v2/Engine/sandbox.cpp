@@ -77,7 +77,7 @@ public:
         std::string fs_file_simple = "./shaders/opengl2_fragment_simple.glsl";
 
         std::string vs_file_texture = "./shaders/opengl2_vertex_texture.glsl";
-        std::string fs_file_texture = "./shaders/opengl2_fragment_texture.glsl";
+        std::string fs_file_texture = "./shaders/opengl2_fragment_texture.frag";
 
         std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map.glsl";
         std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map.glsl";
@@ -611,7 +611,9 @@ public:
                         ImGui::Checkbox("Cast Shadows", &object.light().cast_shadows);
                         ImGui::Checkbox("Enabled", &object.light().enabled);
                         ImGui::Checkbox("Direction", &object.light().direction);
-                        ImGui::ColorEdit3("Color", &light_color.r, misc_flags);
+                        ImGui::ColorEdit3("Color", &object.light().color.r, misc_flags);
+                        glm::vec3 hdr_color = object.light().get_hdr_color();
+                        ImGui::InputFloat3("HDR Value", &hdr_color.r);
                         ImGui::InputFloat3("Position", &object.light().position.x);
                         ImGui::EndTabItem();
                     }
@@ -654,27 +656,14 @@ public:
         float delta_time = time - last_frame_time;
         last_frame_time = time;
         // ===== CONTROLS =====
-        std::static_pointer_cast<NewPerspectiveCamera>(camera)->update(delta_time);
+        // Check if mouse is over UI elements, otherwise pass to camera
+        ImGuiIO& io = ImGui::GetIO();
+        if (!io.WantCaptureMouse) {
+            std::static_pointer_cast<NewPerspectiveCamera>(camera)->update(delta_time);
+        }
         {
             auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
             int state = glfwGetKey(window, GLFW_KEY_W);
-            glm::vec3 camera_position = camera->get_position();
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                camera_position.y += camera_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_S);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                camera_position.y -= camera_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_A);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                camera_position.x -= camera_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_D);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                camera_position.x += camera_move_speed * delta_time;
-            }
-            camera->set_position(camera_position);
 
             state = glfwGetKey(window, GLFW_KEY_UP);
             if (state == GLFW_PRESS || state == GLFW_REPEAT) {
@@ -790,13 +779,13 @@ public:
         // Draw light positions
         simple_shader->bind();
 
-        Transform t = { light_position_b, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-        cube->add_uniform_data("u_color", glm::vec4(light_color_b, 1.0f));
-        Renderer::submit_entity(simple_shader, cube, t);
-
-        t = { light_position_c, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-        cube->add_uniform_data("u_color", glm::vec4(light_color_c, 1.0f));
-        Renderer::submit_entity(simple_shader, cube, t);
+        for (auto& [name, object]: objects) {
+            if (object.type() == object.LIGHT) {
+                Transform t = { object.light().position, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+                cube->add_uniform_data("u_color", glm::vec4(object.light().color, 1.0f));
+                Renderer::submit_entity(simple_shader, cube, t);
+            }
+        }
 
         texture_shader->unbind();
 
@@ -858,7 +847,7 @@ private:
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
     glm::vec3 light_position {3, 3, 3};
-    glm::vec3 light_color {0.4, 0.4, 0.4};
+    glm::vec3 light_color {0.01, 0.01, 0.01};
     glm::vec3 light_position_b {2, 0, 0};
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};

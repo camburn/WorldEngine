@@ -206,13 +206,14 @@ void main() {
     // Final ambient value
     vec3 ambient_value = (kD * diffuse + specular) * ambient_occlusion;
 
-    vec3 color = ambient_value * Lo;
+    //vec3 color = ambient_value * Lo;
+    vec3 color = ambient_value + Lo + emission_sample.xyz;
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // Gamma correction
     color = pow(color, vec3(1.0/2.2));
 
-    color += emission_sample.xyz;
+    //color += emission_sample.xyz;
 
     float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
 
