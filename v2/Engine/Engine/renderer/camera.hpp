@@ -77,7 +77,8 @@ private:
 class NewPerspectiveCamera: public Camera {
 public:
     NewPerspectiveCamera(float fov, float aspect, float near_plane, float far_plane)
-        : Camera(glm::perspective(glm::radians(fov), aspect, near_plane, far_plane), glm::mat4{}) {
+        : Camera(glm::perspective(glm::radians(fov), aspect, near_plane, far_plane), glm::mat4{}),
+            fov(fov), aspect(aspect), near_plane(near_plane), far_plane(far_plane) {
         position = {-5, 5, 5};
         rotation = {90.0f, 0.0f, 0.0f};
         focal_point = {0.0f, 0.0f, 0.0f};
@@ -187,6 +188,8 @@ public:
     void recalculate_view_matrix() override {}
 
     void on_ui_render(bool display) override {};
+
+    const float fov, aspect, near_plane, far_plane;
 
 private:
     glm::vec3 focal_point {0.0f};

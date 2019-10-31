@@ -667,7 +667,7 @@ public:
             if (use_debug_cam) {
                 std::static_pointer_cast<NewPerspectiveCamera>(debug_camera)->update(delta_time);
             } else {
-                std::static_pointer_cast<NewPerspectiveCamera>(camera)->update(delta_time);
+                camera->update(delta_time);
             }
         }
         {
@@ -718,14 +718,17 @@ public:
         // === END CONTROLS ===
 
         // ===== SHADOW MAP =====
-        shadow_camera->set_view(
-            glm::vec3(0.0f), glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
-        );
+        float fov = camera->fov;
+        float ar = camera->aspect;
+        float near = camera->near_plane;
+        float far = camera->far_plane;
 
-        float fov = 45.0f;
-        float ar = (float)width / (float)height;
-        float near = 0.1f;
-        float far = 25.0f;
+        glm::vec3 cam_center = camera->get_position() + (
+            camera->get_forward_direction() * (near + far / 2)
+        );
+        shadow_camera->set_view(
+            cam_center, cam_center + glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
         // Nvidia Styles
         glm::mat4 cam_view_matrix = camera->get_view_matrix();
@@ -734,15 +737,13 @@ public:
 
         glm::vec3 center = camera->get_position();
         //glm::vec3 view_dir = glm::vec3(1.0f, -1.0f, 0.0f);
-        glm::vec3 view_dir = std::static_pointer_cast<NewPerspectiveCamera>(camera)->get_forward_direction();
+        glm::vec3 view_dir = camera->get_forward_direction();
 
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 right = glm::normalize(glm::cross(view_dir, up));
 
         glm::vec3 fc = center + view_dir * far;
         glm::vec3 nc = center + view_dir * near;
-
-        ENGINE_INFO("NV fc:v3({0},{1},{2}), nc:v3({3},{4},{5})", fc.x, fc.y, fc.z, nc.x, nc.y, nc.z);
 
         float near_height = (near * glm::tan(glm::radians(fov / 2.0f)));
         float far_height = (far * glm::tan(glm::radians(fov / 2.0f)));
@@ -761,29 +762,6 @@ public:
             glm::vec4(fc - up*far_height + right*far_width, 1.0f)
         };
 
-        /*
-        // Update shadow camera based on the perspective of the main camera.
-        // Need to get
-        float xn = (near * glm::tan(glm::radians(fov / 2.0f)));
-        float xf = (far * glm::tan(glm::radians(fov / 2.0f)));
-        float yn = (near * glm::tan(glm::radians((fov * ar) / 2.0f)));
-        float yf = (far * glm::tan(glm::radians((fov * ar) / 2.0f)));
-
-        ENGINE_INFO("Frustrum: {0}, {1}, {2}, {3}", xn, xf, yn, yf);
-
-        // Bounding Points
-        // near face
-        std::vector<glm::vec4> frustum_corners = {
-            {xn, yn, near, 1.0},
-            {-xn, yn, near, 1.0},
-            {xn, -yn, near, 1.0},
-            {-xn, -yn, near, 1.0},
-            {xf, yf, far, 1.0},
-            {-xf, yf, far, 1.0},
-            {xf, -yf, far, 1.0},
-            {-xf, -yf, far, 1.0}
-        };
-        */
         float minX = std::numeric_limits<float>::max();
         float maxX = std::numeric_limits<float>::min();
         float minY = std::numeric_limits<float>::max();
@@ -807,11 +785,8 @@ public:
         shadow_camera.reset(
             new OrthographicCamera {minX, maxX, minY, maxY, minZ, maxZ}
         );
-        ENGINE_INFO("Shadow Map: l:{0}, r:{1}, b:{2}, t:{3}, n:{4}, f:{5}",
-            minX, maxX, minY, maxY, minZ, maxZ
-        );
         shadow_camera->set_view(
-            glm::vec3(0.0f), glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+            cam_center, cam_center + glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
         shadow_map->bind();
@@ -856,7 +831,7 @@ public:
             width = Application::get().get_window().get_width();
             height = Application::get().get_window().get_height();
             float aspect = (float)width / (float)height;
-            std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
+            //std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
         }
         if (use_shadow_cam) {
             Renderer::begin_scene(shadow_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, shadow_map_width, shadow_map_height });
@@ -937,6 +912,10 @@ public:
             Transform t = { {fc.x, fc.y, fc.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
             cube->add_uniform_data("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
             Renderer::submit_entity(simple_shader, cube, t);
+
+            t = { cam_center, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+            cube->add_uniform_data("u_color", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+            Renderer::submit_entity(simple_shader, cube, t);
         }
 
         if (render_skybox) {
@@ -963,8 +942,8 @@ private:
     std::shared_ptr<Shader> simple_shader;
     std::shared_ptr<Shader> depth_map_shader;
 
-    std::shared_ptr<Camera> camera;
-    std::shared_ptr<Camera> debug_camera;
+    std::shared_ptr<NewPerspectiveCamera> camera;
+    std::shared_ptr<NewPerspectiveCamera> debug_camera;
     std::shared_ptr<Camera> ibl_camera;
     std::shared_ptr<OrthographicCamera> shadow_camera;
 
