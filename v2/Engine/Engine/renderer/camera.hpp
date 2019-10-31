@@ -49,6 +49,7 @@ protected:
 class OrthographicCamera: public Camera {
 public:
     OrthographicCamera(float left, float right, float bottom, float top);
+    OrthographicCamera(float left, float right, float bottom, float top, float near, float far);
 
     virtual void recalculate_view_matrix() override;
     virtual void on_ui_render(bool display) override;

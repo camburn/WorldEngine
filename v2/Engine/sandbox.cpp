@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <tuple>
+#include <limits>
 
 #include "imgui.h"
 
@@ -14,6 +15,7 @@
 #include "Engine/renderer/renderer.hpp"
 #include "Engine/renderer/camera.hpp"
 #include "Engine/renderer/lights.hpp"
+#include "Engine/renderer/debug_draw.hpp"
 #include "Engine/entity.hpp"
 #include "Tools/gltf_loader.hpp"
 #include "Tools/generate_sphere.hpp"
@@ -137,7 +139,7 @@ public:
         skybox_shader.reset(new Shader{ vs_skybox, fs_skybox });
 
 
-        // --- IBL CALCULATION -- 
+        // --- IBL CALCULATION --
 
         float vertices[] = {
             -1.0f, -1.0f, -1.0f,
@@ -169,7 +171,7 @@ public:
         cube_vao->set_index_buffer(cube_ibo);
 
         ibl_camera.reset(new PerspectiveCamera(90.0f, 1.0f, 0.1f, 10.0f));
-        
+
         struct camera_position {
             glm::vec3 position;
             glm::vec3 look_at;
@@ -183,10 +185,10 @@ public:
             {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
             {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)}
         };
-        
+
         // Equirectangular to Cubemap
         ibl_equi_to_cube_shader->bind();
-        
+
         hdr_map = TextureHDR::create("./assets/hdr/Arches_E_PineTree_3k.hdr");
 
         auto fbo = FrameBuffer::create(512, 512);
@@ -215,7 +217,7 @@ public:
         auto fbo_small = FrameBuffer::create(32, 32);
         fbo_small->bind();
         irradiance_map = TextureCubeMap::create(32, 32);
-        
+
         environment_map->bind(0);
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
@@ -236,10 +238,10 @@ public:
 
         prefilter_shader->bind();
         fbo_filter = FrameBuffer::create(128, 128);
-        
+
         environment_map->bind(0);
         fbo_filter->bind();
-        
+
         unsigned int max_mip_levels = 5;
         for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
             unsigned int mip_width = 128 * std::pow(0.5f, mip);
@@ -311,9 +313,11 @@ public:
         float aspect = (float)width / (float)height;
 
         shadow_camera.reset( new OrthographicCamera {-5.0f, 5.0f, -5.0f, 5.0f} );
-        camera.reset(new NewPerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
+        camera.reset(new NewPerspectiveCamera { 45.0f, aspect, 0.1f, 25.0f });
+        debug_camera.reset(new NewPerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
+        debug_camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
 
         texture_shader->bind();
 
@@ -385,7 +389,7 @@ public:
 
         entities["square"].reset( new CustomEntity());
         entities["square"]->name = "Square Mesh";
-        
+
         objects["square"] = {};
         objects["square"].attach(entities["square"]);
         objects["square"].name = "Square";
@@ -519,9 +523,10 @@ public:
 
             ImGui::Checkbox("Rotate Camera", &camera_rotate);
             ImGui::Checkbox("Shadow Camera", &use_shadow_cam);
+            ImGui::Checkbox("Debug Camera", &use_debug_cam);
 
             ImGui::SetNextItemWidth(50.f);
-            
+
             ImGui::InputFloat("Camera radius", &camera_radius);
             glm::vec3 camera_pos = camera->get_position();
             ImGui::InputFloat3("Camera Position", &camera_pos.x);
@@ -531,10 +536,10 @@ public:
             ImGui::InputFloat("Light A radius", &light_radius);
             ImGui::Checkbox("Rotate Light A", &light_rotate);
 
-            
+
             ImGui::End(); // Scene Settings
         }
-        
+
         if (show_entity_window) {
             ImGui::Begin("Scene Browser", &show_entity_window);
 
@@ -636,7 +641,7 @@ public:
             if (ImGui::BeginMenu("Windows")) {
                 ImGui::MenuItem("Entities", NULL, &show_entity_window);
                 ImGui::MenuItem("Scene Settings", NULL, &show_scene_window);
-                
+
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -659,7 +664,11 @@ public:
         // Check if mouse is over UI elements, otherwise pass to camera
         ImGuiIO& io = ImGui::GetIO();
         if (!io.WantCaptureMouse) {
-            std::static_pointer_cast<NewPerspectiveCamera>(camera)->update(delta_time);
+            if (use_debug_cam) {
+                std::static_pointer_cast<NewPerspectiveCamera>(debug_camera)->update(delta_time);
+            } else {
+                std::static_pointer_cast<NewPerspectiveCamera>(camera)->update(delta_time);
+            }
         }
         {
             auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
@@ -684,7 +693,7 @@ public:
 
             state = glfwGetKey(window, GLFW_KEY_X);
             if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                
+
                 camera_rotate = !camera_rotate;
                 if (camera_rotate) {
                     GAME_INFO("Camera Rotating");
@@ -709,15 +718,109 @@ public:
         // === END CONTROLS ===
 
         // ===== SHADOW MAP =====
-        shadow_camera->set_position(light_position);
+        shadow_camera->set_view(
+            glm::vec3(0.0f), glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+
+        float fov = 45.0f;
+        float ar = (float)width / (float)height;
+        float near = 0.1f;
+        float far = 25.0f;
+
+        // Nvidia Styles
+        glm::mat4 cam_view_matrix = camera->get_view_matrix();
+        glm::mat4 inverse_cam_view_matrix = glm::inverse(cam_view_matrix);
+        glm::mat4 light_view_matrix = shadow_camera->get_view_matrix();
+
+        glm::vec3 center = camera->get_position();
+        //glm::vec3 view_dir = glm::vec3(1.0f, -1.0f, 0.0f);
+        glm::vec3 view_dir = std::static_pointer_cast<NewPerspectiveCamera>(camera)->get_forward_direction();
+
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 right = glm::normalize(glm::cross(view_dir, up));
+
+        glm::vec3 fc = center + view_dir * far;
+        glm::vec3 nc = center + view_dir * near;
+
+        ENGINE_INFO("NV fc:v3({0},{1},{2}), nc:v3({3},{4},{5})", fc.x, fc.y, fc.z, nc.x, nc.y, nc.z);
+
+        float near_height = (near * glm::tan(glm::radians(fov / 2.0f)));
+        float far_height = (far * glm::tan(glm::radians(fov / 2.0f)));
+        float near_width = near_height * ar;
+        float far_width = far_height * ar;
+
+        std::vector<glm::vec4> frustum_points {
+            glm::vec4(nc - up*near_height - right*near_width, 1.0f),
+            glm::vec4(nc + up*near_height - right*near_width, 1.0f),
+            glm::vec4(nc + up*near_height + right*near_width, 1.0f),
+            glm::vec4(nc - up*near_height + right*near_width, 1.0f),
+
+            glm::vec4(fc - up*far_height - right*far_width, 1.0f),
+            glm::vec4(fc + up*far_height - right*far_width, 1.0f),
+            glm::vec4(fc + up*far_height + right*far_width, 1.0f),
+            glm::vec4(fc - up*far_height + right*far_width, 1.0f)
+        };
+
+        /*
+        // Update shadow camera based on the perspective of the main camera.
+        // Need to get
+        float xn = (near * glm::tan(glm::radians(fov / 2.0f)));
+        float xf = (far * glm::tan(glm::radians(fov / 2.0f)));
+        float yn = (near * glm::tan(glm::radians((fov * ar) / 2.0f)));
+        float yf = (far * glm::tan(glm::radians((fov * ar) / 2.0f)));
+
+        ENGINE_INFO("Frustrum: {0}, {1}, {2}, {3}", xn, xf, yn, yf);
+
+        // Bounding Points
+        // near face
+        std::vector<glm::vec4> frustum_corners = {
+            {xn, yn, near, 1.0},
+            {-xn, yn, near, 1.0},
+            {xn, -yn, near, 1.0},
+            {-xn, -yn, near, 1.0},
+            {xf, yf, far, 1.0},
+            {-xf, yf, far, 1.0},
+            {xf, -yf, far, 1.0},
+            {-xf, -yf, far, 1.0}
+        };
+        */
+        float minX = std::numeric_limits<float>::max();
+        float maxX = std::numeric_limits<float>::min();
+        float minY = std::numeric_limits<float>::max();
+        float maxY = std::numeric_limits<float>::min();
+        float minZ = std::numeric_limits<float>::max();
+        float maxZ = std::numeric_limits<float>::min();
         
+        for (glm::vec4 &vec: frustum_points) {
+            //glm::vec4 vw = inverse_cam_view_matrix * vec;  // world space
+            //glm::vec4 vw = cam_view_matrix * vec;
+            glm::vec4 vl = light_view_matrix * vec;  // light space
+
+            minX = std::min(minX, vl.x);
+            maxX = std::max(maxX, vl.x);
+            minY = std::min(minY, vl.y);
+            maxY = std::max(maxY, vl.y);
+            minZ = std::min(minZ, vl.z);
+            maxZ = std::max(maxZ, vl.z);
+        }
+
+        shadow_camera.reset(
+            new OrthographicCamera {minX, maxX, minY, maxY, minZ, maxZ}
+        );
+        ENGINE_INFO("Shadow Map: l:{0}, r:{1}, b:{2}, t:{3}, n:{4}, f:{5}",
+            minX, maxX, minY, maxY, minZ, maxZ
+        );
+        shadow_camera->set_view(
+            glm::vec3(0.0f), glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+
         shadow_map->bind();
         // Bind Shadow map shader here?!
         depth_map_shader->bind();
         shadow_map_buffer->bind();
         // Render things here
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
-        
+
         for (auto& [name, object]: objects) {
             if (object.type() == object.MESH && object.mesh()->draw) {
                 Renderer::submit_entity(depth_map_shader, object.mesh(), object.transform());
@@ -757,6 +860,8 @@ public:
         }
         if (use_shadow_cam) {
             Renderer::begin_scene(shadow_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, shadow_map_width, shadow_map_height });
+        } else if (use_debug_cam) {
+            Renderer::begin_scene(debug_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
         } else {
             Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
         }
@@ -787,7 +892,52 @@ public:
             }
         }
 
-        texture_shader->unbind();
+
+        if (use_debug_cam) {
+            /*
+            for (auto point: frustum_points) {
+                //point = point * cam_view_matrix;
+                Transform t = { {point.x, point.y, point.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+                cube->add_uniform_data("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                Renderer::submit_entity(simple_shader, cube, t);
+            }*/
+
+            simple_shader->bind();
+            simple_shader->upload_u_vec4("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            simple_shader->upload_u_mat4("u_model", glm::mat4(1.0f));
+
+            draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[4]));
+            draw_line(glm::vec3(frustum_points[1]), glm::vec3(frustum_points[5]));
+            draw_line(glm::vec3(frustum_points[2]), glm::vec3(frustum_points[6]));
+            draw_line(glm::vec3(frustum_points[3]), glm::vec3(frustum_points[7]));
+
+            simple_shader->upload_u_vec4("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+            draw_line(
+                shadow_camera->get_position() + glm::vec3(minX, minY, maxZ),
+                shadow_camera->get_position() + glm::vec3(minX, maxY, maxZ)
+            );
+            draw_line(
+                shadow_camera->get_position() + glm::vec3(minX, minY, minZ),
+                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ)
+            );
+            draw_line(
+                shadow_camera->get_position() + glm::vec3(minX, minY, minZ),
+                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ)
+            );
+            draw_line(
+                shadow_camera->get_position() + glm::vec3(maxX, minY, minZ),
+                shadow_camera->get_position() + glm::vec3(maxX, maxY, minZ)
+            );
+            draw_line(
+                shadow_camera->get_position() + glm::vec3(maxX, minY, maxZ),
+                shadow_camera->get_position() + glm::vec3(maxX, maxY, maxZ)
+            );
+            //glm::vec4 c = glm::vec4(fc, 1) * cam_view_matrix;
+            Transform t = { {fc.x, fc.y, fc.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+            cube->add_uniform_data("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+            Renderer::submit_entity(simple_shader, cube, t);
+        }
 
         if (render_skybox) {
             skybox_shader->bind();
@@ -814,6 +964,7 @@ private:
     std::shared_ptr<Shader> depth_map_shader;
 
     std::shared_ptr<Camera> camera;
+    std::shared_ptr<Camera> debug_camera;
     std::shared_ptr<Camera> ibl_camera;
     std::shared_ptr<OrthographicCamera> shadow_camera;
 
@@ -864,6 +1015,7 @@ private:
     bool light_rotate = false;
     bool draw_gears = true;
     bool use_shadow_cam = false;
+    bool use_debug_cam = false;
     bool render_skybox = true;
     bool cast_shadows = true;
     bool use_generated_brdf = true;

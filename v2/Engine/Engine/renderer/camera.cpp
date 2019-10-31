@@ -14,6 +14,12 @@ OrthographicCamera::OrthographicCamera(float left, float right, float bottom, fl
     view_projection_matrix = projection_matrix * view_matrix;
 }
 
+OrthographicCamera::OrthographicCamera(
+    float left, float right, float bottom, float top, float near, float far)
+        : Camera(glm::ortho(left, right, bottom, top, near, far), glm::mat4(1.0f)) {
+    view_projection_matrix = projection_matrix * view_matrix;
+}
+
 void OrthographicCamera::recalculate_view_matrix() {
     // Ortho camera only rotates on Z
     //glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
