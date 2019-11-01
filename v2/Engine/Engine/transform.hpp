@@ -13,9 +13,13 @@ class Transform {
 public:
     Transform() {}
     Transform(glm::vec3 translation, glm::vec3 scale, glm::quat rotation)
-        : translation(translation), scale(scale), rotation(rotation) {
-            state_changed = true;
-        }
+            : translation(translation), scale(scale), rotation(rotation) {
+        state_changed = true;
+    }
+    Transform(glm::vec3 translation, glm::vec3 scale)
+            : translation(translation), scale(scale), rotation(glm::quat{1.0f, 0.0f, 0.0f, 0.0f}) {
+        state_changed = true;
+    }
     Transform(glm::mat4 model) {
         glm::vec3 skew;
         glm::vec4 perspective;

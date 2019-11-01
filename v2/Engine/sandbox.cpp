@@ -24,6 +24,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "Platform/OpenGL/gl_debug_ui.hpp"
 
@@ -129,7 +130,7 @@ public:
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
-        simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
+        //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
 
         // IBL Shaders
         ibl_equi_to_cube_shader.reset(new Shader{ vs_file_ibl_equi_to_cube, fs_file_ibl_equi_to_cube });
@@ -138,7 +139,7 @@ public:
         brdf_shader.reset(new Shader{ vs_file_brdf, fs_file_brdf });
         skybox_shader.reset(new Shader{ vs_skybox, fs_skybox });
 
-
+        engine_debug::init();
         // --- IBL CALCULATION --
 
         float vertices[] = {
@@ -339,7 +340,7 @@ public:
         objects["flight_helmet"].transform().set_scale(glm::vec3(4, 4, 4));
         objects["flight_helmet"].name = "Flight Helmet";
 
-        cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+        //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
         entities["sample_mra"] = GltfEntity::load_from_file("./assets/gltf/EnvironmentTest/EnvironmentTest.gltf");
         entities["sample_mra"]->name = "MetalRoughSpheres Mesh";
@@ -717,6 +718,12 @@ public:
         objects["square"].transform().set_translation(model_position);
         // === END CONTROLS ===
 
+        if (use_debug_cam)
+            engine_debug::draw_cube_deferred(
+                Transform{glm::vec3(0.0f), glm::vec3(0.1f)},
+                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+            );
+
         // ===== SHADOW MAP =====
         float fov = camera->fov;
         float ar = camera->aspect;
@@ -857,65 +864,59 @@ public:
         }
 
         // Draw light positions
-        simple_shader->bind();
+        //simple_shader->bind();
 
         for (auto& [name, object]: objects) {
             if (object.type() == object.LIGHT) {
                 Transform t = { object.light().position, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-                cube->add_uniform_data("u_color", glm::vec4(object.light().color, 1.0f));
-                Renderer::submit_entity(simple_shader, cube, t);
+                //cube->add_uniform_data("u_color", glm::vec4(object.light().color, 1.0f));
+                engine_debug::draw_cube(t, glm::vec4(object.light().color, 1.0f));
+                //Renderer::submit_entity(simple_shader, cube, t);
             }
         }
 
 
         if (use_debug_cam) {
-            /*
-            for (auto point: frustum_points) {
-                //point = point * cam_view_matrix;
-                Transform t = { {point.x, point.y, point.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-                cube->add_uniform_data("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-                Renderer::submit_entity(simple_shader, cube, t);
-            }*/
 
-            simple_shader->bind();
-            simple_shader->upload_u_vec4("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            simple_shader->upload_u_mat4("u_model", glm::mat4(1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[4]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[1]), glm::vec3(frustum_points[5]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[2]), glm::vec3(frustum_points[6]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[3]), glm::vec3(frustum_points[7]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-            draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[4]));
-            draw_line(glm::vec3(frustum_points[1]), glm::vec3(frustum_points[5]));
-            draw_line(glm::vec3(frustum_points[2]), glm::vec3(frustum_points[6]));
-            draw_line(glm::vec3(frustum_points[3]), glm::vec3(frustum_points[7]));
-
-            simple_shader->upload_u_vec4("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-            draw_line(
+            engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(minX, minY, maxZ),
-                shadow_camera->get_position() + glm::vec3(minX, maxY, maxZ)
+                shadow_camera->get_position() + glm::vec3(minX, maxY, maxZ),
+                glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
-            draw_line(
+            engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(minX, minY, minZ),
-                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ)
+                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ),
+                glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
-            draw_line(
+            engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(minX, minY, minZ),
-                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ)
+                shadow_camera->get_position() + glm::vec3(minX, maxY, minZ),
+                glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
-            draw_line(
+            engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(maxX, minY, minZ),
-                shadow_camera->get_position() + glm::vec3(maxX, maxY, minZ)
+                shadow_camera->get_position() + glm::vec3(maxX, maxY, minZ),
+                glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
-            draw_line(
+            engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(maxX, minY, maxZ),
-                shadow_camera->get_position() + glm::vec3(maxX, maxY, maxZ)
+                shadow_camera->get_position() + glm::vec3(maxX, maxY, maxZ),
+                glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
-            //glm::vec4 c = glm::vec4(fc, 1) * cam_view_matrix;
+
             Transform t = { {fc.x, fc.y, fc.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-            cube->add_uniform_data("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-            Renderer::submit_entity(simple_shader, cube, t);
+            engine_debug::draw_cube(t, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
             t = { cam_center, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-            cube->add_uniform_data("u_color", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-            Renderer::submit_entity(simple_shader, cube, t);
+            engine_debug::draw_cube(t, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[5]), glm::vec3(frustum_points[6]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+
+            engine_debug::draw_deferred();
         }
 
         if (render_skybox) {
@@ -939,7 +940,7 @@ private:
     std::shared_ptr<Shader> skybox_shader;
 
     std::shared_ptr<Shader> texture_shader;
-    std::shared_ptr<Shader> simple_shader;
+    //std::shared_ptr<Shader> simple_shader;
     std::shared_ptr<Shader> depth_map_shader;
 
     std::shared_ptr<NewPerspectiveCamera> camera;
@@ -949,7 +950,7 @@ private:
 
     std::shared_ptr<VertexArray> cube_vao;
 
-    std::shared_ptr<Entity> cube;
+    //std::shared_ptr<Entity> cube;
 
     std::map<std::string, Object> objects;
     std::map<std::string, std::shared_ptr<Entity>> entities;
