@@ -17,6 +17,7 @@
 #include "Engine/renderer/lights.hpp"
 #include "Engine/renderer/debug_draw.hpp"
 #include "Engine/entity.hpp"
+#include "Engine/scripts.hpp"
 #include "Tools/gltf_loader.hpp"
 #include "Tools/generate_sphere.hpp"
 #include "Engine/renderer/texture.hpp"
@@ -127,6 +128,8 @@ public:
         std::string vs_skybox = "./shaders/IBL/vertex_skybox3.glsl";
         std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
         #endif
+
+        
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
@@ -326,45 +329,54 @@ public:
         entities["helmet"]->name = "Damaged Helmet Mesh";
         //entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
-        objects["helmet"] = {};
-        objects["helmet"].attach(entities["helmet"]);
-        objects["helmet"].transform().set_translation(glm::vec3(0, 0, 0));
-        objects["helmet"].name = "Damaged Helmet";
+        objects["helmet"].reset(new Object());
+        objects["helmet"]->attach(entities["helmet"]);
+        objects["helmet"]->transform().set_translation(glm::vec3(0, 0, 0));
+        objects["helmet"]->name = "Damaged Helmet";
+
+        
 
         entities["flight_helmet"] = GltfEntity::load_from_file("./assets/gltf/FlightHelmet/FlightHelmet.gltf");
         entities["flight_helmet"]->name = "Flight Helmet Mesh";
 
-        objects["flight_helmet"] = {};
-        objects["flight_helmet"].attach(entities["flight_helmet"]);
-        objects["flight_helmet"].transform().set_translation(glm::vec3(3, 0, 0));
-        objects["flight_helmet"].transform().set_scale(glm::vec3(4, 4, 4));
-        objects["flight_helmet"].name = "Flight Helmet";
+        objects["flight_helmet"].reset(new Object());
+        objects["flight_helmet"]->attach(entities["flight_helmet"]);
+        objects["flight_helmet"]->transform().set_translation(glm::vec3(3, 0, 0));
+        objects["flight_helmet"]->transform().set_scale(glm::vec3(4, 4, 4));
+        objects["flight_helmet"]->name = "Flight Helmet";
 
         //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
         entities["sample_mra"] = GltfEntity::load_from_file("./assets/gltf/EnvironmentTest/EnvironmentTest.gltf");
         entities["sample_mra"]->name = "MetalRoughSpheres Mesh";
 
-        objects["sample_mra"] = {};
-        objects["sample_mra"].attach(entities["sample_mra"]);
-        objects["sample_mra"].name = "Sample MRA";
+        objects["sample_mra"].reset(new Object());
+        objects["sample_mra"]->attach(entities["sample_mra"]);
+        objects["sample_mra"]->name = "Sample MRA";
 
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube Mesh";
 
-        objects["cube"] = {};
-        objects["cube"].attach(entities["cube"]);
-        objects["cube"].name = "Cube";
-        objects["cube"].transform().set_translation(glm::vec3(1, -1.5, 1));
-        objects["cube"].transform().set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
+        objects["cube"].reset(new Object());
+        objects["cube"]->attach(entities["cube"]);
+        objects["cube"]->name = "Cube";
+        objects["cube"]->transform().set_translation(glm::vec3(1, -1.5, 1));
+        objects["cube"]->transform().set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
 
         entities["sphere"] = generate_sphere();
         entities["sphere"]->name = "Sphere Mesh";
 
-        objects["sphere"] = {};
-        objects["sphere"].attach(entities["sphere"]);
-        objects["sphere"].name = "Sphere";
-        objects["sphere"].transform().set_translation(glm::vec3(-3, 0, 0));
+        objects["sphere"].reset(new Object());
+        objects["sphere"]->attach(entities["sphere"]);
+        objects["sphere"]->name = "Sphere";
+        objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
+
+        py_script.reset(
+            new Script(
+                "ball_spin",
+                objects["sphere"]
+            )
+        );
 
         sphere_albedo_texture = Texture2D::create(
             "./assets/textures/rusted_iron/rustediron2_basecolor.png"
@@ -391,10 +403,10 @@ public:
         entities["square"].reset( new CustomEntity());
         entities["square"]->name = "Square Mesh";
 
-        objects["square"] = {};
-        objects["square"].attach(entities["square"]);
-        objects["square"].name = "Square";
-        objects["square"].transform().set_translation(model_position);
+        objects["square"].reset(new Object());
+        objects["square"]->attach(entities["square"]);
+        objects["square"]->name = "Square";
+        objects["square"]->transform().set_translation(model_position);
 
         std::vector<glm::vec4> data = {
             {  3.0f, 0.0f,  3.0f, 1.0f },
@@ -455,15 +467,15 @@ public:
         }
 
         // SCENE OBJECTS
-        objects["sky_light"] = {};
-        objects["sky_light"].attach(std::shared_ptr<Light> {
+        objects["sky_light"].reset(new Object());
+        objects["sky_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color, light_position, true}
         });
-        objects["red_light"] = {};
-        objects["red_light"].attach(std::shared_ptr<Light> {
+        objects["red_light"].reset(new Object());
+        objects["red_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color_b, light_position_b}});
-        objects["green_light"] = {};
-        objects["green_light"].attach(std::shared_ptr<Light> {
+        objects["green_light"].reset(new Object());
+        objects["green_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color_c, light_position_c}});
 
         // SHADOW MAP SETUP
@@ -561,10 +573,10 @@ public:
                     selected_name = name;
                 }
                 ImGui::SameLine(ImGui::GetWindowWidth()-50);
-                if (object.type() == object.MESH)
-                    ImGui::Checkbox(("##" + name).c_str(), &object.mesh()->draw);
-                if (object.type() == object.LIGHT)
-                    ImGui::Checkbox(("##" + name).c_str(), &object.light().enabled);
+                if (object->type() == object->MESH)
+                    ImGui::Checkbox(("##" + name).c_str(), &object->mesh()->draw);
+                if (object->type() == object->LIGHT)
+                    ImGui::Checkbox(("##" + name).c_str(), &object->light().enabled);
                 index ++;
             }
             ImGui::EndChild();
@@ -576,51 +588,51 @@ public:
             ImGui::Begin("Entity Properties");
             if (objects.count(selected_name) > 0) {
             auto &object = objects.at(selected_name);
-            ImGui::Text("MyObject: %s", object.name.c_str());
+            ImGui::Text("MyObject: %s", object->name.c_str());
                 ImGui::Separator();
                 if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
                 {
                     if (ImGui::BeginTabItem("Object"))
                     {
-                        ImGui::Text("%s", object.name.c_str());
-                        glm::vec3 translation = object.transform().get_translation();
-                        glm::vec3 scale = object.transform().get_scale();
-                        glm::quat rotation = object.transform().get_rotation();
+                        ImGui::Text("%s", object->name.c_str());
+                        glm::vec3 translation = object->transform().get_translation();
+                        glm::vec3 scale = object->transform().get_scale();
+                        glm::quat rotation = object->transform().get_rotation();
                         ImGui::InputFloat3("Translation", &translation.x);
                         ImGui::InputFloat3("Scale", &scale.x);
                         ImGui::InputFloat4("Rotation", &rotation.x);
-                        object.transform().set_translation(translation);
-                        object.transform().set_scale(scale);
-                        object.transform().set_rotation(rotation);
+                        object->transform().set_translation(translation);
+                        object->transform().set_scale(scale);
+                        object->transform().set_rotation(rotation);
                         ImGui::EndTabItem();
                     }
-                    if (object.type() == object.MESH && ImGui::BeginTabItem("Mesh"))
+                    if (object->type() == object->MESH && ImGui::BeginTabItem("Mesh"))
                     {
-                        glm::vec3 translation = object.transform().get_translation();
-                        glm::vec3 scale = object.transform().get_scale();
-                        glm::quat rotation = object.transform().get_rotation();
+                        glm::vec3 translation = object->transform().get_translation();
+                        glm::vec3 scale = object->transform().get_scale();
+                        glm::quat rotation = object->transform().get_rotation();
 
-                        ImGui::Checkbox("Draw", &object.mesh()->draw);
+                        ImGui::Checkbox("Draw", &object->mesh()->draw);
 
                         ImGui::InputFloat3("Translation", &translation.x);
                         ImGui::InputFloat3("Scale", &scale.x);
                         ImGui::InputFloat4("Rotation", &rotation.x);
-                        object.transform().set_translation(translation);
-                        object.transform().set_scale(scale);
-                        object.transform().set_rotation(rotation);
+                        object->transform().set_translation(translation);
+                        object->transform().set_scale(scale);
+                        object->transform().set_rotation(rotation);
 
                         ImGui::EndTabItem();
                     }
-                    if (object.type() == object.LIGHT && ImGui::BeginTabItem("Light")) {
+                    if (object->type() == object->LIGHT && ImGui::BeginTabItem("Light")) {
                         int misc_flags = ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoInputs;
-                        ImGui::Text("%s", object.name.c_str());
-                        ImGui::Checkbox("Cast Shadows", &object.light().cast_shadows);
-                        ImGui::Checkbox("Enabled", &object.light().enabled);
-                        ImGui::Checkbox("Direction", &object.light().direction);
-                        ImGui::ColorEdit3("Color", &object.light().color.r, misc_flags);
-                        glm::vec3 hdr_color = object.light().get_hdr_color();
+                        ImGui::Text("%s", object->name.c_str());
+                        ImGui::Checkbox("Cast Shadows", &object->light().cast_shadows);
+                        ImGui::Checkbox("Enabled", &object->light().enabled);
+                        ImGui::Checkbox("Direction", &object->light().direction);
+                        ImGui::ColorEdit3("Color", &object->light().color.r, misc_flags);
+                        glm::vec3 hdr_color = object->light().get_hdr_color();
                         ImGui::InputFloat3("HDR Value", &hdr_color.r);
-                        ImGui::InputFloat3("Position", &object.light().position.x);
+                        ImGui::InputFloat3("Position", &object->light().position.x);
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();
@@ -661,6 +673,11 @@ public:
         float time = (float)glfwGetTime();
         float delta_time = time - last_frame_time;
         last_frame_time = time;
+
+        // ===== SCRIPTING =====
+        py_script->update(delta_time);
+        // === END SCRIPTING ===
+
         // ===== CONTROLS =====
         // Check if mouse is over UI elements, otherwise pass to camera
         ImGuiIO& io = ImGui::GetIO();
@@ -715,7 +732,7 @@ public:
             light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
         //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
-        objects["square"].transform().set_translation(model_position);
+        objects["square"]->transform().set_translation(model_position);
         // === END CONTROLS ===
 
         if (use_debug_cam)
@@ -804,8 +821,8 @@ public:
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
 
         for (auto& [name, object]: objects) {
-            if (object.type() == object.MESH && object.mesh()->draw) {
-                Renderer::submit_entity(depth_map_shader, object.mesh(), object.transform());
+            if (object->type() == object->MESH && object->mesh()->draw) {
+                Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
             }
         }
         depth_map_shader->unbind();
@@ -815,13 +832,13 @@ public:
         texture_shader->bind();
         int light_counter = 0;
         for (auto& [name, object]: objects) {
-            if (object.type() == object.LIGHT) {
+            if (object->type() == object->LIGHT) {
                 std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
-                texture_shader->upload_u_vec3(u_light_name + ".position", object.light().position);
-                texture_shader->upload_u_vec3(u_light_name + ".color", object.light().get_hdr_color());
-                texture_shader->upload_u_int1(u_light_name + ".cast_shadows", object.light().cast_shadows);
-                texture_shader->upload_u_int1(u_light_name + ".enabled", object.light().enabled);
-                texture_shader->upload_u_int1(u_light_name + ".direction", object.light().direction);
+                texture_shader->upload_u_vec3(u_light_name + ".position", object->light().position);
+                texture_shader->upload_u_vec3(u_light_name + ".color", object->light().get_hdr_color());
+                texture_shader->upload_u_int1(u_light_name + ".cast_shadows", object->light().cast_shadows);
+                texture_shader->upload_u_int1(u_light_name + ".enabled", object->light().enabled);
+                texture_shader->upload_u_int1(u_light_name + ".direction", object->light().direction);
                 light_counter += 1;
             }
         }
@@ -858,8 +875,8 @@ public:
         }
 
         for (auto& [name, object]: objects) {
-            if (object.type() == object.MESH && object.mesh()->draw) {
-                Renderer::submit_entity(texture_shader, object.mesh(), object.transform());
+            if (object->type() == object->MESH && object->mesh()->draw) {
+                Renderer::submit_entity(texture_shader, object->mesh(), object->transform());
             }
         }
 
@@ -867,10 +884,10 @@ public:
         //simple_shader->bind();
 
         for (auto& [name, object]: objects) {
-            if (object.type() == object.LIGHT) {
-                Transform t = { object.light().position, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-                //cube->add_uniform_data("u_color", glm::vec4(object.light().color, 1.0f));
-                engine_debug::draw_cube(t, glm::vec4(object.light().color, 1.0f));
+            if (object->type() == object->LIGHT) {
+                Transform t = { object->light().position, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+                //cube->add_uniform_data("u_color", glm::vec4(object->light().color, 1.0f));
+                engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));
                 //Renderer::submit_entity(simple_shader, cube, t);
             }
         }
@@ -931,6 +948,8 @@ public:
     }
 
 private:
+    std::shared_ptr<Script> py_script;
+
     std::shared_ptr<FrameBuffer> fbo_filter;
 
     std::shared_ptr<Shader> ibl_equi_to_cube_shader;
@@ -952,7 +971,7 @@ private:
 
     //std::shared_ptr<Entity> cube;
 
-    std::map<std::string, Object> objects;
+    std::map<std::string, std::shared_ptr<Object>> objects;
     std::map<std::string, std::shared_ptr<Entity>> entities;
     std::vector<Light> lights;
 

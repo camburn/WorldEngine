@@ -67,6 +67,20 @@ void gl_draw_line(glm::vec3 a, glm::vec3 b) {
     glDrawElements(GL_TRIANGLES, elements.size(), GL_UNSIGNED_INT, 0);
 }
 
+/*
+Draw a line from a cube
+
+a Get a 1x1x1 cube
+Get a forward vector i.e. v3(0, 1, 0)
+
+Determine line direction vector (normalize(b - a))
+then rotate cube to face direction
+
+Then determine distance (glm::distance(a, b))
+Then scale forward vector by distance
+*/
+
+
 }
 
 #endif

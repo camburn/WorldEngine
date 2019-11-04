@@ -64,6 +64,7 @@ project "Engine"
     {
         "extern/spdlog/include",
         "extern/tinygltf",
+        "/usr/include/python3.7m",
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
@@ -74,7 +75,8 @@ project "Engine"
     links 
     { 
         "GLFW",
-        "imgui"
+        "imgui",
+        "python3.7m"
     }
 
     configuration "opengl3"
