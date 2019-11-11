@@ -373,10 +373,17 @@ public:
         objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
 
         script_init();
-        py_script.reset(
+        py_scripts["sphere"].reset(
             new PythonScript(
                 "scripts.ball_spin",
                 objects["sphere"]
+            )
+        );
+
+        py_scripts["cube"].reset(
+            new PythonScript(
+                "scripts.cube",
+                objects["cube"]
             )
         );
 
@@ -677,8 +684,9 @@ public:
         last_frame_time = time;
 
         // ===== SCRIPTING =====
-        py_script->update(delta_time);
-        // mark for updating?
+        for (auto &[name, script]: py_scripts) {
+            script->update(delta_time);
+        }
         // === END SCRIPTING ===
 
         // ===== CONTROLS =====
@@ -714,8 +722,7 @@ public:
 
             state = glfwGetKey(window, GLFW_KEY_X);
             if (state == GLFW_PRESS) {
-                ENGINE_INFO("Setting script reload trigger");
-                py_script->code_changed = true;
+
             }
         }
 
@@ -971,6 +978,7 @@ private:
 
     std::map<std::string, std::shared_ptr<Object>> objects;
     std::map<std::string, std::shared_ptr<Entity>> entities;
+    std::map<std::string, std::shared_ptr<PythonScript>> py_scripts;
     std::vector<Light> lights;
 
     std::shared_ptr<Texture> checker_texture;

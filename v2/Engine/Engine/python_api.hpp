@@ -84,7 +84,6 @@ public:
     PyObject *module_name;
     PyObject *script_module;
     PyObject *update_func;
-    bool code_changed;
     std::string module_path;
     std::experimental::filesystem::file_time_type last_modify;
 

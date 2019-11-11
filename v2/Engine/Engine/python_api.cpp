@@ -194,6 +194,8 @@ PyMODINIT_FUNC PyInit_py_script(void) {
     return m;
 }
 
+PyObject *script_class;
+
 void script_init() {
     //Py_SetProgramName("EngineTest");
     //Py_SetPath(L"./"
@@ -205,14 +207,14 @@ void script_init() {
         "import sys\n"
         "sys.path.append('./')\n"
     );
+    script_class = PyObject_GetAttrString(PyInit_py_script(), "Script");
 }
 
 PyObject *new_script() {
     ENGINE_ASSERT(Py_IsInitialized(), "Python is not initialised, cannot create PythonScript - call `script_init()`");
-    PyObject *custom_class = PyObject_GetAttrString(PyInit_py_script(), "Script");
     PyObject *args = Py_BuildValue("(s)", "Python Script Instance");
-    PyObject *custom_instance = PyObject_CallObject(custom_class, args);
-    return custom_instance;
+    PyObject *script_instance = PyObject_CallObject(script_class, args);
+    return script_instance;
 }
 
 
