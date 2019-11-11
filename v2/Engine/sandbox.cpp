@@ -18,6 +18,7 @@
 #include "Engine/renderer/debug_draw.hpp"
 #include "Engine/entity.hpp"
 #include "Engine/scripts.hpp"
+#include "Engine/python_api.hpp"
 #include "Tools/gltf_loader.hpp"
 #include "Tools/generate_sphere.hpp"
 #include "Engine/renderer/texture.hpp"
@@ -371,9 +372,10 @@ public:
         objects["sphere"]->name = "Sphere";
         objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
 
+        script_init();
         py_script.reset(
-            new Script(
-                "ball_spin",
+            new PythonScript(
+                "scripts.ball_spin",
                 objects["sphere"]
             )
         );
@@ -676,6 +678,7 @@ public:
 
         // ===== SCRIPTING =====
         py_script->update(delta_time);
+        // mark for updating?
         // === END SCRIPTING ===
 
         // ===== CONTROLS =====
@@ -710,14 +713,9 @@ public:
             }
 
             state = glfwGetKey(window, GLFW_KEY_X);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-
-                camera_rotate = !camera_rotate;
-                if (camera_rotate) {
-                    GAME_INFO("Camera Rotating");
-                } else {
-                    GAME_INFO("Camera Stopped");
-                }
+            if (state == GLFW_PRESS) {
+                ENGINE_INFO("Setting script reload trigger");
+                py_script->code_changed = true;
             }
         }
 
@@ -948,7 +946,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Script> py_script;
+    std::shared_ptr<PythonScript> py_script;
 
     std::shared_ptr<FrameBuffer> fbo_filter;
 

@@ -9,7 +9,9 @@
 
 #include <glm/glm.hpp>
 
+#include "engine.hpp"
 #include "Engine/objects.hpp"
+//#include "Engine/python_api.hpp"
 
 
 namespace engine {
@@ -29,7 +31,8 @@ i.e. Collision event args(self, other_object) would be called during the physics
 update.
 */
 
-static std::shared_ptr<Object> current_object {nullptr};
+/*
+static std::shared_ptr<engine::Object> current_object {nullptr};
 
 static PyObject*
 engine_updateobjectrotation(PyObject *self, PyObject *args) {
@@ -86,31 +89,21 @@ static PyMethodDef EngineMethods[] = {
 
 // Create a python module
 static PyModuleDef EngineModule = {
-    PyModuleDef_HEAD_INIT, "engine", NULL, -1, EngineMethods,
+    PyModuleDef_HEAD_INIT, "engine_static", NULL, -1, EngineMethods,
     NULL, NULL, NULL, NULL
 };
 
 static PyObject*
-PyInit_engine(void) {
+PyInit_engine_static(void) {
     return PyModule_Create(&EngineModule);
 }
-
+*/
 class Script {
 
 public:
     Script(std::string name, std::shared_ptr<Object> parent): name(name), parent(parent) {
-        
-        //Py_SetProgramName("EngineTest");
-        //
-        //Py_SetPath(L"./");
-        PyImport_AppendInittab("engine", &PyInit_engine);
-        Py_Initialize();
-        
-        PyRun_SimpleString(
-            "import sys\n"
-            "sys.path.append('./')\n"
-        );
 
+        /*
         PyObject *pName = PyUnicode_FromString("scripts.ball_spin");
         pModule = PyImport_Import(pName);
         if (pModule != NULL) {
@@ -119,21 +112,28 @@ public:
                 ENGINE_INFO("Update function found");
             }
 
+            PyObject *script_class = PyObject_GetAttrString(pModule, "Script");
+            PyObject* script_instance = PyObject_CallFunction(script_class, "f", 25.5f);
+
         } else {
             ENGINE_ERROR("Cannot import module.");
         }
         Py_DECREF(pName);
+        */
     }
 
     ~Script(){
+        /*
         Py_DECREF(pModule);
         Py_DECREF(update_function);
 
         if (Py_FinalizeEx() < 0)
             exit(120);
+        */
     }
 
-    void update(float delta_time) {
+    virtual void update(float delta_time) = 0;// {
+        /*
         using milli = std::chrono::milliseconds;
         auto start = std::chrono::high_resolution_clock::now();
     
@@ -157,15 +157,17 @@ public:
             return;
         }
         ENGINE_WARN("Update function not initialised");
-    }
+        */
+    //}
+
     std::string name;
 
-private:
-    std::string script;
+protected:
+    //std::string script;
     std::shared_ptr<Object> parent;
 
-    PyObject *pModule;
-    PyObject *update_function;
+    //PyObject *pModule;
+    //PyObject *update_function;
 
 };
 

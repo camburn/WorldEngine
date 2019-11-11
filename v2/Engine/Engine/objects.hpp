@@ -3,7 +3,7 @@
 
 #include "Engine/entity.hpp"
 #include "Engine/transform.hpp"
-#include "Engine/scripts.hpp"
+//#include "Engine/scripts.hpp"
 #include "Engine/renderer/camera.hpp"
 #include "Engine/renderer/lights.hpp"
 
@@ -24,12 +24,12 @@ public:
 
     Transform& transform() { return _transform; }
     std::shared_ptr<Entity>& mesh() { return _mesh; }
-    std::shared_ptr<Script>& script() { return _script; }
+    //std::shared_ptr<Script>& script() { return _script; }
     Light& light() { return *_light; }
 
     void attach(std::shared_ptr<Entity> mesh);
     void attach(std::shared_ptr<Light> light);
-    void attach(std::shared_ptr<Script> script);
+    //void attach(std::shared_ptr<Script> script);
 
     virtual void update() {}; // Simulation step
 
@@ -47,7 +47,7 @@ private:
     std::shared_ptr<Entity> _mesh {nullptr};
     std::shared_ptr<Camera> camera {nullptr};
     std::shared_ptr<Light> _light {nullptr};
-    std::shared_ptr<Script> _script {nullptr};
+    //std::shared_ptr<Script> _script {nullptr};
 };
 
 

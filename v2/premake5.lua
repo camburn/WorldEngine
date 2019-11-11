@@ -140,7 +140,8 @@ project "Engine"
             "GL",
             "X11",
             "dl",
-            "pthread"
+            "pthread",
+            "stdc++fs"
         }
 
         defines
