@@ -374,17 +374,12 @@ public:
 
         script_init();
         py_scripts["sphere"].reset(
-            new PythonScript(
-                "scripts.ball_spin",
-                objects["sphere"]
-            )
+            new PythonScript("scripts.ball_spin", objects["sphere"] )
         );
+        objects["sphere"]->attach(py_scripts["sphere"]);
 
         py_scripts["cube"].reset(
-            new PythonScript(
-                "scripts.cube",
-                objects["cube"]
-            )
+            new PythonScript("scripts.cube", objects["cube"])
         );
 
         sphere_albedo_texture = Texture2D::create(
@@ -601,8 +596,7 @@ public:
                 ImGui::Separator();
                 if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
                 {
-                    if (ImGui::BeginTabItem("Object"))
-                    {
+                    if (ImGui::BeginTabItem("Object")){
                         ImGui::Text("%s", object->name.c_str());
                         glm::vec3 translation = object->transform().get_translation();
                         glm::vec3 scale = object->transform().get_scale();
@@ -642,6 +636,10 @@ public:
                         glm::vec3 hdr_color = object->light().get_hdr_color();
                         ImGui::InputFloat3("HDR Value", &hdr_color.r);
                         ImGui::InputFloat3("Position", &object->light().position.x);
+                        ImGui::EndTabItem();
+                    }
+                    if (object->script() != nullptr && ImGui::BeginTabItem("Script")){
+                        ImGui::Text("%s", object->script()->name.c_str());
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();

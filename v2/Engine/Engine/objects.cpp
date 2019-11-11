@@ -22,4 +22,12 @@ void Object::attach(std::shared_ptr<Light> light) {
     _type = LIGHT;
 }
 
+void Object::attach(std::shared_ptr<Script> script) {
+    if (_script != nullptr) {
+        ENGINE_WARN("Cannot attach script to object as it already has one");
+        return;
+    }
+    _script = script;
+}
+
 }
