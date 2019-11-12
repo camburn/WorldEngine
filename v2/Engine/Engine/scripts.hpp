@@ -39,8 +39,10 @@ public:
     ~Script(){}
 
     virtual void update(float delta_time) = 0;
+    virtual void reload() = 0;
 
     std::string name;
+    std::string source;
 
 protected:
     std::shared_ptr<Object> parent;

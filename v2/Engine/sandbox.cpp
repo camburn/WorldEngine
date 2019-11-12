@@ -640,6 +640,15 @@ public:
                     }
                     if (object->script() != nullptr && ImGui::BeginTabItem("Script")){
                         ImGui::Text("%s", object->script()->name.c_str());
+                        if (ImGui::Button("Save")) {
+                            object->script()->reload();
+                        }
+                        ImGui::InputTextMultiline(
+                            "##Code",
+                            &object->script()->source[0],
+                            object->script()->source.size(),
+                            ImVec2(-FLT_MIN, -FLT_MIN)
+                        );
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();

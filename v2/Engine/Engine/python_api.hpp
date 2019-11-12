@@ -4,6 +4,10 @@
 #include <Python.h>
 #include <structmember.h>
 #include <experimental/filesystem>
+#include <string>
+#include <fstream>
+#include <streambuf>
+#include <iostream>
 
 #include "Engine/scripts.hpp"
 
@@ -29,6 +33,10 @@ public:
         module_path = PyUnicode_AsUTF8(p_module_path);
         last_modify = std::experimental::filesystem::last_write_time(module_path);
 
+        // Read file into memory
+        std::ifstream t(module_path);
+        source = std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
         update_func = PyObject_GetAttrString(script_module, "update");
         if (update_func == NULL) { 
             ENGINE_ERROR("Python script module not found - {0}", name);
@@ -47,6 +55,14 @@ public:
         Py_DECREF(module_name);
         Py_DECREF(script_module);
         Py_DECREF(update_func);
+    }
+
+    virtual void reload() override {
+        std::ofstream out(module_path);
+        source.erase(std::find(source.begin(), source.end(), '\0'), source.end());
+        source += '\n';
+        out << source;
+        out.close();
     }
 
     virtual void update(float delta_time) override {
