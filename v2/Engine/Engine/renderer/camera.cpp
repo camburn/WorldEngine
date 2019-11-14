@@ -15,8 +15,8 @@ OrthographicCamera::OrthographicCamera(float left, float right, float bottom, fl
 }
 
 OrthographicCamera::OrthographicCamera(
-    float left, float right, float bottom, float top, float near, float far)
-        : Camera(glm::ortho(left, right, bottom, top, near, far), glm::mat4(1.0f)) {
+    float left, float right, float bottom, float top, float near_plane, float far_plane)
+        : Camera(glm::ortho(left, right, bottom, top, near_plane, far_plane), glm::mat4(1.0f)) {
     view_projection_matrix = projection_matrix * view_matrix;
 }
 
