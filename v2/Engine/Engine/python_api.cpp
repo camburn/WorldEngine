@@ -126,58 +126,17 @@ static PyGetSetDef py_script_getseters[] = {
     {NULL}  // Sentinel
 };
 
-/*
-static PyTypeObject PyScriptType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "engine.Script",          // tp_name
-    sizeof(Script),           // tp_basicsize
-    0,                        // tp_itemsize
-    (destructor) py_script_dealloc,   // tp_dealloc
-    0,                        // tp_print
-    0,                        // tp_getattr
-    0,                        // tp_setattr
-    0,                        // tp_reserved
-    0,                        // tp_repr
-    0,                        // tp_as_number
-    0,                        // tp_as_sequence
-    0,                        // tp_as_mapping
-    0,                        // tp_hash
-    0,                        // tp_call
-    0,                        // tp_str
-    0,                        // tp_getattro
-    0,                        // tp_setattro
-    0,                        // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,  // tp_flags
-    "Engine PythonScriptObject",   // tp_doc
-    0,                        // tp_traverse
-    0,                        // tp_clear
-    0,                        // tp_richcompare
-    0,                        // tp_weaklistoffset
-    0,                        // tp_iter
-    0,                        // tp_iternext
-    py_script_methods,        // tp_methods
-    py_script_members,        // tp_members
-    py_script_getseters,      // tp_getset
-    0,                        // tp_base
-    0,                        // tp_dict
-    0,                        // tp_descr_get
-    0,                        // tp_descr_set
-    0,                        // tp_dictoffset
-    (initproc)py_script_init, // tp_init
-    0,                        // tp_alloc
-    py_script_new,            // tp_new
-};
-void init_type() {}
-
-*/
-
 static PyTypeObject PyScriptType {
     PyVarObject_HEAD_INIT(NULL, 0)
 };
 
+static PyModuleDef engine_module {
+    PyModuleDef_HEAD_INIT
+};
+
 // c++ struct initialization is a bit of a mess between compilers
 // on the MSVC compiler you cannot mix named attributes (.tp_name)
-// with header macros while this is support on Linux.
+// with header macros while this is supported on Linux.
 // In order to protect against the PyTypeObject struct changes between
 // Python versions we are using the following function to initialize it.
 void init_type() {
@@ -191,94 +150,12 @@ void init_type() {
     PyScriptType.tp_getset = py_script_getseters;
     PyScriptType.tp_init = (initproc)py_script_init;
     PyScriptType.tp_new = py_script_new;
+
+    engine_module.m_name = "engine";
+    engine_module.m_doc = "Engine module for engine API.";
+    engine_module.m_size = -1;
 }
 
-/*
-static PyTypeObject PyScriptType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "engine.Script", // For printing, in format "<module>.<name>"
-    .tp_basicsize = sizeof(Script),
-    .tp_itemsize = 0, // For allocation
-
-    // Methods to implement standard operations
-    .tp_dealloc = (destructor) py_script_dealloc,
-    .tp_print = 0,
-    .tp_getattr = 0,
-    .tp_setattr = 0,
-    .tp_as_async = 0,
-    .tp_repr = 0,
-
-    // Method suites for standard classes
-    .tp_as_number = 0,
-    .tp_as_sequence = 0,
-    .tp_as_mapping = 0,
-
-    // More standard operations (here for binary compatibility)
-    .tp_hash = 0,
-    .tp_call = 0,
-    .tp_str = 0,
-    .tp_getattro = 0,
-    .tp_setattro = 0,
-
-    // Functions to access object as input/output buffer
-    .tp_as_buffer = 0,
-
-    // Flags to define presence of optional/expanded features
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc = "Engine PythonScriptObject", // Documentation string
-
-    // Assigned meaning in release 2.0
-    // call function for all accessible objects
-    .tp_traverse = 0,
-
-    // delete references to contained objects
-    .tp_clear = 0,
-
-    // Assigned meaning in release 2.1
-    // rich comparisons
-    .tp_richcompare = 0,
-
-    // weak reference enabler
-    .tp_weaklistoffset = 0,
-
-    // Iterators
-    .tp_iter = 0,
-    .tp_iternext = 0,
-
-    // Attribute descriptor and subclassing stuff
-    .tp_methods = py_script_methods,
-    .tp_members = py_script_members,
-    .tp_getset = py_script_getseters,
-    .tp_base = 0,
-    .tp_dict = 0,
-    .tp_descr_get = 0,
-    .tp_descr_set = 0,
-    .tp_dictoffset = 0,
-    .tp_init = (initproc)py_script_init,
-    .tp_alloc = 0,
-    .tp_new = py_script_new,
-    .tp_free = 0, // Low-level free-memory routine
-    .tp_is_gc = 0, // For PyObject_IS_GC
-    .tp_bases = 0,
-    .tp_mro = 0, // method resolution order
-    .tp_cache = 0,
-    .tp_subclasses = 0,
-    .tp_weaklist = 0,
-    .tp_del = 0,
-
-    // Type attribute cache version tag. Added in version 2.6
-    .tp_version_tag = 0,
-
-    .tp_finalize = 0,
-};
-*/
-
-static PyModuleDef engine_module = {
-    PyModuleDef_HEAD_INIT,
-    .m_name = "engine",
-    .m_doc = "Engine module for engine API.",
-    .m_size = -1,
-};
 
 PyMODINIT_FUNC PyInit_py_script(void) {
     PyObject *m;
