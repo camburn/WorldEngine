@@ -3,13 +3,22 @@
 
 #include <Python.h>
 #include <structmember.h>
-#include <experimental/filesystem>
 #include <string>
 #include <fstream>
 #include <streambuf>
 #include <iostream>
 
 #include "Engine/scripts.hpp"
+
+#ifdef ENGINE_PLATFORM_LINUX
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
+
+#ifdef ENGINE_PLATFORM_WINDOWS
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 
 namespace engine {
 
@@ -31,7 +40,7 @@ public:
 
         PyObject *p_module_path = PyObject_GetAttrString(script_module, "__file__");
         module_path = PyUnicode_AsUTF8(p_module_path);
-        last_modify = std::experimental::filesystem::last_write_time(module_path);
+        last_modify = fs::last_write_time(module_path);
 
         // Read file into memory
         std::ifstream t(module_path);
@@ -68,7 +77,7 @@ public:
     virtual void update(float delta_time) override {
         #ifdef ENGINE_DEBUG_ENABLED
         // Check if the script has been updated
-        if (last_modify < std::experimental::filesystem::last_write_time(module_path)) {
+        if (last_modify < fs::last_write_time(module_path)) {
             ENGINE_INFO("Script reloaded");
             PyObject* new_module = PyImport_ReloadModule(script_module);
             if (new_module == NULL) { 
@@ -82,7 +91,7 @@ public:
                 script_module = new_module;
                 update_func = PyObject_GetAttrString(script_module, "update");
             }
-            last_modify = std::experimental::filesystem::last_write_time(module_path);
+            last_modify = fs::last_write_time(module_path);
         }
         #endif
         // Call the python update with our object
@@ -101,7 +110,7 @@ public:
     PyObject *script_module;
     PyObject *update_func;
     std::string module_path;
-    std::experimental::filesystem::file_time_type last_modify;
+    fs::file_time_type last_modify;
 
 private:
     friend PyObject* py_script_set_transform(PythonScript *self, PyObject *args, PyObject *kwargs);
