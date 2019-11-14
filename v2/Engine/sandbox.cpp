@@ -756,11 +756,11 @@ public:
         // ===== SHADOW MAP =====
         float fov = camera->fov;
         float ar = camera->aspect;
-        float near = camera->near_plane;
-        float far = camera->far_plane;
+        float near_plane = camera->near_plane;
+        float far_plane = camera->far_plane;
 
         glm::vec3 cam_center = camera->get_position() + (
-            camera->get_forward_direction() * (near + far / 2)
+            camera->get_forward_direction() * (near_plane + far_plane / 2)
         );
         shadow_camera->set_view(
             cam_center, cam_center + glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
@@ -778,11 +778,11 @@ public:
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 right = glm::normalize(glm::cross(view_dir, up));
 
-        glm::vec3 fc = center + view_dir * far;
-        glm::vec3 nc = center + view_dir * near;
+        glm::vec3 fc = center + view_dir * far_plane;
+        glm::vec3 nc = center + view_dir * near_plane;
 
-        float near_height = (near * glm::tan(glm::radians(fov / 2.0f)));
-        float far_height = (far * glm::tan(glm::radians(fov / 2.0f)));
+        float near_height = (near_plane * glm::tan(glm::radians(fov / 2.0f)));
+        float far_height = (far_plane * glm::tan(glm::radians(fov / 2.0f)));
         float near_width = near_height * ar;
         float far_width = far_height * ar;
 
