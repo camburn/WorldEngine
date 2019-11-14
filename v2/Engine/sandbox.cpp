@@ -130,7 +130,7 @@ public:
         std::string fs_skybox = "./shaders/IBL/fragment_skybox3.glsl";
         #endif
 
-        
+        script_init(); // Initialise Python Scripting
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
@@ -372,7 +372,7 @@ public:
         objects["sphere"]->name = "Sphere";
         objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
 
-        script_init();
+        
         py_scripts["sphere"].reset(
             new PythonScript("scripts.ball_spin", objects["sphere"] )
         );
