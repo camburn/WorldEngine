@@ -15,6 +15,7 @@ imgui.ini
 bin
 bin-int
 *.gch
+*.pch
 *.make
 Makefile
 *.vcxproj
