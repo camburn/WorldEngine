@@ -68,6 +68,7 @@ project "Engine"
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
+        "%{IncludeDir.imgui}/misc/cpp",
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
     }

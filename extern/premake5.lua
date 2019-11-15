@@ -77,6 +77,12 @@ project "imgui"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+    includedirs
+    {
+        "%{prj.name}",
+        "%{prj.name}/misc/cpp"
+    }
+
 	files
 	{
         "%{prj.name}/imconfig.h",
@@ -89,8 +95,8 @@ project "imgui"
         "%{prj.name}/imstb_textedit.h",
         "%{prj.name}/imstb_truetype.h",
         "%{prj.name}/imgui_demo.cpp",
-        "%{prj.name}/imgui_stdlib.h",
-        "%{prj.name}/imgui_stdlib.cpp"
+        "%{prj.name}/misc/cpp/imgui_stdlib.h",
+        "%{prj.name}/misc/cpp/imgui_stdlib.cpp"
 
     }
     
