@@ -705,9 +705,6 @@ public:
         last_frame_time = time;
 
         // ===== SCRIPTING =====
-        //for (auto &[name, script]: py_scripts) {
-        //    script->update(delta_time);
-        //}
         for (auto &[name, object]: objects) {
             if (object->script() != nullptr) {
                 object->script()->update(delta_time);
@@ -757,7 +754,6 @@ public:
             float lightZ = cos(glfwGetTime()) * light_radius;
             light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
-        //square->add_uniform_data("u_model", glm::translate(glm::mat4(1.0f), model_position));
         objects["square"]->transform().set_translation(model_position);
         // === END CONTROLS ===
 
@@ -859,8 +855,10 @@ public:
         int light_counter = 0;
         for (auto& [name, object]: objects) {
             if (object->type() == object->LIGHT) {
+                // TODO: Get a final transform (object + light) to get a position
                 std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
-                texture_shader->upload_u_vec3(u_light_name + ".position", object->light().position);
+                glm::vec3 obj_pos = object->transform().get_translation();
+                texture_shader->upload_u_vec3(u_light_name + ".position", object->light().position + obj_pos);
                 texture_shader->upload_u_vec3(u_light_name + ".color", object->light().get_hdr_color());
                 texture_shader->upload_u_int1(u_light_name + ".cast_shadows", object->light().cast_shadows);
                 texture_shader->upload_u_int1(u_light_name + ".enabled", object->light().enabled);
@@ -911,7 +909,8 @@ public:
 
         for (auto& [name, object]: objects) {
             if (object->type() == object->LIGHT) {
-                Transform t = { object->light().position, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+                glm::vec3 obj_pos = object->transform().get_translation();
+                Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
                 //cube->add_uniform_data("u_color", glm::vec4(object->light().color, 1.0f));
                 engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));
                 //Renderer::submit_entity(simple_shader, cube, t);
