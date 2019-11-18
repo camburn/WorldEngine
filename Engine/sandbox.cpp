@@ -328,14 +328,11 @@ public:
 
         entities["helmet"] = GltfEntity::load_from_file("./assets/gltf/DamagedHelmet/DamagedHelmet.gltf");
         entities["helmet"]->name = "Damaged Helmet Mesh";
-        //entities["helmet"]->add_uniform_data("u_model", glm::mat4(1.0f));
 
         objects["helmet"].reset(new Object());
         objects["helmet"]->attach(entities["helmet"]);
         objects["helmet"]->transform().set_translation(glm::vec3(0, 0, 0));
         objects["helmet"]->name = "Damaged Helmet";
-
-        
 
         entities["flight_helmet"] = GltfEntity::load_from_file("./assets/gltf/FlightHelmet/FlightHelmet.gltf");
         entities["flight_helmet"]->name = "Flight Helmet Mesh";
@@ -345,8 +342,6 @@ public:
         objects["flight_helmet"]->transform().set_translation(glm::vec3(3, 0, 0));
         objects["flight_helmet"]->transform().set_scale(glm::vec3(4, 4, 4));
         objects["flight_helmet"]->name = "Flight Helmet";
-
-        //cube = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
 
         entities["sample_mra"] = GltfEntity::load_from_file("./assets/gltf/EnvironmentTest/EnvironmentTest.gltf");
         entities["sample_mra"]->name = "MetalRoughSpheres Mesh";
@@ -374,13 +369,14 @@ public:
 
         
         py_scripts["sphere"].reset(
-            new PythonScript("scripts.ball_spin", objects["sphere"] )
+            new PythonScript("ball_spin", objects["sphere"] )
         );
         objects["sphere"]->attach(py_scripts["sphere"]);
 
         py_scripts["cube"].reset(
-            new PythonScript("scripts.cube", objects["cube"])
+            new PythonScript("cube", objects["cube"])
         );
+        objects["cube"]->attach(py_scripts["cube"]);
 
         sphere_albedo_texture = Texture2D::create(
             "./assets/textures/rusted_iron/rustediron2_basecolor.png"
@@ -411,6 +407,11 @@ public:
         objects["square"]->attach(entities["square"]);
         objects["square"]->name = "Square";
         objects["square"]->transform().set_translation(model_position);
+
+        py_scripts["square"].reset(
+            new PythonScript("square_scripto", objects["square"] )
+        );
+        objects["square"]->attach(py_scripts["square"]);
 
         std::vector<glm::vec4> data = {
             {  3.0f, 0.0f,  3.0f, 1.0f },

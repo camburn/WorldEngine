@@ -3,9 +3,99 @@
 
 namespace engine {
 
+static const std::string DEFAULT_MODULE = R"(""" Template Python Script """
+from scripts.engine import engine_call
+
+@engine_call
+def update(obj, delta_time):
+    """ Update is called every frame. """
+
+)";
+
+PythonScript::PythonScript(std::string name, std::shared_ptr<Object> parent): Script(name, parent) {
+    module_name = PyUnicode_FromString(("scripts." + name).c_str());
+    script_module = PyImport_Import(module_name);
+    if (script_module == NULL) {
+        ENGINE_INFO("Python script does not exist, creating base file - {0}", name);
+        std::ofstream out( "./scripts/" + name + ".py" );
+        out << DEFAULT_MODULE;
+        out.close();
+        module_name = PyUnicode_FromString(("scripts." + name).c_str());
+        script_module = PyImport_Import(module_name);
+        if (script_module == NULL) {
+            ENGINE_ERROR("Failing to create and load default script.");
+            return;
+        }
+    }
+
+    PyObject *p_module_path = PyObject_GetAttrString(script_module, "__file__");
+    module_path = PyUnicode_AsUTF8(p_module_path);
+    last_modify = fs::last_write_time(module_path);
+
+    // Read file into memory
+    std::ifstream t(module_path);
+    source = std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+    update_func = PyObject_GetAttrString(script_module, "update");
+    if (update_func == NULL) {
+        ENGINE_ERROR("Python script module not found - {0}", name);
+    }
+    // Create the python script instance
+    py_script = new_script();
+    // Python c api uses the memory layout of this class.
+    // That is why it is safe for us to perform the following
+    ((PythonScript*)py_script)->parent = parent;
+}
+
+PythonScript::~PythonScript() {
+    // TODO: Deallocate memory and deallocate python references to objects
+    // Py_DECREF(py_name);
+    Py_DECREF(py_script);
+    Py_DECREF(module_name);
+    Py_DECREF(script_module);
+    Py_DECREF(update_func);
+}
+
+void PythonScript::reload() {
+    std::ofstream out(module_path);
+    source.erase(std::find(source.begin(), source.end(), '\0'), source.end());
+    source += '\n';
+    out << source;
+    out.close();
+}
+
+void PythonScript::update(float delta_time) {
+    #ifdef ENGINE_DEBUG_ENABLED
+    // Check if the script has been updated
+    if (last_modify < fs::last_write_time(module_path)) {
+        ENGINE_INFO("Script reloaded");
+        PyObject* new_module = PyImport_ReloadModule(script_module);
+        if (new_module == NULL) { 
+            ENGINE_ERROR("Python module could not be reloaded - {0}", name);
+            if (PyErr_Occurred()) {
+                ENGINE_ERROR("Error in script");
+                PyErr_PrintEx(1);
+            }
+        } else {
+            Py_DECREF(script_module);
+            script_module = new_module;
+            update_func = PyObject_GetAttrString(script_module, "update");
+        }
+        last_modify = fs::last_write_time(module_path);
+    }
+    #endif
+    // Call the python update with our object
+    PyObject* result = PyObject_CallFunction(update_func, "Of", py_script, delta_time);
+    if (PyErr_Occurred()) {
+        ENGINE_ERROR("Error in script");
+        PyErr_PrintEx(1);
+    }
+    Py_XDECREF(result);
+}
+
 
 static void py_script_dealloc(PythonScript* self) {
-    Py_XDECREF(self->py_name);
+    //Py_XDECREF(self->py_name);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -14,35 +104,20 @@ static PyObject* py_script_new(PyTypeObject *type, PyObject *args, PyObject *kwd
 
     self = (PythonScript*) type->tp_alloc(type, 0);
     if (self != NULL) {
+        
         self->py_name = PyUnicode_FromString("");
-        if (self->py_name == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
     }
     return (PyObject *) self;
 }
 
 static int py_script_init(PythonScript* self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {(char*)"name", NULL};
-    PyObject *name = NULL, *tmp;
-
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, "|O", kwlist, &name)
-        )
-        return -1;
-
-    if (name) {
-        tmp = self->py_name;
-        Py_INCREF(name);
-        self->py_name = name;
-        Py_XDECREF(tmp);
-    }
     return 0;
 }
 
+// Pure members are not particulary compatible with c++ classes, use
+// getter/setters instead
 static PyMemberDef py_script_members[] = {
-    {"name", T_OBJECT_EX, offsetof(PythonScript, py_name), 0, "Name"},
+    //{"name", T_OBJECT_EX, offsetof(PythonScript, py_name), 0, "Name"},
     //{"number", T_INT, offsetof(Script, number), 0, "custom number"},
     {NULL}  // Sentinel
 };
@@ -66,29 +141,7 @@ PyObject* py_script_get_transform(PythonScript *self, PyObject *Py_UNUSED(ignore
     return Py_BuildValue("fff", t.x, t.y, t.z);
 }
 
-static PyObject* py_script_get_name(PythonScript *self, PyObject *Py_UNUSED(ignored)) {
-    if (self->py_name == NULL) {
-        PyErr_SetString(PyExc_AttributeError, "name");
-        return NULL;
-    }
-    return PyUnicode_FromFormat("%S", self->py_name);
-}
-
-static PyObject *py_script_set_name(PythonScript *self, PyObject *args, PyObject *kwargs) {
-    PyObject *name;
-    static char *kwlist[] = {(char*)"name", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O", kwlist, &name) ) {
-        return NULL;
-    }
-    self->py_name = name;
-
-    Py_RETURN_NONE;
-    return PyUnicode_FromFormat("%S %i", self->py_name);
-}
-
 static PyMethodDef py_script_methods[] = {
-    {"get_name", (PyCFunction) py_script_get_name, METH_NOARGS, "Return the name, combining the first and last name" },
-    {"set_name", (PyCFunction) py_script_set_name, METH_VARARGS | METH_KEYWORDS, "Set the name" },
     {"update_transform", (PyCFunction) py_script_set_transform, METH_VARARGS | METH_KEYWORDS, "Multiply args."},
     {"get_transform", (PyCFunction) py_script_get_transform, METH_NOARGS, "Multiply args."},
     //{"update_object_rotation", engine_updateobjectrotation, METH_VARARGS | METH_KEYWORDS, "Multiply args."},
@@ -98,15 +151,13 @@ static PyMethodDef py_script_methods[] = {
 // GETTERS AND SETTERS (properties)
 PyObject* py_script_get_rotation(PythonScript *self, void *closure) {
     glm::quat q = self->parent->transform().get_rotation();
-    //Py_INCREF(self->last);
-    //#return self->last;
     return Py_BuildValue("ffff", q.x, q.y, q.z, q.w);
 }
 
 int py_script_set_rotation(PythonScript *self, PyObject *value, void *closure) {
     float x, y, z;
     if (!PyArg_ParseTuple(value, "fff", &x, &y, &z)) {
-        return NULL;
+        return -1;
     }
 
     glm::quat pitch = glm::angleAxis(x, glm::vec3(1, 0, 0));
@@ -120,9 +171,37 @@ int py_script_set_rotation(PythonScript *self, PyObject *value, void *closure) {
     return 0;
 }
 
+PyObject* py_script_get_name(PythonScript *self, void *closure) {
+    if (self->py_name == NULL) {
+        PyErr_SetString(PyExc_AttributeError, "name");
+        return NULL;
+    }
+    return PyUnicode_FromFormat("%S", self->py_name);
+}
+
+int py_script_set_name(PythonScript *self, PyObject *value, void *closure) {
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError,
+            "Set requires 1 argument");
+        return -1;
+    }
+    if (! PyUnicode_Check(value)) {
+        PyErr_SetString(PyExc_TypeError,
+            "The first attribute value must be a str");
+        return -1;
+    }
+
+    Py_DECREF(self->py_name);
+    Py_INCREF(value);
+    self->py_name = value;
+
+    //Py_RETURN_NONE;
+    return 0;
+}
+
 static PyGetSetDef py_script_getseters[] = {
     {"rotation", (getter)py_script_get_rotation, (setter)py_script_set_rotation, "Object rotation", NULL},
-    //{"last", (getter)Noddy_getlast, (setter)Noddy_setlast, "last name", NULL},
+    {"name", (getter)py_script_get_name, (setter)py_script_set_name, "Script Name", NULL},
     {NULL}  // Sentinel
 };
 

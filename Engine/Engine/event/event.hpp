@@ -17,7 +17,7 @@ enum EVENT_TYPE {
 class Event {
 public:
     Event() {}
-    ~Event() {}
+    virtual ~Event() {}
     
     virtual EVENT_TYPE get_type() const = 0;
     //static const EVENT_TYPE type = EMPTY;
