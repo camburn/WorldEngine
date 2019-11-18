@@ -367,7 +367,6 @@ public:
         objects["sphere"]->name = "Sphere";
         objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
 
-        
         py_scripts["sphere"].reset(
             new PythonScript("ball_spin", objects["sphere"] )
         );
@@ -473,15 +472,18 @@ public:
 
         // SCENE OBJECTS
         objects["sky_light"].reset(new Object());
+        objects["sky_light"]->name = "sky_light";
         objects["sky_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color, light_position, true}
         });
         objects["red_light"].reset(new Object());
         objects["red_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color_b, light_position_b}});
+        objects["red_light"]->name = "red_light";
         objects["green_light"].reset(new Object());
         objects["green_light"]->attach(std::shared_ptr<Light> {
             new Light{light_color_c, light_position_c}});
+        objects["green_light"]->name = "green_light";
 
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
@@ -639,17 +641,28 @@ public:
                         ImGui::InputFloat3("Position", &object->light().position.x);
                         ImGui::EndTabItem();
                     }
-                    if (object->script() != nullptr && ImGui::BeginTabItem("Script")){
-                        ImGui::Text("%s", object->script()->name.c_str());
-                        if (ImGui::Button("Save")) {
-                            object->script()->reload();
+                    if (ImGui::BeginTabItem("Script")){
+                        if (object->script() != nullptr) {
+                            ImGui::Text("%s", object->script()->name.c_str());
+                            if (ImGui::Button("Save")) {
+                                object->script()->reload();
+                            }
+                            ImGui::InputTextMultiline(
+                                "##Code",
+                                &object->script()->source[0],
+                                object->script()->source.size(),
+                                ImVec2(-FLT_MIN, -FLT_MIN)
+                            );
+                        } else {
+                            ImGui::Text("No Script");
+                            if (ImGui::Button("Create")) {
+                                object->attach(
+                                    (std::shared_ptr<Script>)new PythonScript(
+                                        object->name + "_script", object
+                                    )
+                                );
+                            }
                         }
-                        ImGui::InputTextMultiline(
-                            "##Code",
-                            &object->script()->source[0],
-                            object->script()->source.size(),
-                            ImVec2(-FLT_MIN, -FLT_MIN)
-                        );
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();
@@ -692,8 +705,13 @@ public:
         last_frame_time = time;
 
         // ===== SCRIPTING =====
-        for (auto &[name, script]: py_scripts) {
-            script->update(delta_time);
+        //for (auto &[name, script]: py_scripts) {
+        //    script->update(delta_time);
+        //}
+        for (auto &[name, object]: objects) {
+            if (object->script() != nullptr) {
+                object->script()->update(delta_time);
+            }
         }
         // === END SCRIPTING ===
 
@@ -726,11 +744,6 @@ public:
             state = glfwGetKey(window, GLFW_KEY_RIGHT);
             if (state == GLFW_PRESS || state == GLFW_REPEAT) {
                 model_position.x += model_move_speed * delta_time;
-            }
-
-            state = glfwGetKey(window, GLFW_KEY_X);
-            if (state == GLFW_PRESS) {
-
             }
         }
 

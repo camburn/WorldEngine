@@ -20,7 +20,6 @@ public:
     bool direction = false;
     bool cast_shadows = true;
     bool enabled = true;
-    
 
     glm::vec3 get_hdr_color() { return color * 255.0f; }
 };
