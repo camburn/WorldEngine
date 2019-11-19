@@ -1,0 +1,18 @@
+[
+    {
+        "path": "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf",
+        "name": "Damaged Helmet"
+    },
+    {
+        "path": "./assets/gltf/FlightHelmet/FlightHelmet.gltf",
+        "name": "Flight Helmet"
+    },
+    {
+        "path": "./assets/gltf/EnvironmentTest/EnvironmentTest.gltf",
+        "name": "MRA Environment Test"
+    },
+    {
+        "path": "./assets/gltf/Cube/Cube.gltf",
+        "name": "Cube"
+    }
+]

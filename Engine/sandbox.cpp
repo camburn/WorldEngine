@@ -9,6 +9,7 @@
 #include "Engine/application.hpp"
 #include "Engine/layer.hpp"
 #include "Engine/objects.hpp"
+#include "Engine/manager.hpp"
 #include "Engine/renderer/shader.hpp"
 #include "Engine/renderer/buffer.hpp"
 #include "Engine/renderer/vertex_array.hpp"
@@ -326,6 +327,10 @@ public:
 
         texture_shader->bind();
 
+        deserialise_assets();
+        deserialise_object();
+        //ENGINE_ASSERT(0, "CRASHING THE ENGINE");
+
         entities["helmet"] = GltfEntity::load_from_file("./assets/gltf/DamagedHelmet/DamagedHelmet.gltf");
         entities["helmet"]->name = "Damaged Helmet Mesh";
 
@@ -350,6 +355,7 @@ public:
         objects["sample_mra"]->attach(entities["sample_mra"]);
         objects["sample_mra"]->name = "Sample MRA";
 
+        /*
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube Mesh";
 
@@ -358,6 +364,7 @@ public:
         objects["cube"]->name = "Cube";
         objects["cube"]->transform().set_translation(glm::vec3(1, -1.5, 1));
         objects["cube"]->transform().set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
+        */
 
         entities["sphere"] = generate_sphere();
         entities["sphere"]->name = "Sphere Mesh";
@@ -372,10 +379,12 @@ public:
         );
         objects["sphere"]->attach(py_scripts["sphere"]);
 
+        /*
         py_scripts["cube"].reset(
             new PythonScript("cube", objects["cube"])
         );
         objects["cube"]->attach(py_scripts["cube"]);
+        */
 
         sphere_albedo_texture = Texture2D::create(
             "./assets/textures/rusted_iron/rustediron2_basecolor.png"
@@ -446,7 +455,7 @@ public:
 
         entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
-        entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
+        //entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
 
         dirt_albedo_texture = Texture2D::create("./assets/textures/dry-dirt1-albedo_small.png");
         dirt_normal_texture = Texture2D::create("./assets/textures/dry-dirt1-normal_small.png");
