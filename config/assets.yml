@@ -1,0 +1,14 @@
+# Assets
+---
+- #!mesh
+  path: ./assets/gltf/DamagedHelmet/DamagedHelmet.gltf
+  name: Damaged Helmet
+- #!mesh
+  path: ./assets/gltf/FlightHelmet/FlightHelmet.gltf
+  name: Flight Helmet
+- #!mesh
+  path: ./assets/gltf/EnvironmentTest/EnvironmentTest.gltf
+  name: MRA Environment Test
+- #!mesh
+  path: ./assets/gltf/Cube/Cube.gltf
+  name: Cube

@@ -782,7 +782,6 @@ public:
         glm::mat4 light_view_matrix = shadow_camera->get_view_matrix();
 
         glm::vec3 center = camera->get_position();
-        //glm::vec3 view_dir = glm::vec3(1.0f, -1.0f, 0.0f);
         glm::vec3 view_dir = camera->get_forward_direction();
 
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -855,8 +854,8 @@ public:
         int light_counter = 0;
         for (auto& [name, object]: objects) {
             if (object->type() == object->LIGHT) {
-                // TODO: Get a final transform (object + light) to get a position
                 std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
+                // TODO: Get a final transform (object + light) to get a position in a better way
                 glm::vec3 obj_pos = object->transform().get_translation();
                 texture_shader->upload_u_vec3(u_light_name + ".position", object->light().position + obj_pos);
                 texture_shader->upload_u_vec3(u_light_name + ".color", object->light().get_hdr_color());
@@ -905,15 +904,11 @@ public:
         }
 
         // Draw light positions
-        //simple_shader->bind();
-
         for (auto& [name, object]: objects) {
             if (object->type() == object->LIGHT) {
                 glm::vec3 obj_pos = object->transform().get_translation();
                 Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-                //cube->add_uniform_data("u_color", glm::vec4(object->light().color, 1.0f));
                 engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));
-                //Renderer::submit_entity(simple_shader, cube, t);
             }
         }
 
@@ -984,7 +979,6 @@ private:
     std::shared_ptr<Shader> skybox_shader;
 
     std::shared_ptr<Shader> texture_shader;
-    //std::shared_ptr<Shader> simple_shader;
     std::shared_ptr<Shader> depth_map_shader;
 
     std::shared_ptr<NewPerspectiveCamera> camera;
@@ -993,8 +987,6 @@ private:
     std::shared_ptr<OrthographicCamera> shadow_camera;
 
     std::shared_ptr<VertexArray> cube_vao;
-
-    //std::shared_ptr<Entity> cube;
 
     std::map<std::string, std::shared_ptr<Object>> objects;
     std::map<std::string, std::shared_ptr<Entity>> entities;
