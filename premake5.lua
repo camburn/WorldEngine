@@ -64,7 +64,6 @@ project "Engine"
     {
         "extern/spdlog/include",
         "extern/tinygltf",
-        "/usr/include/python3.7m",
         "%{prj.name}",
         "%{IncludeDir.glfw}",
         "%{IncludeDir.imgui}",
@@ -77,7 +76,7 @@ project "Engine"
     { 
         "GLFW",
         "imgui",
-        "python3.7m"
+        
     }
 
     configuration "opengl3"
@@ -132,6 +131,11 @@ project "Engine"
             "%{prj.name}/Platform/Linux/**.cpp"
         }
 
+        includedirs
+        {
+            "/usr/include/python3.7m",
+        }
+
         links
         {
             "Xrandr",
@@ -142,7 +146,8 @@ project "Engine"
             "X11",
             "dl",
             "pthread",
-            "stdc++fs"
+            "stdc++fs",
+            "python3.7m"
         }
 
         defines
@@ -152,12 +157,17 @@ project "Engine"
 
     filter "system:windows"
         systemversion "latest"
-        staticruntime "off"
+        -- staticruntime "on"
 
         files
         {
             "%{prj.name}/Platform/Windows/**.h",
             "%{prj.name}/Platform/Windows/**.cpp"
+        }
+
+        includedirs
+        {
+            "D:/Python38/include",
         }
 
         defines
@@ -166,17 +176,25 @@ project "Engine"
             "_CRT_SECURE_NO_WARNINGS"
         }
 
+        libdirs
+        {
+            "D:/Python38/libs"
+        }
+
         links 
         { 
-            "opengl32.lib"
+            "opengl32.lib",
+            "python38"
         }
 
     filter "configurations:Debug"
         defines "ENGINE_DEBUG_ENABLED"
         runtime "Debug"
         symbols "on"
+        staticruntime "on"
 
     filter "configurations:Release"
         defines "ENGINE_RELEASE"
         runtime "Release"
         optimize "on"
+        staticruntime "on"
