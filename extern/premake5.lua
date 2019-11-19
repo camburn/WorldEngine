@@ -103,15 +103,23 @@ project "imgui"
 	filter "system:linux"
         systemversion "latest"
         cppdialect "C++17"
-        staticruntime "On"
+        staticruntime "on"
 
 	filter "system:windows"
         systemversion "latest"
         cppdialect "C++17"
-        staticruntime "On"
-        
-    filter { "system:windows", "configurations:Release" }
-        buildoptions "/MDd"
+        staticruntime "on"
+        runtime "Debug"
+    
+    filter "configurations:Debug"
+        defines "ENGINE_DEBUG_ENABLED"
+        runtime "Debug"
+        symbols "on"
+
+    filter "configurations:Release"
+        defines "ENGINE_RELEASE"
+        runtime "Release"
+        optimize "on"
 
 
 project "glad2"
