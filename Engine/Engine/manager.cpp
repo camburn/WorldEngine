@@ -18,8 +18,8 @@ void deserialise_assets () {
     assets_config >> assets_json;
 
     for (auto &object: assets_json) {
-        entities[object["name"]] = GltfEntity::load_from_file(object["path"]);
-        entities[object["name"]]->name = object["name"];
+        m_entities[object["name"]] = GltfEntity::load_from_file(object["path"]);
+        m_entities[object["name"]]->name = object["name"];
     }
 }
 
@@ -57,12 +57,12 @@ void deserialise_object () {
 
         if (json_obj.contains("script")) {
             std::string json_script = json_obj["script"].get<std::string>();
-            py_scripts[json_id].reset(new PythonScript(json_script, m_objects[json_id]));
-            m_objects[json_id]->attach(py_scripts[json_id]);
+            m_py_scripts[json_id].reset(new PythonScript(json_script, m_objects[json_id]));
+            m_objects[json_id]->attach(m_py_scripts[json_id]);
         }
         if (json_obj.contains("mesh")) {
             std::string json_mesh = json_obj["mesh"].get<std::string>();
-            m_objects[json_id]->attach(entities[json_mesh]);
+            m_objects[json_id]->attach(m_entities[json_mesh]);
         }
     }
 }
