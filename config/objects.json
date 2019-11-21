@@ -1,12 +1,67 @@
 [
   {
-    "name": "Cube instance 1",
+    "name": "Cube",
     "id": "cube_instance_1",
     "transform": {
       "translation": [1.0, -1.5, 1.0],
       "scale": [0.5, 0.5, 0.5]
     },
-    "mesh": "Cube",
+    "mesh": "cube_mesh",
     "script": "cube"
+  },
+  {
+    "name": "Damaged Helmet",
+    "id": "damaged_helmet",
+    "transform": {
+      "translation": [0.0, 0.0, 0.0]
+    },
+    "mesh": "damaged_helmet_mesh"
+  },
+  {
+    "name": "Flight Helmet",
+    "id": "flight_helmet",
+    "transform": {
+      "translation": [3.0, 0.0, 0.0],
+      "scale": [4, 4, 4]
+    },
+    "mesh": "flight_helmet_mesh"
+  },
+  {
+    "name": "MRA Environment Test",
+    "id": "mra_environment_test",
+    "mesh": "mra_environment_test_mesh"
+  },
+  {
+    "name": "Green Light",
+    "id": "green_light",
+    "transform": {
+      "translation": [-2.0, 0.0, 0.0]
+    },
+    "light": {
+      "type": "point",
+      "color": [0.1, 0.2, 0.1]
+    }
+  },
+  {
+    "name": "Red Light",
+    "id": "red_light",
+    "transform": {
+      "translation": [2.0, 0.0, 0.0]
+    },
+    "light": {
+      "type": "point",
+      "color": [0.2, 0.1, 0.1]
+    }
+  },
+  {
+    "name": "Sky Light",
+    "id": "sky_light",
+    "transform": {
+      "translation": [3.0, 3.0, 3.0]
+    },
+    "light": {
+      "type": "direction",
+      "color": [0.01, 0.01, 0.01]
+    }
   }
 ]

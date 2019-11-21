@@ -330,7 +330,7 @@ public:
         deserialise_assets();
         deserialise_object();
         //ENGINE_ASSERT(0, "CRASHING THE ENGINE");
-
+        /*
         entities["helmet"] = GltfEntity::load_from_file("./assets/gltf/DamagedHelmet/DamagedHelmet.gltf");
         entities["helmet"]->name = "Damaged Helmet Mesh";
 
@@ -338,7 +338,7 @@ public:
         objects["helmet"]->attach(entities["helmet"]);
         objects["helmet"]->transform().set_translation(glm::vec3(0, 0, 0));
         objects["helmet"]->name = "Damaged Helmet";
-
+        
         entities["flight_helmet"] = GltfEntity::load_from_file("./assets/gltf/FlightHelmet/FlightHelmet.gltf");
         entities["flight_helmet"]->name = "Flight Helmet Mesh";
 
@@ -354,7 +354,7 @@ public:
         objects["sample_mra"].reset(new Object());
         objects["sample_mra"]->attach(entities["sample_mra"]);
         objects["sample_mra"]->name = "Sample MRA";
-
+        */
         /*
         entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
         entities["cube"]->name = "Cube Mesh";
@@ -366,18 +366,18 @@ public:
         objects["cube"]->transform().set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
         */
 
-        entities["sphere"] = generate_sphere();
-        entities["sphere"]->name = "Sphere Mesh";
+        m_entities["sphere"] = generate_sphere();
+        m_entities["sphere"]->name = "Sphere Mesh";
 
-        objects["sphere"].reset(new Object());
-        objects["sphere"]->attach(entities["sphere"]);
-        objects["sphere"]->name = "Sphere";
-        objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
+        m_objects["sphere"].reset(new Object());
+        m_objects["sphere"]->attach(m_entities["sphere"]);
+        m_objects["sphere"]->name = "Sphere";
+        m_objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
 
-        py_scripts["sphere"].reset(
-            new PythonScript("ball_spin", objects["sphere"] )
+        m_py_scripts["sphere"].reset(
+            new PythonScript("ball_spin", m_objects["sphere"] )
         );
-        objects["sphere"]->attach(py_scripts["sphere"]);
+        m_objects["sphere"]->attach(m_py_scripts["sphere"]);
 
         /*
         py_scripts["cube"].reset(
@@ -395,31 +395,31 @@ public:
         sphere_rma_texture = Texture2D::create(
             "./assets/textures/rusted_iron/out2.png"
         );
-        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
             "albedo", sphere_albedo_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
             "normal", sphere_normal_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
             "roughness_metallic", sphere_rma_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["sphere"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
             "ambient", sphere_rma_texture
         );
 
-        entities["square"].reset( new CustomEntity());
-        entities["square"]->name = "Square Mesh";
+        m_entities["square"].reset( new CustomEntity());
+        m_entities["square"]->name = "Square Mesh";
 
-        objects["square"].reset(new Object());
-        objects["square"]->attach(entities["square"]);
-        objects["square"]->name = "Square";
-        objects["square"]->transform().set_translation(model_position);
+        m_objects["square"].reset(new Object());
+        m_objects["square"]->attach(m_entities["square"]);
+        m_objects["square"]->name = "Square";
+        m_objects["square"]->transform().set_translation(model_position);
 
-        py_scripts["square"].reset(
-            new PythonScript("square_scripto", objects["square"] )
+        m_py_scripts["square"].reset(
+            new PythonScript("square_scripto", m_objects["square"] )
         );
-        objects["square"]->attach(py_scripts["square"]);
+        m_objects["square"]->attach(m_py_scripts["square"]);
 
         std::vector<glm::vec4> data = {
             {  3.0f, 0.0f,  3.0f, 1.0f },
@@ -448,51 +448,36 @@ public:
 
         std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
 
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("position", data);
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("normal", normals);
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_attribute_data("texcoord", texcoords);
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_index_data(i_data);
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("position", data);
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("normal", normals);
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("texcoord", texcoords);
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_index_data(i_data);
 
-        entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
+        m_entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
         //entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
 
         dirt_albedo_texture = Texture2D::create("./assets/textures/dry-dirt1-albedo_small.png");
         dirt_normal_texture = Texture2D::create("./assets/textures/dry-dirt1-normal_small.png");
         dirt_rma_texture = Texture2D::create("./assets/textures/dry-dirt1-rma.png");
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
             "albedo", dirt_albedo_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
             "normal", dirt_normal_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
             "roughness_metallic", dirt_rma_texture
         );
-        std::static_pointer_cast<CustomEntity>(entities["square"])->add_texture(
+        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
             "ambient", dirt_rma_texture
         );
         //checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
 
-        for (auto& [name, entity]: entities) {
+        for (auto& [name, entity]: m_entities) {
             entity->update_buffers(texture_shader);
             entity->draw = false;
         }
-
-        // SCENE OBJECTS
-        objects["sky_light"].reset(new Object());
-        objects["sky_light"]->name = "sky_light";
-        objects["sky_light"]->attach(std::shared_ptr<Light> {
-            new Light{light_color, light_position, true}
-        });
-        objects["red_light"].reset(new Object());
-        objects["red_light"]->attach(std::shared_ptr<Light> {
-            new Light{light_color_b, light_position_b}});
-        objects["red_light"]->name = "red_light";
-        objects["green_light"].reset(new Object());
-        objects["green_light"]->attach(std::shared_ptr<Light> {
-            new Light{light_color_c, light_position_c}});
-        objects["green_light"]->name = "green_light";
 
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
@@ -583,7 +568,7 @@ public:
             ImGui::BeginChild("left pane", ImVec2(0, 0), true);
 
             int index = 0;
-            for (auto& [name, object]: objects) {
+            for (auto& [name, object]: m_objects) {
                 if (ImGui::Selectable(name.c_str(), selected == index, 0, ImVec2(ImGui::GetWindowWidth()-100, 18))) {
                     selected = index;
                     selected_name = name;
@@ -602,8 +587,8 @@ public:
             //ImGui::BeginGroup();
             //ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
             ImGui::Begin("Entity Properties");
-            if (objects.count(selected_name) > 0) {
-            auto &object = objects.at(selected_name);
+            if (m_objects.count(selected_name) > 0) {
+            auto &object = m_objects.at(selected_name);
             ImGui::Text("MyObject: %s", object->name.c_str());
                 ImGui::Separator();
                 if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
@@ -705,7 +690,7 @@ public:
         camera->on_ui_render(true);
         enginegl::on_ui_render(true);
         //monkey->on_ui_render(true);
-        entities["helmet"]->on_ui_render(true);
+        //entities["helmet"]->on_ui_render(true);
     }
 
     void on_update() override {
@@ -714,7 +699,7 @@ public:
         last_frame_time = time;
 
         // ===== SCRIPTING =====
-        for (auto &[name, object]: objects) {
+        for (auto &[name, object]: m_objects) {
             if (object->script() != nullptr) {
                 object->script()->update(delta_time);
             }
@@ -763,7 +748,7 @@ public:
             float lightZ = cos(glfwGetTime()) * light_radius;
             light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
-        objects["square"]->transform().set_translation(model_position);
+        m_objects["square"]->transform().set_translation(model_position);
         // === END CONTROLS ===
 
         if (use_debug_cam)
@@ -850,7 +835,7 @@ public:
         // Render things here
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
 
-        for (auto& [name, object]: objects) {
+        for (auto& [name, object]: m_objects) {
             if (object->type() == object->MESH && object->mesh()->draw) {
                 Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
             }
@@ -861,7 +846,7 @@ public:
 
         texture_shader->bind();
         int light_counter = 0;
-        for (auto& [name, object]: objects) {
+        for (auto& [name, object]: m_objects) {
             if (object->type() == object->LIGHT) {
                 std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
                 // TODO: Get a final transform (object + light) to get a position in a better way
@@ -906,14 +891,14 @@ public:
             brdf_map_file->bind(texture_shader->uniform_texture_unit("brdf_map"));
         }
 
-        for (auto& [name, object]: objects) {
+        for (auto& [name, object]: m_objects) {
             if (object->type() == object->MESH && object->mesh()->draw) {
                 Renderer::submit_entity(texture_shader, object->mesh(), object->transform());
             }
         }
 
         // Draw light positions
-        for (auto& [name, object]: objects) {
+        for (auto& [name, object]: m_objects) {
             if (object->type() == object->LIGHT) {
                 glm::vec3 obj_pos = object->transform().get_translation();
                 Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
@@ -996,11 +981,6 @@ private:
     std::shared_ptr<OrthographicCamera> shadow_camera;
 
     std::shared_ptr<VertexArray> cube_vao;
-
-    std::map<std::string, std::shared_ptr<Object>> objects;
-    std::map<std::string, std::shared_ptr<Entity>> entities;
-    std::map<std::string, std::shared_ptr<PythonScript>> py_scripts;
-    std::vector<Light> lights;
 
     std::shared_ptr<Texture> checker_texture;
     std::shared_ptr<Texture> dirt_rma_texture;
