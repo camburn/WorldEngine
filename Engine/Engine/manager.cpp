@@ -9,6 +9,7 @@ namespace engine {
 
 std::map<std::string, std::shared_ptr<Object>> m_objects;
 std::map<std::string, std::shared_ptr<Entity>> m_entities;
+std::map<std::string, std::shared_ptr<Texture>> m_textures;
 std::map<std::string, std::shared_ptr<PythonScript>> m_py_scripts;
 //std::map<std::string, std::shared_ptr<Camera>> cameras;
 //std::map<std::string, std::shared_ptr<Light>> lights;
@@ -18,13 +19,22 @@ void process_asset(std::string file_path, std::string name) {
 }
 
 void deserialise_assets () {
+    // Load default assets
+    m_entities["primitive_sphere"] = generate_sphere();
+    m_entities["primitive_sphere"]->name = "Sphere Mesh";
+
+    // Process configured assets
     std::ifstream assets_config("./config/assets.json");
     json assets_json;
     assets_config >> assets_json;
 
     for (auto &object: assets_json) {
-        m_entities[object["name"]] = GltfEntity::load_from_file(object["path"]);
-        m_entities[object["name"]]->name = object["name"];
+        if (object["type"] == "mesh") {
+            m_entities[object["name"]] = GltfEntity::load_from_file(object["path"]);
+            m_entities[object["name"]]->name = object["name"];
+        } else if (object["type"] == "texture") {
+            m_textures[object["name"]] = Texture2D::create(object["path"]);
+        }
     }
 }
 
@@ -69,6 +79,23 @@ void deserialise_object () {
         if (json_obj.contains("mesh")) {
             std::string json_mesh = json_obj["mesh"].get<std::string>();
             m_objects[json_id]->attach(m_entities[json_mesh]);
+        }
+
+        if (json_obj.contains("primitive")) {
+            //TODO: Primitive should be one of [sphere, ...]
+            std::string mesh_name = "primitive_" + json_obj["primitive"].get<std::string>();
+            m_objects[json_id]->attach(m_entities[mesh_name]);
+        }
+
+        if (json_obj.contains("textures")) {
+            //TODO: Textures are only support on primitive objects (CustomEntity)
+            for (auto &json_texture: json_obj["textures"]) {
+                std::string tex_type = json_texture["type"].get<std::string>();
+                std::string tex_id = json_texture["texture"].get<std::string>();
+                std::static_pointer_cast<CustomEntity>(m_objects[json_id]->mesh())->add_texture(
+                    tex_type, m_textures[json_texture["texture"]]
+                );
+            }
         }
 
         if (json_obj.contains("light")) {

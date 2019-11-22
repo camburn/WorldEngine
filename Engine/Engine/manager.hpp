@@ -7,6 +7,7 @@
 #include "Engine/scripts.hpp"
 #include "Engine/python_api.hpp"
 #include "Engine/transform.hpp"
+#include "Tools/generate_sphere.hpp"
 
 namespace engine {
 

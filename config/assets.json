@@ -18,5 +18,20 @@
         "path": "./assets/gltf/Cube/Cube.gltf",
         "type": "mesh",
         "name": "cube_mesh"
+    },
+    {
+        "path": "./assets/textures/rusted_iron/rustediron2_basecolor.png",
+        "type": "texture",
+        "name": "rustediron2_basecolor"
+    },
+    {
+        "path": "./assets/textures/rusted_iron/rustediron2_normal.png",
+        "type": "texture",
+        "name": "rustediron2_normal"
+    },
+    {
+        "path": "./assets/textures/rusted_iron/rustediron2_mra.png",
+        "type": "texture",
+        "name": "rustediron2_mra"
     }
 ]

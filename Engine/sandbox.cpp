@@ -21,7 +21,7 @@
 #include "Engine/scripts.hpp"
 #include "Engine/python_api.hpp"
 #include "Tools/gltf_loader.hpp"
-#include "Tools/generate_sphere.hpp"
+//#include "Tools/generate_sphere.hpp"
 #include "Engine/renderer/texture.hpp"
 
 #include <GLFW/glfw3.h>
@@ -329,41 +329,6 @@ public:
 
         deserialise_assets();
         deserialise_object();
-
-        m_entities["sphere"] = generate_sphere();
-        m_entities["sphere"]->name = "Sphere Mesh";
-
-        m_objects["sphere"].reset(new Object());
-        m_objects["sphere"]->attach(m_entities["sphere"]);
-        m_objects["sphere"]->name = "Sphere";
-        m_objects["sphere"]->transform().set_translation(glm::vec3(-3, 0, 0));
-
-        m_py_scripts["sphere"].reset(
-            new PythonScript("ball_spin", m_objects["sphere"] )
-        );
-        m_objects["sphere"]->attach(m_py_scripts["sphere"]);
-
-        sphere_albedo_texture = Texture2D::create(
-            "./assets/textures/rusted_iron/rustediron2_basecolor.png"
-        );
-        sphere_normal_texture = Texture2D::create(
-            "./assets/textures/rusted_iron/rustediron2_normal.png"
-        );
-        sphere_rma_texture = Texture2D::create(
-            "./assets/textures/rusted_iron/out2.png"
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
-            "albedo", sphere_albedo_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
-            "normal", sphere_normal_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
-            "roughness_metallic", sphere_rma_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["sphere"])->add_texture(
-            "ambient", sphere_rma_texture
-        );
 
         m_entities["square"].reset( new CustomEntity());
         m_entities["square"]->name = "Square Mesh";

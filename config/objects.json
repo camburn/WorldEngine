@@ -63,5 +63,32 @@
       "type": "direction",
       "color": [0.01, 0.01, 0.01]
     }
+  },
+  {
+    "name": "Rusted Sphere",
+    "id": "rusted_sphere",
+    "primitive": "sphere",
+    "transform": {
+      "translation": [-3.0, 0.0, 0.0]
+    },
+    "textures": [
+      { 
+        "type": "albedo",
+        "texture": "rustediron2_basecolor"
+      },
+      { 
+        "type": "normal",
+        "texture": "rustediron2_normal"
+      },
+      { 
+        "type": "roughness_metallic",
+        "texture": "rustediron2_mra"
+      },
+      { 
+        "type": "ambient",
+        "texture": "rustediron2_mra"
+      }
+    ],
+    "script": "ball_spin"
   }
 ]
