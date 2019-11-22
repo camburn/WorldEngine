@@ -329,42 +329,6 @@ public:
 
         deserialise_assets();
         deserialise_object();
-        //ENGINE_ASSERT(0, "CRASHING THE ENGINE");
-        /*
-        entities["helmet"] = GltfEntity::load_from_file("./assets/gltf/DamagedHelmet/DamagedHelmet.gltf");
-        entities["helmet"]->name = "Damaged Helmet Mesh";
-
-        objects["helmet"].reset(new Object());
-        objects["helmet"]->attach(entities["helmet"]);
-        objects["helmet"]->transform().set_translation(glm::vec3(0, 0, 0));
-        objects["helmet"]->name = "Damaged Helmet";
-        
-        entities["flight_helmet"] = GltfEntity::load_from_file("./assets/gltf/FlightHelmet/FlightHelmet.gltf");
-        entities["flight_helmet"]->name = "Flight Helmet Mesh";
-
-        objects["flight_helmet"].reset(new Object());
-        objects["flight_helmet"]->attach(entities["flight_helmet"]);
-        objects["flight_helmet"]->transform().set_translation(glm::vec3(3, 0, 0));
-        objects["flight_helmet"]->transform().set_scale(glm::vec3(4, 4, 4));
-        objects["flight_helmet"]->name = "Flight Helmet";
-
-        entities["sample_mra"] = GltfEntity::load_from_file("./assets/gltf/EnvironmentTest/EnvironmentTest.gltf");
-        entities["sample_mra"]->name = "MetalRoughSpheres Mesh";
-
-        objects["sample_mra"].reset(new Object());
-        objects["sample_mra"]->attach(entities["sample_mra"]);
-        objects["sample_mra"]->name = "Sample MRA";
-        */
-        /*
-        entities["cube"] = GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
-        entities["cube"]->name = "Cube Mesh";
-
-        objects["cube"].reset(new Object());
-        objects["cube"]->attach(entities["cube"]);
-        objects["cube"]->name = "Cube";
-        objects["cube"]->transform().set_translation(glm::vec3(1, -1.5, 1));
-        objects["cube"]->transform().set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
-        */
 
         m_entities["sphere"] = generate_sphere();
         m_entities["sphere"]->name = "Sphere Mesh";
@@ -378,13 +342,6 @@ public:
             new PythonScript("ball_spin", m_objects["sphere"] )
         );
         m_objects["sphere"]->attach(m_py_scripts["sphere"]);
-
-        /*
-        py_scripts["cube"].reset(
-            new PythonScript("cube", objects["cube"])
-        );
-        objects["cube"]->attach(py_scripts["cube"]);
-        */
 
         sphere_albedo_texture = Texture2D::create(
             "./assets/textures/rusted_iron/rustediron2_basecolor.png"
