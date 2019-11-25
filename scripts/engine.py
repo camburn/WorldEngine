@@ -5,6 +5,9 @@ class V3:
         self.y = y
         self.z = z
 
+    def __repr__(self):
+        return f"V3({self.x},{self.y},{self.z})"
+
 
 class EngineObject:
     """ Pythonic API for the C++ object """

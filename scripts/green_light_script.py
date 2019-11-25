@@ -9,4 +9,3 @@ def update(obj, delta_time):
     pos = obj.transform
     pos.x = math.sin(time.time()) * 3
     obj.transform = pos
-

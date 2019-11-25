@@ -6,8 +6,7 @@
       "translation": [1.0, -1.5, 1.0],
       "scale": [0.5, 0.5, 0.5]
     },
-    "mesh": "cube_mesh",
-    "script": "cube"
+    "mesh": "cube_mesh"
   },
   {
     "name": "Damaged Helmet",
@@ -40,7 +39,8 @@
     "light": {
       "type": "point",
       "color": [0.1, 0.2, 0.1]
-    }
+    },
+    "script": "green_light_script"
   },
   {
     "name": "Red Light",

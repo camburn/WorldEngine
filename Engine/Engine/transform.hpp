@@ -26,6 +26,14 @@ public:
         glm::decompose(model, scale, rotation, translation, skew, perspective);
         state_changed = true;
     }
+
+    void set_model_matrix(glm::mat4 model) {
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(model, scale, rotation, translation, skew, perspective);
+        state_changed = true;
+    }
+    
     void set_translation(glm::vec3 value) { state_changed = true; translation = value; }
     void set_scale(glm::vec3 value) { state_changed = true; scale = value; }
     void set_rotation(glm::quat value) { state_changed = true; rotation = value; }

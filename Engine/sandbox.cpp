@@ -5,6 +5,7 @@
 #include <limits>
 
 #include "imgui.h"
+#include "Tools/ImGuizmo.h"
 
 #include "Engine/application.hpp"
 #include "Engine/layer.hpp"
@@ -21,7 +22,7 @@
 #include "Engine/scripts.hpp"
 #include "Engine/python_api.hpp"
 #include "Tools/gltf_loader.hpp"
-//#include "Tools/generate_sphere.hpp"
+#include "Tools/raycast.hpp"
 #include "Engine/renderer/texture.hpp"
 
 #include <GLFW/glfw3.h>
@@ -411,6 +412,7 @@ public:
     }
 
     void on_ui_render() override {
+        ImGuizmo::BeginFrame();
         static bool p_open = true;
 
         static bool opt_fullscreen_persistant = true;
@@ -491,7 +493,7 @@ public:
 
             int index = 0;
             for (auto& [name, object]: m_objects) {
-                if (ImGui::Selectable(name.c_str(), selected == index, 0, ImVec2(ImGui::GetWindowWidth()-100, 18))) {
+                if (ImGui::Selectable(object->name.c_str(), selected == index, 0, ImVec2(ImGui::GetWindowWidth()-100, 18))) {
                     selected = index;
                     selected_name = name;
                 }
@@ -510,22 +512,30 @@ public:
             //ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
             ImGui::Begin("Entity Properties");
             if (m_objects.count(selected_name) > 0) {
-            auto &object = m_objects.at(selected_name);
-            ImGui::Text("MyObject: %s", object->name.c_str());
+                auto &object = m_objects.at(selected_name);
+
+                // Add control widget
+                ImGui::Text("MyObject: %s", object->name.c_str());
                 ImGui::Separator();
                 if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
                 {
                     if (ImGui::BeginTabItem("Object")){
                         ImGui::Text("%s", object->name.c_str());
-                        glm::vec3 translation = object->transform().get_translation();
-                        glm::vec3 scale = object->transform().get_scale();
-                        glm::quat rotation = object->transform().get_rotation();
-                        ImGui::InputFloat3("Translation", &translation.x);
-                        ImGui::InputFloat3("Scale", &scale.x);
-                        ImGui::InputFloat4("Rotation", &rotation.x);
-                        object->transform().set_translation(translation);
-                        object->transform().set_scale(scale);
-                        object->transform().set_rotation(rotation);
+
+                        /*
+                        glm::mat4 eye = glm::mat4{1.0f};
+                        ImGuizmo::DrawGrid(
+                            &camera->get_view_matrix()[0][0],
+                            &camera->get_projection_matrix()[0][0],
+                            &eye[0][0],
+                            10.f
+                        );
+                        */
+
+                        glm::mat4 model_mat = object->transform().get_model_matrix();
+                        EditTransform(std::static_pointer_cast<Camera>(camera), model_mat);
+                        object->transform().set_model_matrix(model_mat);
+
                         ImGui::EndTabItem();
                     }
                     if (object->type() == object->MESH && ImGui::BeginTabItem("Mesh"))
@@ -608,11 +618,11 @@ public:
 
         ImGui::End(); // Dockspace Demo
 
+        ImGuizmo::Enable(true);
+
         texture_shader->on_ui_render(true);
         camera->on_ui_render(true);
         enginegl::on_ui_render(true);
-        //monkey->on_ui_render(true);
-        //entities["helmet"]->on_ui_render(true);
     }
 
     void on_update() override {
@@ -627,7 +637,6 @@ public:
             }
         }
         // === END SCRIPTING ===
-
         // ===== CONTROLS =====
         // Check if mouse is over UI elements, otherwise pass to camera
         ImGuiIO& io = ImGui::GetIO();
@@ -638,26 +647,21 @@ public:
                 camera->update(delta_time);
             }
         }
-        {
-            auto window = static_cast<GLFWwindow*>(Application::get().get_window().get_native_window());
-            int state = glfwGetKey(window, GLFW_KEY_W);
-
-            state = glfwGetKey(window, GLFW_KEY_UP);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                model_position.y += model_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_DOWN);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                model_position.y -= model_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_LEFT);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                model_position.x -= model_move_speed * delta_time;
-            }
-            state = glfwGetKey(window, GLFW_KEY_RIGHT);
-            if (state == GLFW_PRESS || state == GLFW_REPEAT) {
-                model_position.x += model_move_speed * delta_time;
-            }
+        static bool ray_set = false;
+        static glm::vec3 ray = glm::vec3{0.0f};
+        
+        if (!io.WantCaptureMouse && ImGui::IsMouseClicked(0) ){
+            ENGINE_INFO("Casting ray");
+            auto cam = std::static_pointer_cast<Camera>(camera);
+            ray = cast_ray(cam);
+            ray_set = true;
+        }
+        if (ray_set) {
+            engine_debug::draw_line_deferred(
+                camera->get_position(),
+                camera->get_position() + (ray * 50.0f),
+                glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)
+            );
         }
 
         if (camera_rotate) {

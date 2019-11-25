@@ -100,8 +100,8 @@ void deserialise_object () {
 
         if (json_obj.contains("light")) {
             auto &light_obj = json_obj["light"];
-            std::vector<float> transform {0.0f};
-            std::vector<float> color {1.0f};
+            std::vector<float> transform {0.0f, 0.0f, 0.0f};
+            std::vector<float> color {1.0f, 1.0f, 1.0f};
             bool directional_light = false;
             if (light_obj.contains("translation")) {
                 transform = light_obj["translation"].get<std::vector<float>>();
