@@ -64,6 +64,8 @@ void init() {
     #else
     std::string vs_file_simple = "./shaders/vertex_simple.glsl";
     std::string fs_file_simple = "./shaders/fragment_simple.glsl";
+    std::string vs_line_simple = "./shaders/vertex_line.glsl";
+    std::string fs_line_simple = "./shaders/fragment_line.glsl";
     #endif
     debug_shader.reset(new engine::Shader{ vs_file_simple, fs_file_simple });
     debug_cube = engine::GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");

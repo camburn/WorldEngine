@@ -173,7 +173,8 @@ project "Engine"
         defines
         {
             "ENGINE_PLATFORM_WINDOWS",
-            "_CRT_SECURE_NO_WARNINGS"
+            "_CRT_SECURE_NO_WARNINGS",
+            "HAVE_SNPRINTF"
         }
 
         libdirs
