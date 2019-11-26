@@ -53,17 +53,22 @@ std::deque<std::shared_ptr<DebugPrimitive>> deferred_calls;
 
 std::shared_ptr<engine::Entity> debug_cube;
 std::shared_ptr<engine::Shader> debug_shader;
+std::shared_ptr<engine::Shader> line_shader;
 
 void init() {
     #ifdef OPENGL_COMPATIBILITY
     std::string vs_file_simple = "./shaders/opengl2_vertex_simple.glsl";
     std::string fs_file_simple = "./shaders/opengl2_fragment_simple.glsl";
+    std::string vs_line_simple = "./shaders/opengl2_vertex_line.glsl";
+    std::string fs_line_simple = "./shaders/opengl2_fragment_line.glsl";
     #else
     std::string vs_file_simple = "./shaders/vertex_simple.glsl";
     std::string fs_file_simple = "./shaders/fragment_simple.glsl";
     #endif
     debug_shader.reset(new engine::Shader{ vs_file_simple, fs_file_simple });
     debug_cube = engine::GltfEntity::load_from_file("./assets/gltf/Cube/Cube.gltf");
+
+    line_shader.reset(new engine::Shader{ vs_line_simple, fs_line_simple });
 }
 
 void draw_line(glm::vec3 a, glm::vec3 b, glm::vec4 color) {
@@ -110,6 +115,24 @@ void draw_deferred() {
         deferred_calls.pop_front();
     }
 
+}
+
+void new_frame() {
+    enginegl::new_frame();
+}
+
+void draw_simple_line(glm::vec4 a, glm::vec4 b, glm::vec4 color) {
+    enginegl::draw_line(a, b, color);
+}
+
+void draw_buffers() {
+    line_shader->bind();
+    //line_shader->upload_u_vec4("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    line_shader->upload_u_mat4("u_model", glm::mat4{1.0f});
+    line_shader->upload_u_mat4("u_view_projection",
+        engine::Renderer::scene_state->view_projection_matrix
+    );
+    enginegl::draw_buffers();
 }
 
 }

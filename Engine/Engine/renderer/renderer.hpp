@@ -45,11 +45,12 @@ public:
     );
 
     inline static RendererAPI::API get_api() { return RendererAPI::get_api(); }
-private:
+
     struct SceneState {
         glm::mat4 view_projection_matrix;
     };
     static SceneState* scene_state;
+private:
     static RendererAPI* renderer_api;
 
     static void submit_node(

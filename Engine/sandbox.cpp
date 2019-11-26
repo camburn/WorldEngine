@@ -637,6 +637,7 @@ public:
             }
         }
         // === END SCRIPTING ===
+        engine_debug::new_frame();
         // ===== CONTROLS =====
         // Check if mouse is over UI elements, otherwise pass to camera
         ImGuiIO& io = ImGui::GetIO();
@@ -647,6 +648,7 @@ public:
                 camera->update(delta_time);
             }
         }
+        // RAYCAST SAMPLE
         static bool ray_set = false;
         static glm::vec3 ray = glm::vec3{0.0f};
         
@@ -663,6 +665,7 @@ public:
                 glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)
             );
         }
+        // END RAYCAST
 
         if (camera_rotate) {
             float camX = sin((float)glfwGetTime()) * camera_radius;
@@ -875,6 +878,24 @@ public:
 
             engine_debug::draw_deferred();
         }
+
+        engine_debug::draw_simple_line(
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+            glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+            glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)
+        );
+        engine_debug::draw_simple_line(
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)
+        );
+        engine_debug::draw_simple_line(
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+            glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+            glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)
+        );
+
+        engine_debug::draw_buffers();
 
         if (render_skybox) {
             skybox_shader->bind();
