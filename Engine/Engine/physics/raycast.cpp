@@ -3,6 +3,8 @@
 
 namespace engine {
 
+RayHit::RayHit();
+
 Ray cast_ray(std::shared_ptr<Camera> &camera){
     int width = Application::get().get_window().get_width();
     int height = Application::get().get_window().get_height();

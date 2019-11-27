@@ -9,6 +9,8 @@
 
 namespace engine {
 
+class Collider;
+
 class Ray {
 public:
     Ray(): origin(glm::vec3{0.0f}), direction(glm::vec3{0.0f}), unit_direction(1.0f / direction) {}
@@ -24,6 +26,17 @@ public:
     glm::vec3 origin;
     glm::vec3 direction;
     glm::vec3 unit_direction;
+};
+
+class RayHit {
+public:
+    RayHit();
+
+    bool hit;
+
+    glm::vec3 hit_point;
+    Ray ray;
+    Collider &hit_target;
 };
 
 Ray cast_ray(std::shared_ptr<Camera> &camera);
