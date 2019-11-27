@@ -22,7 +22,8 @@
 #include "Engine/scripts.hpp"
 #include "Engine/python_api.hpp"
 #include "Tools/gltf_loader.hpp"
-#include "Tools/raycast.hpp"
+#include "Engine/physics/raycast.hpp"
+#include "Engine/physics/collision.hpp"
 #include "Engine/renderer/texture.hpp"
 
 #include <GLFW/glfw3.h>
@@ -58,6 +59,14 @@ std::unordered_map<int, std::string> render_modes {
     {19, "Diffuse"},
     {20, "kD"},
 };
+
+
+const glm::vec4 RED = glm::vec4(1.0f, 0.2f, 0.2f, 1.0f);
+const glm::vec4 GREEN = glm::vec4(0.2f, 1.0f, 0.2f, 1.0f);
+const glm::vec4 BLUE = glm::vec4(0.2f, 0.2f, 1.0f, 1.0f);
+const glm::vec4 WHITE = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
 
 class MyLayer: public engine::Layer {
 public:
@@ -405,6 +414,14 @@ public:
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
+
+        glm::quat pitch = glm::angleAxis(glm::radians(45.0f), glm::vec3(1, 0, 0));
+        glm::quat yaw = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 1, 0));
+        glm::quat roll = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
+
+        glm::quat rotation = yaw * pitch * roll;
+
+        obb_test.transform.set_rotation(rotation);
     }
 
     void on_attach() override {
@@ -650,7 +667,11 @@ public:
         }
         // RAYCAST SAMPLE
         static bool ray_set = false;
-        static glm::vec3 ray = glm::vec3{0.0f};
+        static bool hit = false;
+        static Ray ray;
+
+        engine_debug::draw_box_collider(box_test);
+        engine_debug::draw_box_collider(obb_test);
         
         if (!io.WantCaptureMouse && ImGui::IsMouseClicked(0) ){
             ENGINE_INFO("Casting ray");
@@ -659,11 +680,28 @@ public:
             ray_set = true;
         }
         if (ray_set) {
-            engine_debug::draw_line_deferred(
-                camera->get_position(),
-                camera->get_position() + (ray * 50.0f),
-                glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)
-            );
+
+            engine_debug::draw_simple_line(ray.origin, ray.project(50.0f), RED);
+
+            hit = box_test.intersect(ray);
+            if (hit) {
+                ENGINE_WARN("Raycast hit on collider");
+                box_test.debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
+                ray_set = false;
+                hit = false;
+            } else {
+                box_test.debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
+            }
+
+            hit = obb_test.intersect(ray);
+            if (hit) {
+                ENGINE_WARN("Raycast hit on OBB object");
+                obb_test.debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
+                ray_set = false;
+                hit = false;
+            } else {
+                obb_test.debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
+            }
         }
         // END RAYCAST
 
@@ -956,6 +994,9 @@ private:
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};
     glm::vec3 light_color_c {0.1, 0.2, 0.1};
+
+    AABBCollider box_test {glm::vec3{2.0f}, glm::vec3{1.0f}};
+    BoxCollider obb_test {glm::vec3{0.0f}, glm::vec3{0.5f, 2.0f, 1.0f}};
 
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;

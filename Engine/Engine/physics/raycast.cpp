@@ -3,7 +3,7 @@
 
 namespace engine {
 
-glm::vec3 cast_ray(std::shared_ptr<Camera> &camera){
+Ray cast_ray(std::shared_ptr<Camera> &camera){
     int width = Application::get().get_window().get_width();
     int height = Application::get().get_window().get_height();
     auto mouse_pos = ImGui::GetMousePos();
@@ -11,7 +11,8 @@ glm::vec3 cast_ray(std::shared_ptr<Camera> &camera){
     float mouse_y = mouse_pos.y;
 
     if (mouse_x <= -FLT_MAX || mouse_y <= -FLT_MAX) {
-        return glm::vec3{0.0f};
+        ENGINE_WARN("Bad raycast detected");
+        return Ray(false);
     }
 
     float x = (2.0f * mouse_x) / width - 1.0f;
@@ -28,7 +29,8 @@ glm::vec3 cast_ray(std::shared_ptr<Camera> &camera){
     // 4d world coordinates
     glm::vec3 ray_world = glm::vec3(inverse(camera->get_view_matrix()) * ray_eye);
     ray_world = glm::normalize(ray_world);
-    return ray_world;
+
+    return Ray(camera->get_position(), ray_world);
 }
 
 }
