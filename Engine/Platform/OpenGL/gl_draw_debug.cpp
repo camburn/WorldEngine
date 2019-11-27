@@ -74,8 +74,9 @@ Then determine distance (glm::distance(a, b))
 Then scale forward vector by distance
 */
 
-static bool not_initialised = true;
+static bool initialised = false;
 static GLuint vbo;
+static GLuint vao;
 
 std::vector<glm::vec4> line_data;
 
@@ -92,22 +93,34 @@ void draw_line(glm::vec4 a, glm::vec4 b, glm::vec4 color) {
 
 void draw_buffers() {
     if (line_data.empty()) return;
-    if (not_initialised) {
+    if (!initialised) {
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
         glGenBuffers(1, &vbo);
+        initialised = true;
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        glEnableVertexAttribArray(0); // position
+        glVertexAttribPointer(
+            0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (const void*)0
+        );
+        glEnableVertexAttribArray(1); // color
+        glVertexAttribPointer(
+            1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (const void*)(4 * sizeof(float))
+        );
+
+        glBindVertexArray(0);
     }
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, line_data.size() * sizeof(glm::vec4), &line_data[0].x, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0); // position
-    glVertexAttribPointer(
-        0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (const void*)0
-    );
-    glEnableVertexAttribArray(1); // color
-    glVertexAttribPointer(
-        1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (const void*)(4 * sizeof(float))
-    );
+    glBindVertexArray(vao);
+
     glDrawArrays(GL_LINES, 0, line_data.size());
 
+    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
