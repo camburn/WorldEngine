@@ -42,11 +42,11 @@ OpenGLVertexArray::OpenGLVertexArray (engine::DrawMode mode) {
     draw_mode = mode;
     // Too new
     // glCreateVertexArrays(1, &vao_id);
-    ENGINE_TRACE("Vertex array {0} created", vao_id);
+    //ENGINE_TRACE("Vertex array {0} created", vao_id);
 }
 
 OpenGLVertexArray::~OpenGLVertexArray () {
-    ENGINE_TRACE("Vertex array {0} garbage collected", vao_id);
+    //ENGINE_TRACE("Vertex array {0} garbage collected", vao_id);
     glDeleteVertexArrays(1, &vao_id);
 }
 

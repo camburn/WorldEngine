@@ -30,4 +30,12 @@ void Object::attach(std::shared_ptr<Script> script) {
     _script = script;
 }
 
+void Object::attach(std::shared_ptr<Collider> collider) {
+    if (_collider != nullptr) {
+        ENGINE_WARN("Cannot attach collider to object as it already has one");
+        return;
+    }
+    _collider = collider;
+}
+
 }

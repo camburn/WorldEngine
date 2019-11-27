@@ -17,6 +17,7 @@ public:
     virtual bool intersect(Ray ray) = 0;
 
     glm::vec4 debug_color {0.3f, 1.0f, 0.3f, 1.0f};
+    bool debug_draw_enabled = false;
 private:
 
 };

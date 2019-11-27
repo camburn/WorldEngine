@@ -6,6 +6,7 @@
 //#include "Engine/scripts.hpp"
 #include "Engine/renderer/camera.hpp"
 #include "Engine/renderer/lights.hpp"
+#include "Engine/physics/collision.hpp"
 
 namespace engine {
 
@@ -28,10 +29,12 @@ public:
     std::shared_ptr<Entity>& mesh() { return _mesh; }
     std::shared_ptr<Script>& script() { return _script; }
     Light& light() { return *_light; }
+    std::shared_ptr<Collider>& collider() { return _collider; }
 
     void attach(std::shared_ptr<Entity> mesh);
     void attach(std::shared_ptr<Light> light);
     void attach(std::shared_ptr<Script> script);
+    void attach(std::shared_ptr<Collider> collider);
 
     virtual void update() {}; // Simulation step
 
@@ -50,6 +53,7 @@ private:
     std::shared_ptr<Camera> camera {nullptr};
     std::shared_ptr<Light> _light {nullptr};
     std::shared_ptr<Script> _script {nullptr};
+    std::shared_ptr<Collider> _collider {nullptr};
 };
 
 

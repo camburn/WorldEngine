@@ -10,12 +10,12 @@ OpenGLVertexBuffer::OpenGLVertexBuffer(void *vertices, uint32_t size) {
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-    ENGINE_TRACE("Vertex buffer {0} created", vertex_buffer);
+    //ENGINE_TRACE("Vertex buffer {0} created", vertex_buffer);
 }
 
 OpenGLVertexBuffer::~OpenGLVertexBuffer() {
     glDeleteBuffers(1, &vertex_buffer);
-    ENGINE_TRACE("Vertex buffer {0} garbage collected", vertex_buffer);
+    //ENGINE_TRACE("Vertex buffer {0} garbage collected", vertex_buffer);
 }
 
 void OpenGLVertexBuffer::bind() const {
@@ -80,7 +80,7 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t *indices, uint32_t count
 
 OpenGLIndexBuffer::~OpenGLIndexBuffer() {
     glDeleteBuffers(1, &index_buffer);
-    ENGINE_TRACE("Index buffer {0} garbage collected", index_buffer);
+    //ENGINE_TRACE("Index buffer {0} garbage collected", index_buffer);
 }
 
 void OpenGLIndexBuffer::bind() const {
@@ -102,7 +102,7 @@ OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height) {
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer);
 
-    ENGINE_TRACE("Frame buffer {0} {1}x{2} created", frame_buffer, width, height);
+    //ENGINE_TRACE("Frame buffer {0} {1}x{2} created", frame_buffer, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
@@ -110,7 +110,7 @@ OpenGLFrameBuffer::OpenGLFrameBuffer(uint32_t width, uint32_t height) {
 OpenGLFrameBuffer::~OpenGLFrameBuffer() {
     glDeleteBuffers(1, &frame_buffer);
     glDeleteBuffers(1, &render_buffer);
-    ENGINE_TRACE("Frame buffer {0} garbage collected", frame_buffer);
+    //ENGINE_TRACE("Frame buffer {0} garbage collected", frame_buffer);
 }
 
 void OpenGLFrameBuffer::resize(uint32_t width, uint32_t height) {

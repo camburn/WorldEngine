@@ -387,8 +387,6 @@ public:
 
         m_entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
-        //entities["cube"]->add_uniform_data("u_color", glm::vec4(1.0f));
-
         dirt_albedo_texture = Texture2D::create("./assets/textures/dry-dirt1-albedo_small.png");
         dirt_normal_texture = Texture2D::create("./assets/textures/dry-dirt1-normal_small.png");
         dirt_rma_texture = Texture2D::create("./assets/textures/dry-dirt1-rma.png");
@@ -404,7 +402,15 @@ public:
         std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
             "ambient", dirt_rma_texture
         );
-        //checker_texture = Texture2D::create("./assets/textures/checkerboard.png");
+
+        m_objects["cube_instance_1"]->attach(
+            std::shared_ptr<BoxCollider>(
+                new BoxCollider{
+                    m_objects["cube_instance_1"]->transform().get_translation(),
+                    glm::vec3{1.0f, 1.0f, 1.0f}
+                }
+            )
+        );
 
         for (auto& [name, entity]: m_entities) {
             entity->update_buffers(texture_shader);
@@ -415,13 +421,6 @@ public:
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
 
-        glm::quat pitch = glm::angleAxis(glm::radians(45.0f), glm::vec3(1, 0, 0));
-        glm::quat yaw = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 1, 0));
-        glm::quat roll = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
-
-        glm::quat rotation = yaw * pitch * roll;
-
-        obb_test.transform.set_rotation(rotation);
     }
 
     void on_attach() override {
@@ -608,6 +607,13 @@ public:
                         }
                         ImGui::EndTabItem();
                     }
+                    if (ImGui::BeginTabItem("Collider")){
+                        if (object->collider() != nullptr) {
+                            ImGui::Text("Collider enabled");
+                            ImGui::Checkbox("Show", &object->collider()->debug_draw_enabled);
+                        }
+                        ImGui::EndTabItem();
+                    }
                     ImGui::EndTabBar();
                 }
             }
@@ -666,12 +672,10 @@ public:
             }
         }
         // RAYCAST SAMPLE
+        /*
         static bool ray_set = false;
         static bool hit = false;
         static Ray ray;
-
-        engine_debug::draw_box_collider(box_test);
-        engine_debug::draw_box_collider(obb_test);
         
         if (!io.WantCaptureMouse && ImGui::IsMouseClicked(0) ){
             ENGINE_INFO("Casting ray");
@@ -679,10 +683,8 @@ public:
             ray = cast_ray(cam);
             ray_set = true;
         }
+        engine_debug::draw_simple_line(ray.origin, ray.project(50.0f), RED);
         if (ray_set) {
-
-            engine_debug::draw_simple_line(ray.origin, ray.project(50.0f), RED);
-
             hit = box_test.intersect(ray);
             if (hit) {
                 ENGINE_WARN("Raycast hit on collider");
@@ -703,6 +705,7 @@ public:
                 obb_test.debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
             }
         }
+        */
         // END RAYCAST
 
         if (camera_rotate) {
@@ -873,7 +876,6 @@ public:
             }
         }
 
-
         if (use_debug_cam) {
 
             engine_debug::draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[4]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -915,6 +917,14 @@ public:
             engine_debug::draw_line(glm::vec3(frustum_points[5]), glm::vec3(frustum_points[6]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
 
             engine_debug::draw_deferred();
+        }
+
+        for (auto& [name, object]: m_objects) {
+            if (object->collider() != nullptr) {
+                if (object->collider()->debug_draw_enabled) {
+                    engine_debug::draw_box_collider(*object->collider());
+                }
+            }
         }
 
         engine_debug::draw_simple_line(
@@ -995,8 +1005,8 @@ private:
     glm::vec3 light_position_c {-2, 0, 0};
     glm::vec3 light_color_c {0.1, 0.2, 0.1};
 
-    AABBCollider box_test {glm::vec3{2.0f}, glm::vec3{1.0f}};
-    BoxCollider obb_test {glm::vec3{0.0f}, glm::vec3{0.5f, 2.0f, 1.0f}};
+    //AABBCollider box_test {glm::vec3{2.0f}, glm::vec3{1.0f}};
+    //BoxCollider obb_test {glm::vec3{0.0f}, glm::vec3{0.5f, 2.0f, 1.0f}};
 
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;

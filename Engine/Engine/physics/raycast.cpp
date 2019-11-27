@@ -3,7 +3,14 @@
 
 namespace engine {
 
-RayHit::RayHit();
+//RayHit::RayHit(): hit_target(nullptr) {
+
+//}
+
+RayHit::RayHit(Collider &collider, Ray ray, glm::vec3 hit_point):
+        hit_target(collider), ray(ray), hit_point(hit_point) {
+    hit = true;
+}
 
 Ray cast_ray(std::shared_ptr<Camera> &camera){
     int width = Application::get().get_window().get_width();

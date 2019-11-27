@@ -30,7 +30,7 @@ public:
 
 class RayHit {
 public:
-    RayHit();
+    RayHit(Collider &collider, Ray ray, glm::vec3 hit_point);
 
     bool hit;
 
