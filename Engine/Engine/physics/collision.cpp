@@ -83,8 +83,8 @@ BoxCollider::BoxCollider(glm::vec3 position, glm::vec3 size): size(size){
 
 void BoxCollider::calculate_minimals() {
     glm::vec3 half_size = glm::vec3(size.x / 2, size.y / 2, size.z / 2);
-    min_corner = transform.get_translation() - half_size;
-    max_corner = transform.get_translation() + half_size;
+    min_corner = glm::vec3{0.0f} - half_size;
+    max_corner = glm::vec3{0.0f} + half_size;
 }
 
 bool BoxCollider::intersect(Ray ray) {

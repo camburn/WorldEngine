@@ -18,11 +18,13 @@ public:
     Object() {}
     ~Object() {}
 
-    enum Type {
-        CAMERA,
-        MESH,
-        LIGHT,
-        EMPTY
+    enum Type : char {
+        EMPTY = 1 << 0,
+        CAMERA = 1 << 1,
+        MESH = 1 << 2,
+        LIGHT = 1 << 3,
+        SCRIPT = 1 << 5,
+        COLLIDER = 1 << 6
     };
 
     Transform& transform() { return _transform; }
@@ -43,7 +45,7 @@ public:
     void draw_deferred() {}; // What about shaders?
     // Only the renderer cares about shaders?
 
-    const Type type() { return _type;}
+    const bool attached(Type attachment_type) { return attachment_type & _type; }
 
     std::string name;
 private:
@@ -56,26 +58,14 @@ private:
     std::shared_ptr<Collider> _collider {nullptr};
 };
 
+inline Object::Type operator|(Object::Type a, Object::Type b) {
+    return static_cast<Object::Type>(static_cast<char>(a) | static_cast<char>(b));
+}
+inline Object::Type operator&(Object::Type a, Object::Type b) {
+    return static_cast<Object::Type>(static_cast<char>(a) & static_cast<char>(b));
+}
+
 
 } // Namspace
 
 #endif
-/*
-Mesh mesh;
-Object obj;
-obj.attach_mesh(mesh);
-
-obj.transform().set_translation(glm::vec3(5, 0, 0));
-
-obj.draw_deferred();
-// Submit the components of object that can be drawn for drawing at a later
-// point in time
-
-// This will submit any meshes, editor ui components, or other components to be
-// drawn in bulk. This will later allow drawing optimisations as required.
-// (batch processing through glMultiDrawElemnts or glDrawElementsInstance)
-
-// it will also allow threading of the object representation vs the rendererer drawing
-// How do we send the transform data to the mesh instance?
-
-*/

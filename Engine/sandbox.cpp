@@ -403,6 +403,7 @@ public:
             "ambient", dirt_rma_texture
         );
 
+        glm::vec3 tt = m_objects["cube_instance_1"]->transform().get_translation();
         m_objects["cube_instance_1"]->attach(
             std::shared_ptr<BoxCollider>(
                 new BoxCollider{
@@ -514,9 +515,11 @@ public:
                     selected_name = name;
                 }
                 ImGui::SameLine(ImGui::GetWindowWidth()-50);
-                if (object->type() == object->MESH)
+                
+                //if (object->type() & object->MESH)
+                if (object->attached(Object::MESH))
                     ImGui::Checkbox(("##" + name).c_str(), &object->mesh()->draw);
-                if (object->type() == object->LIGHT)
+                if (object->attached(Object::LIGHT))
                     ImGui::Checkbox(("##" + name).c_str(), &object->light().enabled);
                 index ++;
             }
@@ -554,7 +557,7 @@ public:
 
                         ImGui::EndTabItem();
                     }
-                    if (object->type() == object->MESH && ImGui::BeginTabItem("Mesh"))
+                    if (object->attached(Object::MESH) && ImGui::BeginTabItem("Mesh"))
                     {
                         glm::vec3 translation = object->transform().get_translation();
                         glm::vec3 scale = object->transform().get_scale();
@@ -571,7 +574,7 @@ public:
 
                         ImGui::EndTabItem();
                     }
-                    if (object->type() == object->LIGHT && ImGui::BeginTabItem("Light")) {
+                    if (object->attached(Object::LIGHT) && ImGui::BeginTabItem("Light")) {
                         int misc_flags = ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoInputs;
                         ImGui::Text("%s", object->name.c_str());
                         ImGui::Checkbox("Cast Shadows", &object->light().cast_shadows);
@@ -584,7 +587,7 @@ public:
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Script")){
-                        if (object->script() != nullptr) {
+                        if (object->attached(Object::SCRIPT)) {
                             ImGui::Text("%s", object->script()->name.c_str());
                             if (ImGui::Button("Save")) {
                                 object->script()->reload();
@@ -608,7 +611,7 @@ public:
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Collider")){
-                        if (object->collider() != nullptr) {
+                        if (object->attached(Object::COLLIDER)) {
                             ImGui::Text("Collider enabled");
                             ImGui::Checkbox("Show", &object->collider()->debug_draw_enabled);
                         }
@@ -672,7 +675,7 @@ public:
             }
         }
         // RAYCAST SAMPLE
-        /*
+        
         static bool ray_set = false;
         static bool hit = false;
         static Ray ray;
@@ -685,27 +688,21 @@ public:
         }
         engine_debug::draw_simple_line(ray.origin, ray.project(50.0f), RED);
         if (ray_set) {
-            hit = box_test.intersect(ray);
-            if (hit) {
-                ENGINE_WARN("Raycast hit on collider");
-                box_test.debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
-                ray_set = false;
-                hit = false;
-            } else {
-                box_test.debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
-            }
-
-            hit = obb_test.intersect(ray);
-            if (hit) {
-                ENGINE_WARN("Raycast hit on OBB object");
-                obb_test.debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
-                ray_set = false;
-                hit = false;
-            } else {
-                obb_test.debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
+            for (auto &[name, object]: m_objects) {
+                if (object->collider() != nullptr) {
+                    hit = object->collider()->intersect(ray);
+                    if (hit) {
+                        ENGINE_WARN("Raycast hit on collider");
+                        object->collider()->debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
+                        ray_set = false;
+                        hit = false;
+                    } else {
+                        object->collider()->debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
+                    }
+                }
             }
         }
-        */
+        
         // END RAYCAST
 
         if (camera_rotate) {
@@ -806,7 +803,8 @@ public:
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
 
         for (auto& [name, object]: m_objects) {
-            if (object->type() == object->MESH && object->mesh()->draw) {
+            bool result = object->attached(Object::MESH);
+            if (object->attached(Object::MESH) && object->mesh()->draw) {
                 Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
             }
         }
@@ -817,7 +815,7 @@ public:
         texture_shader->bind();
         int light_counter = 0;
         for (auto& [name, object]: m_objects) {
-            if (object->type() == object->LIGHT) {
+            if (object->attached(Object::LIGHT)) {
                 std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
                 // TODO: Get a final transform (object + light) to get a position in a better way
                 glm::vec3 obj_pos = object->transform().get_translation();
@@ -862,14 +860,14 @@ public:
         }
 
         for (auto& [name, object]: m_objects) {
-            if (object->type() == object->MESH && object->mesh()->draw) {
+            if (object->attached(Object::MESH) && object->mesh()->draw) {
                 Renderer::submit_entity(texture_shader, object->mesh(), object->transform());
             }
         }
 
         // Draw light positions
         for (auto& [name, object]: m_objects) {
-            if (object->type() == object->LIGHT) {
+            if (object->attached(Object::LIGHT)) {
                 glm::vec3 obj_pos = object->transform().get_translation();
                 Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
                 engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));

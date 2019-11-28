@@ -5,7 +5,7 @@
 #include "keys.hpp"
 
 enum EVENT_TYPE {
-    ENGINE_EMPTY = 1 << 0, 
+    ENGINE_EMPTY = 1 << 0,
     ENGINE_TEXT_EVENT = 1 << 1,
     ENGINE_KEY_EVENT = 1 << 2,
     ENGINE_MOUSE_EVENT = 1 << 3,
