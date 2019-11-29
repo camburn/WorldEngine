@@ -73,10 +73,12 @@ std::vector<glm::vec4> AABBCollider::points() {
 
 BoxCollider::BoxCollider(): size(glm::vec3{1.0f}) {
     calculate_minimals();
+    transform.disable_scale();
     transform.set_translation(glm::vec3{0.0f});
 }
 
 BoxCollider::BoxCollider(glm::vec3 position, glm::vec3 size): size(size){
+    transform.disable_scale();
     transform.set_translation(position);
     calculate_minimals();
 }

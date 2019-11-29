@@ -18,6 +18,7 @@ public:
 
     glm::vec4 debug_color {0.3f, 1.0f, 0.3f, 1.0f};
     bool debug_draw_enabled = false;
+    Transform transform;
 private:
 
 };
@@ -53,7 +54,6 @@ public:
     bool intersect(Ray ray) override;
     std::vector<glm::vec4> points() override;
 
-    Transform transform;
     glm::vec3 size;
     glm::vec3 min_corner;
     glm::vec3 max_corner;

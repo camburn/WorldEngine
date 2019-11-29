@@ -38,6 +38,35 @@ void deserialise_assets () {
     }
 }
 
+glm::vec3 deserialise_vec3(json vector){
+    std::vector<float> data = vector.get<std::vector<float>>();
+    return glm::vec3{data[0], data[1], data[2]};
+}
+
+glm::vec4 deserialise_vec4(json vector){
+    std::vector<float> data = vector.get<std::vector<float>>();
+    return glm::vec4{data[0], data[1], data[2], data[3]};
+}
+
+glm::quat deserialise_quat(json vector){
+    std::vector<float> data = vector.get<std::vector<float>>();
+    return glm::quat{data[0], data[1], data[2], data[3]};
+}
+
+Transform deserialise_transform(json transform_obj) {
+    Transform t;
+    if (transform_obj.contains("translation")) {
+        t.set_translation(deserialise_vec3(transform_obj["translation"]));
+    }
+    if (transform_obj.contains("scale")) {
+        t.set_scale(deserialise_vec3(transform_obj["scale"]));
+    }
+    if (transform_obj.contains("rotation")) {
+        t.set_rotation(deserialise_quat(transform_obj["rotation"]));
+    }
+    return t;
+}
+
 void deserialise_object () {
     std::ifstream objects_config("./config/objects.json");
     json objects_json;
@@ -52,22 +81,7 @@ void deserialise_object () {
 
         // Process Tranforms
         if (json_obj.contains("transform")) {
-            auto &transform_obj = json_obj["transform"];
-            if (transform_obj.contains("translation")) {
-                std::vector<float> transform = transform_obj["translation"].get<std::vector<float>>();
-                m_objects[json_id]->transform().set_translation(
-                    glm::vec3(transform[0], transform[1], transform[2]));
-            }
-            if (transform_obj.contains("scale")) {
-                std::vector<float> scale = transform_obj["scale"].get<std::vector<float>>();
-                m_objects[json_id]->transform().set_scale(
-                    glm::vec3(scale[0], scale[1], scale[2]));
-            }
-            if (transform_obj.contains("rotation")) {
-                std::vector<float> rot = transform_obj["rotation"].get<std::vector<float>>();
-                m_objects[json_id]->transform().set_rotation(
-                    glm::quat(rot[0], rot[1], rot[2], rot[3]));
-            }
+            m_objects[json_id]->set_transform(deserialise_transform(json_obj["transform"]));
         }
 
         if (json_obj.contains("script")) {
@@ -100,14 +114,14 @@ void deserialise_object () {
 
         if (json_obj.contains("light")) {
             auto &light_obj = json_obj["light"];
-            std::vector<float> transform {0.0f, 0.0f, 0.0f};
-            std::vector<float> color {1.0f, 1.0f, 1.0f};
+            glm::vec3 transform {0.0f, 0.0f, 0.0f};
+            glm::vec3 color {1.0f, 1.0f, 1.0f};
             bool directional_light = false;
             if (light_obj.contains("translation")) {
-                transform = light_obj["translation"].get<std::vector<float>>();
+                transform = deserialise_vec3(light_obj["translation"]);
             }
             if (light_obj.contains("color")) {
-                color = light_obj["color"].get<std::vector<float>>();
+                color = deserialise_vec3(light_obj["color"]);
             }
             if (light_obj.contains("type")) {
                 if (light_obj["type"] == "point") {
@@ -117,12 +131,19 @@ void deserialise_object () {
                 }
             }
             m_objects[json_id]->attach(std::shared_ptr<Light> {
-                new Light{
-                    glm::vec3(color[0], color[1], color[2]),
-                    glm::vec3(transform[0], transform[1], transform[2]),
-                    directional_light
-                }
+                new Light{color, transform, directional_light}
             });
+        }
+
+        if (json_obj.contains("collider")) {
+            m_objects[json_id]->attach(
+                std::shared_ptr<BoxCollider>(
+                    new BoxCollider{
+                        deserialise_transform(json_obj["collider"]["transform"]).get_translation(),
+                        deserialise_vec3(json_obj["collider"]["size"])
+                    }
+                )
+            );
         }
     }
 }

@@ -4,6 +4,46 @@
 
 namespace engine {
 
+Transform Object::transform(Type type) {
+    Transform t;
+    switch(type) {
+        case CAMERA:
+            if (_type & CAMERA) {
+                
+            }
+
+            break;
+
+        case MESH:
+
+            break;
+
+        case LIGHT:
+
+            break;
+
+        case COLLIDER:
+            if (_type & COLLIDER) {
+                // Colliders do not have 
+                glm::vec3 pos = _collider->transform.get_translation();
+                
+                t.set_translation(
+                    _transform->get_translation() + _collider->transform.get_translation()
+                );
+                t.set_rotation(
+                    _transform->get_rotation() * _collider->transform.get_rotation()
+                );
+                return t;
+            }
+            break;
+            
+        default:
+            GL_NOOP;
+    };
+    return t;
+}
+
+
 void Object::attach(std::shared_ptr<Entity> mesh) {
     if (_type & MESH) {
         ENGINE_WARN("Cannot attach mesh to object as it already has a mesh");
@@ -45,6 +85,7 @@ void Object::attach(std::shared_ptr<Collider> collider) {
         return;
     }
     _collider = collider;
+    _collider->transform.set_parent(_transform);
     _type = _type | COLLIDER;
 }
 

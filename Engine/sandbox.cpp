@@ -403,6 +403,7 @@ public:
             "ambient", dirt_rma_texture
         );
 
+        /*
         glm::vec3 tt = m_objects["cube_instance_1"]->transform().get_translation();
         m_objects["cube_instance_1"]->attach(
             std::shared_ptr<BoxCollider>(
@@ -411,7 +412,7 @@ public:
                     glm::vec3{1.0f, 1.0f, 1.0f}
                 }
             )
-        );
+        );*/
 
         for (auto& [name, entity]: m_entities) {
             entity->update_buffers(texture_shader);
@@ -516,7 +517,6 @@ public:
                 }
                 ImGui::SameLine(ImGui::GetWindowWidth()-50);
                 
-                //if (object->type() & object->MESH)
                 if (object->attached(Object::MESH))
                     ImGui::Checkbox(("##" + name).c_str(), &object->mesh()->draw);
                 if (object->attached(Object::LIGHT))
@@ -611,11 +611,19 @@ public:
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Collider")){
+                        
                         if (object->attached(Object::COLLIDER)) {
+                            object->collider()->debug_draw_enabled = true;
                             ImGui::Text("Collider enabled");
-                            ImGui::Checkbox("Show", &object->collider()->debug_draw_enabled);
+
                         }
                         ImGui::EndTabItem();
+                    } else {
+                        if (object->attached(Object::COLLIDER)) {
+                            object->collider()->debug_draw_enabled = false;
+                            glm::vec3 pos = object->collider()->transform.get_translation(true);
+                            ImGui::InputFloat3("Position", &pos.x, ImGuiInputTextFlags_ReadOnly);
+                        }
                     }
                     ImGui::EndTabBar();
                 }

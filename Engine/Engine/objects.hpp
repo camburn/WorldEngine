@@ -27,7 +27,8 @@ public:
         COLLIDER = 1 << 6
     };
 
-    Transform& transform() { return _transform; }
+    Transform& transform() { return *_transform; }
+    Transform transform(Type type);
     std::shared_ptr<Entity>& mesh() { return _mesh; }
     std::shared_ptr<Script>& script() { return _script; }
     Light& light() { return *_light; }
@@ -38,6 +39,7 @@ public:
     void attach(std::shared_ptr<Script> script);
     void attach(std::shared_ptr<Collider> collider);
 
+
     virtual void update() {}; // Simulation step
 
     void draw_ui() {}; // Draw UI Elements for this object (immediate)
@@ -47,10 +49,13 @@ public:
 
     const bool attached(Type attachment_type) { return attachment_type & _type; }
 
+    void set_transform(Transform t) { *_transform = t; }
+
     std::string name;
 private:
-    Transform _transform {};
+    
     Type _type {EMPTY};
+    std::shared_ptr<Transform> _transform {new Transform{} };
     std::shared_ptr<Entity> _mesh {nullptr};
     std::shared_ptr<Camera> camera {nullptr};
     std::shared_ptr<Light> _light {nullptr};

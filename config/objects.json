@@ -6,7 +6,13 @@
       "translation": [1.0, -1.5, 1.0],
       "scale": [0.5, 0.5, 0.5]
     },
-    "mesh": "cube_mesh"
+    "mesh": "cube_mesh",
+    "collider": {
+      "transform": {
+        "translation": [0.0, 0.0, 0.0]
+      },
+      "size": [1.0, 1.0, 1.0]
+    }
   },
   {
     "name": "Damaged Helmet",
