@@ -173,6 +173,15 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     vaos = m_obj.vaos;
     handled_shaders.emplace(shader->get_id());
     buffered = true;
+    min_extents = m_obj.min_extents;
+    max_extents = m_obj.max_extents;
+}
+
+void GltfEntity::clear_gltf_data() {
+    if (model.unique()) {
+        ENGINE_INFO("Deleting model state");
+    }
+    model.reset();
 }
 
 void GltfEntity::render() {

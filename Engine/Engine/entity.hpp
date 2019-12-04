@@ -46,6 +46,9 @@ public:
     bool draw = true;
     std::string name;
 
+    glm::vec3 min_extents {0.0f};
+    glm::vec3 max_extents {0.0f};
+
     Transform transform;
 
 protected:
@@ -108,6 +111,7 @@ public:
     ~GltfEntity() { ENGINE_INFO("GLTF Entity {0} garbage collected", name); }
 
     void update_buffers(const std::shared_ptr<Shader>& shader) override;
+    void clear_gltf_data();
 
     void render() override;
 

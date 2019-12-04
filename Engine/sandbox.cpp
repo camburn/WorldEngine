@@ -419,6 +419,25 @@ public:
             entity->draw = false;
         }
 
+        for (auto& [name, object]: m_objects) {
+            if (!object->attached(Object::COLLIDER)
+            && object->attached(Object::MESH) ) {
+                // This size calculation is a bit trickey, it cannot occur until
+                // the mesh data is set by calling update_buffers.
+                glm::vec3 size = object->mesh()->max_extents - object->mesh()->min_extents;
+                glm::vec4 m_size = glm::vec4(size, 1.0f) * object->transform().get_model_matrix();
+                object->attach(
+                    std::shared_ptr<BoxCollider>(
+                        new BoxCollider{
+                            glm::vec3(0.0f),
+                            glm::vec3(m_size)
+                        }
+                    )
+                );
+                object->collider()->transform.set_parent(object->transform_reference());
+            }
+        }
+
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
@@ -615,6 +634,10 @@ public:
                         if (object->attached(Object::COLLIDER)) {
                             object->collider()->debug_draw_enabled = true;
                             ImGui::Text("Collider enabled");
+                            ImGui::InputFloat3("Size", &std::static_pointer_cast<BoxCollider>(object->collider())->size.x);
+                            glm::vec3 pos = object->collider()->transform.get_translation();
+                            ImGui::InputFloat3("Position", &pos.x);
+                            
 
                         }
                         ImGui::EndTabItem();
@@ -685,7 +708,7 @@ public:
         // RAYCAST SAMPLE
         
         static bool ray_set = false;
-        static bool hit = false;
+        //static RayHit hit;
         static Ray ray;
         
         if (!io.WantCaptureMouse && ImGui::IsMouseClicked(0) ){
@@ -698,12 +721,13 @@ public:
         if (ray_set) {
             for (auto &[name, object]: m_objects) {
                 if (object->collider() != nullptr) {
-                    hit = object->collider()->intersect(ray);
+                    RayHit hit = object->collider()->intersect(ray);
                     if (hit) {
+                        bus::publish(std::make_unique<RaycastHitEvent>(ray, hit));
                         ENGINE_WARN("Raycast hit on collider");
                         object->collider()->debug_color = glm::vec4(1.0f, 0.3f, 0.3f, 1.0f);
                         ray_set = false;
-                        hit = false;
+                        break;
                     } else {
                         object->collider()->debug_color = glm::vec4(0.3f, 1.0f, 0.3f, 1.0f);
                     }
@@ -959,6 +983,12 @@ public:
             skybox_shader->upload_u_mat4("u_view", camera->get_view_matrix());
             skybox_shader->upload_u_mat4("u_projection", camera->get_projection_matrix());
             Renderer::submit(skybox_shader, cube_vao, glm::mat4(1.0f));
+        }
+
+        for (auto& [name, entity]: m_entities) {
+            if (auto gltf_entity = std::dynamic_pointer_cast<GltfEntity>(entity)) {
+                gltf_entity->clear_gltf_data();
+            }
         }
     }
 

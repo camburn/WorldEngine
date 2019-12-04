@@ -12,7 +12,8 @@
         "translation": [0.0, 0.0, 0.0]
       },
       "size": [1.0, 1.0, 1.0]
-    }
+    },
+    "script": "cube"
   },
   {
     "name": "Damaged Helmet",
@@ -20,7 +21,8 @@
     "transform": {
       "translation": [0.0, 0.0, 0.0]
     },
-    "mesh": "damaged_helmet_mesh"
+    "mesh": "damaged_helmet_mesh",
+    "script": "cube"
   },
   {
     "name": "Flight Helmet",

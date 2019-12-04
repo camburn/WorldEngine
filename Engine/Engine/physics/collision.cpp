@@ -17,7 +17,7 @@ void AABBCollider::calculate_minimals() {
     max_corner = position + half_size;
 }
 
-bool AABBCollider::intersect(Ray ray) {
+RayHit AABBCollider::intersect(Ray ray) {
     float t1 = (min_corner.x - ray.origin.x) * ray.unit_direction.x;
     float t2 = (max_corner.x - ray.origin.x) * ray.unit_direction.x;
     float t3 = (min_corner.y - ray.origin.y) * ray.unit_direction.y;
@@ -28,21 +28,22 @@ bool AABBCollider::intersect(Ray ray) {
     float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
     float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
 
-    float ray_length_at_intersection;
+    float intersection_distance;
     // if tmax < 0, ray is intersecting AABB, but the whole AABB is behind us
     if (tmax < 0) {
-        ray_length_at_intersection = tmax;
-        return false;
+        intersection_distance = tmax;
+        return RayHit(false, *this, ray, glm::vec3{0.0f});
     }
 
     // if tmin > tmax ray doesn't intersect AABB
     if (tmin > tmax) {
-        ray_length_at_intersection = tmax;
-        return false;
+        intersection_distance = tmax;
+        return RayHit(false, *this, ray, glm::vec3{0.0f});
     }
 
-    ray_length_at_intersection = tmin;
-    return true;
+    intersection_distance = tmin;
+
+    return RayHit(true, *this, ray, ray.origin + (intersection_distance * ray.direction));
 }
 
 std::vector<glm::vec4> AABBCollider::points() {
@@ -89,7 +90,7 @@ void BoxCollider::calculate_minimals() {
     max_corner = glm::vec3{0.0f} + half_size;
 }
 
-bool BoxCollider::intersect(Ray ray) {
+RayHit BoxCollider::intersect(Ray ray) {
     float t_min = 0.0f;
     float t_max = 100000.0f;
 
@@ -110,10 +111,10 @@ bool BoxCollider::intersect(Ray ray) {
             if (t1 > t2) { float w = t1; t1 = t2; t2 = w; }
             if (t2 < t_max) { t_max = t2; }
             if (t1 > t_min) { t_min = t1; }
-            if (t_max < t_min ) { return false; }
+            if (t_max < t_min ) { return RayHit(false, *this, ray, glm::vec3{0.0f}); }
         } else {  // Parallel case
             if (-e + min_corner.x > 0.0f || -e + max_corner.x < 0.0f) {
-                return false;
+                return RayHit(false, *this, ray, glm::vec3{0.0f});
             }
         }
     }
@@ -129,10 +130,10 @@ bool BoxCollider::intersect(Ray ray) {
             if (t1 > t2) { float w = t1; t1 = t2; t2 = w; }
             if (t2 < t_max) { t_max = t2; }
             if (t1 > t_min) { t_min = t1; }
-            if (t_max < t_min ) { return false; }
+            if (t_max < t_min ) { return RayHit(false, *this, ray, glm::vec3{0.0f});; }
         } else {  // Parallel case
             if (-e + min_corner.y > 0.0f || -e + max_corner.y < 0.0f) {
-                return false;
+                return RayHit(false, *this, ray, glm::vec3{0.0f});
             }
         }
     }
@@ -148,15 +149,16 @@ bool BoxCollider::intersect(Ray ray) {
             if (t1 > t2) { float w = t1; t1 = t2; t2 = w; }
             if (t2 < t_max) { t_max = t2; }
             if (t1 > t_min) { t_min = t1; }
-            if (t_max < t_min ) { return false; }
+            if (t_max < t_min ) { return RayHit(false, *this, ray, glm::vec3{0.0f}); }
         } else {  // Parallel case
             if (-e + min_corner.z > 0.0f || -e + max_corner.z < 0.0f) {
-                return false;
+                return RayHit(false, *this, ray, glm::vec3{0.0f});
             }
         }
     }
     float intersection_distance = t_min;
-    return true;
+
+     return RayHit(true, *this, ray, ray.origin + (intersection_distance * ray.direction));
 }
 
 std::vector<glm::vec4> BoxCollider::points() {

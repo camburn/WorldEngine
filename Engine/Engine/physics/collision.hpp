@@ -14,7 +14,7 @@ public:
     ~Collider(){}
 
     virtual std::vector<glm::vec4> points() = 0;
-    virtual bool intersect(Ray ray) = 0;
+    virtual RayHit intersect(Ray ray) = 0;
 
     glm::vec4 debug_color {0.3f, 1.0f, 0.3f, 1.0f};
     bool debug_draw_enabled = false;
@@ -30,7 +30,7 @@ public:
 
     AABBCollider(glm::vec3 position, glm::vec3 size);
 
-    bool intersect(Ray ray) override;
+    RayHit intersect(Ray ray) override;
     std::vector<glm::vec4> points() override;
 
     glm::vec3 position;
@@ -51,7 +51,7 @@ public:
 
     BoxCollider(glm::vec3 position, glm::vec3 size);
 
-    bool intersect(Ray ray) override;
+    RayHit intersect(Ray ray) override;
     std::vector<glm::vec4> points() override;
 
     glm::vec3 size;

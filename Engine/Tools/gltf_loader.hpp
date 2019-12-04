@@ -18,6 +18,8 @@
 struct ModelObjects {
     std::vector<GLuint> texture_ids;
     std::vector<std::shared_ptr<engine::VertexArray>> vaos;
+    glm::vec3 min_extents {0.0f};
+    glm::vec3 max_extents {0.0f};
 };
 
 struct TextureObject {
@@ -36,11 +38,15 @@ struct MaterialObject {
 struct PrimitiveObject {
     MaterialObject material;
     std::shared_ptr<engine::VertexArray> vao; // Contains VBOs, IBO
+    glm::vec3 min_extents {0.0f};
+    glm::vec3 max_extents {0.0f};
     // Who stores the IBO offset?
 };
 
 struct MeshObject {
     std::vector<PrimitiveObject> primitives;
+    glm::vec3 min_extents {0.0f};
+    glm::vec3 max_extents {0.0f};
 };
 
 struct NodeObject {

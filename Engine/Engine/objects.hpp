@@ -28,6 +28,7 @@ public:
     };
 
     Transform& transform() { return *_transform; }
+    std::shared_ptr<Transform>& transform_reference() { return _transform; }
     Transform transform(Type type);
     std::shared_ptr<Entity>& mesh() { return _mesh; }
     std::shared_ptr<Script>& script() { return _script; }

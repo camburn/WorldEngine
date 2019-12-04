@@ -24,6 +24,6 @@ class EngineObject:
 
 
 def engine_call(func):
-    def new_update(obj, dt):
-        func(EngineObject(obj), dt)
+    def new_update(obj, *args, **kwargs):
+        func(EngineObject(obj), *args, **kwargs)
     return new_update

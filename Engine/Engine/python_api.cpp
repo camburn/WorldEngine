@@ -10,20 +10,67 @@ from scripts.engine import engine_call
 def update(obj, delta_time):
     """ Update is called every frame. """
 
+@engine_call
+def on_click(obj):
+    """ on_click is called when an object is clicked on with a collider """
+
 )";
+
+bool handle_exception(std::string name) {
+    if (PyErr_Occurred()) {
+        PyObject *type, *value, *traceback;
+
+        PyErr_Fetch(&type, &value, &traceback);
+        PyErr_NormalizeException(&type, &value, &traceback);
+
+        PyObject* str_exc_type = PyObject_Repr(type);
+        PyObject* pystr = PyUnicode_AsEncodedString(str_exc_type, "utf-8", "Error ~");
+        std::string str_type =  std::string(PyBytes_AS_STRING(pystr));
+
+        PyObject* str_exc_value = PyObject_Repr(value);
+        PyObject* excstr = PyUnicode_AsEncodedString(str_exc_value, "utf-8", "Error ~");
+        std::string str_value =  std::string(PyBytes_AS_STRING(excstr));
+
+        Py_XDECREF(type);
+        Py_XDECREF(value);
+        Py_XDECREF(traceback);
+
+        Py_XDECREF(str_exc_type);
+        Py_XDECREF(pystr);
+
+        Py_XDECREF(excstr);
+        Py_XDECREF(str_exc_value);
+
+        if (str_type == name) {
+            return true;
+        }
+
+        ENGINE_ERROR("Unhandled Python Exception: {0}", str_value);
+        return false;
+    }
+    ENGINE_INFO("No Exception: {0}");
+    return false;
+}
 
 PythonScript::PythonScript(std::string name, std::shared_ptr<Object> parent): Script(name, parent) {
     module_name = PyUnicode_FromString(("scripts." + name).c_str());
     script_module = PyImport_Import(module_name);
     if (script_module == NULL) {
-        ENGINE_INFO("Python script does not exist, creating base file - {0}", name);
-        std::ofstream out( "./scripts/" + name + ".py" );
-        out << DEFAULT_MODULE;
-        out.close();
-        module_name = PyUnicode_FromString(("scripts." + name).c_str());
-        script_module = PyImport_Import(module_name);
-        if (script_module == NULL) {
-            ENGINE_ERROR("Failing to create and load default script.");
+        if (handle_exception("<class 'ModuleNotFoundError'>")) {
+            ENGINE_INFO("Python script does not exist, creating base file - {0}", name);
+            std::ofstream out( "./scripts/" + name + ".py" );
+            out << DEFAULT_MODULE;
+            out.close();
+            module_name = PyUnicode_FromString(("scripts." + name).c_str());
+            script_module = PyImport_Import(module_name);
+            if (script_module == NULL) {
+                ENGINE_ASSERT(script_module, "Failed to set up script");
+                script_failed = true;
+                return;
+            }
+        } else {
+            ENGINE_ERROR("Script {0} failed", name);
+            script_failed = true;
             return;
         }
     }
@@ -39,6 +86,15 @@ PythonScript::PythonScript(std::string name, std::shared_ptr<Object> parent): Sc
     update_func = PyObject_GetAttrString(script_module, "update");
     if (update_func == NULL) {
         ENGINE_ERROR("Python script module not found - {0}", name);
+    }
+    if (PyObject_HasAttrString(script_module, "on_click")) {
+        on_click_func = PyObject_GetAttrString(script_module, "on_click");
+        if (on_click_func != NULL) {
+            bus::register_callback(
+                std::bind(&PythonScript::on_click, this, std::placeholders::_1),
+                ENGINE_PHYSICS_RAYCAST_HIT
+            );
+        }
     }
     // Create the python script instance
     py_script = new_script();
@@ -65,6 +121,8 @@ void PythonScript::reload() {
 }
 
 void PythonScript::update(float delta_time) {
+    if (script_failed) return;
+
     #ifdef ENGINE_DEBUG_ENABLED
     // Check if the script has been updated
     if (last_modify < fs::last_write_time(module_path)) {
@@ -93,6 +151,15 @@ void PythonScript::update(float delta_time) {
     Py_XDECREF(result);
 }
 
+void PythonScript::on_click(std::shared_ptr<Event> event) {
+    if (auto ray_event = std::dynamic_pointer_cast<RaycastHitEvent>(event)) {
+        // FIXME: This check smells
+        if (parent->attached(Object::COLLIDER) &&
+                &ray_event->hit.hit_target == parent->collider().get()) {
+            PyObject* result = PyObject_CallFunction(on_click_func, "O", py_script);
+        }
+    }
+}
 
 static void py_script_dealloc(PythonScript* self) {
     //Py_XDECREF(self->py_name);
@@ -276,12 +343,14 @@ void script_init() {
         "sys.path.append('./')\n"
     );
     script_class = PyObject_GetAttrString(PyInit_py_script(), "Script");
+    ENGINE_ASSERT(script_class, "Object was not made.");
 }
 
 PyObject *new_script() {
     ENGINE_ASSERT(Py_IsInitialized(), "Python is not initialised, cannot create PythonScript - call `script_init()`");
     PyObject *args = Py_BuildValue("(s)", "Python Script Instance");
     PyObject *script_instance = PyObject_CallObject(script_class, args);
+    PyErr_Print();
     return script_instance;
 }
 

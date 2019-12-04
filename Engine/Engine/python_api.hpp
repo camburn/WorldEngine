@@ -38,6 +38,7 @@ public:
     virtual void reload() override;
 
     virtual void update(float delta_time) override;
+    virtual void on_click(std::shared_ptr<Event> event) override;
 
     PyObject_HEAD
     PyObject *py_name;
@@ -45,10 +46,12 @@ public:
     PyObject *module_name;
     PyObject *script_module;
     PyObject *update_func;
+    PyObject *on_click_func;
     std::string module_path;
     fs::file_time_type last_modify;
 
 private:
+    bool script_failed = false;
     friend PyObject* py_script_set_transform(PythonScript *self, PyObject *args, PyObject *kwargs);
     friend PyObject* py_script_get_transform(PythonScript *self, PyObject *Py_UNUSED(ignored));
     friend PyObject* py_script_get_rotation(PythonScript *self, void *closure);

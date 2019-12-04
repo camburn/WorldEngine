@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "imgui.h"
+#include "Engine/event/event.hpp"
 #include "Engine/renderer/camera.hpp"
 
 namespace engine {
@@ -30,9 +31,11 @@ public:
 
 class RayHit {
 public:
-    RayHit(Collider &collider, Ray ray, glm::vec3 hit_point);
+    RayHit(bool hit, Collider &collider, Ray ray, glm::vec3 hit_point);
 
-    bool hit;
+    operator bool() const { return hit; }
+
+    const bool hit;
 
     glm::vec3 hit_point;
     Ray ray;
@@ -40,6 +43,17 @@ public:
 };
 
 Ray cast_ray(std::shared_ptr<Camera> &camera);
+
+class RaycastHitEvent: public Event {
+public:
+    RaycastHitEvent(engine::Ray ray, engine::RayHit hit): ray(ray), hit(hit) {}
+
+    const engine::Ray ray;
+    const engine::RayHit hit;
+
+    static EVENT_TYPE get_static_type() { return ENGINE_PHYSICS_RAYCAST_HIT; }
+    virtual EVENT_TYPE get_type() const override { return get_static_type(); }
+};
 
 }
 #endif

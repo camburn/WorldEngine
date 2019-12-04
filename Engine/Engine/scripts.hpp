@@ -40,6 +40,7 @@ public:
 
     virtual void update(float delta_time) = 0;
     virtual void reload() = 0;
+    virtual void on_click(std::shared_ptr<Event> event) = 0;
 
     std::string name;
     std::string source;

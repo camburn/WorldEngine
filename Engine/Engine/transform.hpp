@@ -82,12 +82,9 @@ public:
         }
         if (parent_set) {
             if (_disable_scale) {
-                // FIXME: Rotation being combined incorrectly
-                glm::vec3 parent_translate = parent->get_translation();
-                glm::quat parent_rotation = parent->get_rotation();
-                glm::mat4 m = glm::toMat4(parent_rotation) * model_matrix;
-                m = glm::translate(m, parent_translate);
-                return m;
+                return glm::scale(model_matrix * parent->get_model_matrix(),
+                    glm::vec3(1.0f) / parent->get_scale() // Remove the scale
+                );
             }
             return model_matrix * parent->get_model_matrix();
         }

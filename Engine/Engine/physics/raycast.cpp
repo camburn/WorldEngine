@@ -3,13 +3,8 @@
 
 namespace engine {
 
-//RayHit::RayHit(): hit_target(nullptr) {
-
-//}
-
-RayHit::RayHit(Collider &collider, Ray ray, glm::vec3 hit_point):
-        hit_target(collider), ray(ray), hit_point(hit_point) {
-    hit = true;
+RayHit::RayHit(bool hit, Collider &collider, Ray ray, glm::vec3 hit_point):
+        hit(hit), hit_target(collider), ray(ray), hit_point(hit_point) {
 }
 
 Ray cast_ray(std::shared_ptr<Camera> &camera){

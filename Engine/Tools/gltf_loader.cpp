@@ -333,11 +333,22 @@ MeshObject process_mesh(
         for (auto &[name, accessor_view_index]: primitive.attributes){
             Accessor accessor = model->accessors[accessor_view_index];
             BufferView buffer_view = model->bufferViews[accessor.bufferView];
+
+            if (name == "POSITION" && accessor.type == TINYGLTF_TYPE_VEC3) {
+                if (accessor.minValues.size() == 3 and accessor.maxValues.size() == 3) {
+                    glm::vec3 min_extents = glm::vec3(
+                        accessor.minValues[0], accessor.minValues[1],accessor.minValues[2]);
+                    glm::vec3 max_extents = glm::vec3(
+                        accessor.maxValues[0], accessor.maxValues[1],accessor.maxValues[2]);
+
+                    primitive_object.min_extents = min_extents;
+                    primitive_object.max_extents = max_extents;
+                }
+            }
             // We choose not buffer unsupported data?
             // Alternatively we could buffer it and only recreate the vertexattribpointers
             ENGINE_INFO("Primitive Supports {0}", name);
             if (shader->attribute_supported(name)) {
-            //{
                 if (common_buffers.count(accessor.bufferView) == 0) {
                     auto vertex_buffer = process_buffer_view(model, buffer_view);  // This creates the VBOs
                     common_buffers[accessor.bufferView] = vertex_buffer;
@@ -353,6 +364,29 @@ MeshObject process_mesh(
         vao->unbind();
         mesh_object.primitives.push_back(primitive_object);
     }
+    // Calculate object extent
+    for (auto &prim: mesh_object.primitives) {
+        glm::vec3 &min_extents = prim.min_extents;
+        glm::vec3 &max_extents = prim.max_extents;
+
+        if (min_extents.x < mesh_object.min_extents.x)
+            mesh_object.min_extents.x = min_extents.x;
+        if (min_extents.y < mesh_object.min_extents.y)
+            mesh_object.min_extents.y = min_extents.y;
+        if (min_extents.z < mesh_object.min_extents.z)
+            mesh_object.min_extents.z = min_extents.z;
+
+        if (max_extents.x > mesh_object.max_extents.x)
+            mesh_object.max_extents.x = max_extents.x;
+        if (max_extents.y > mesh_object.max_extents.y)
+            mesh_object.max_extents.y = max_extents.y;
+        if (max_extents.z > mesh_object.max_extents.z)
+            mesh_object.max_extents.z = max_extents.z;
+    }
+    m_obj.min_extents = mesh_object.min_extents;
+    m_obj.max_extents = mesh_object.max_extents;
+    ENGINE_INFO("Min extents {0},{1},{2}", mesh_object.min_extents.x, mesh_object.min_extents.y, mesh_object.min_extents.z);
+    ENGINE_INFO("Max extents {0},{1},{2}", mesh_object.max_extents.x, mesh_object.max_extents.y, mesh_object.max_extents.z);
     return mesh_object;
 }
 
@@ -434,3 +468,4 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
     }
     return node_object;
 }
+ 
