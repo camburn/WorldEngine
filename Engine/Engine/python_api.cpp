@@ -351,10 +351,10 @@ void script_init() {
     //PyImport_AppendInittab("engine_static", &PyInit_engine_static);
     ENGINE_INFO("Initialising Python scripting");
     init_type();
-    if (!PyImport_AppendInittab("engine", &PyInit_py_script)) {
+    if (PyImport_AppendInittab("engine", &PyInit_py_script)) {
         ENGINE_ERROR("Failed to append input module");
     }
-    if (!PyImport_AppendInittab("engine_input", &PyInit_input)) {
+    if (PyImport_AppendInittab("engine_input", &PyInit_input)) {
         ENGINE_ERROR("Failed to append input module");
     }
     Py_Initialize();
