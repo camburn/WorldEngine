@@ -14,7 +14,7 @@ namespace engine{
 // Base engine application
 class Application {
 public:
-    // Should have 
+    // Should have
     // - Window
     // - Event manager
     // - Renderer

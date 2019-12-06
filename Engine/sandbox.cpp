@@ -340,6 +340,8 @@ public:
         deserialise_assets();
         deserialise_object();
 
+        /*
+
         m_entities["square"].reset( new CustomEntity());
         m_entities["square"]->name = "Square Mesh";
 
@@ -747,7 +749,7 @@ public:
             float lightZ = cos(glfwGetTime()) * light_radius;
             light_position = glm::vec3(lightX, light_position.y, lightZ);
         }
-        m_objects["square"]->transform().set_translation(model_position);
+        //m_objects["square"]->transform().set_translation(model_position);
         // === END CONTROLS ===
 
         if (use_debug_cam)
@@ -1021,10 +1023,6 @@ private:
     std::shared_ptr<Texture> brdf_map;
     std::shared_ptr<Texture> brdf_map_file;
 
-    std::shared_ptr<Texture> sphere_albedo_texture;
-    std::shared_ptr<Texture> sphere_normal_texture;
-    std::shared_ptr<Texture> sphere_rma_texture;
-
     std::shared_ptr<TextureDepth> shadow_map;
     std::shared_ptr<FrameBuffer> shadow_map_buffer;
 
@@ -1040,9 +1038,6 @@ private:
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};
     glm::vec3 light_color_c {0.1, 0.2, 0.1};
-
-    //AABBCollider box_test {glm::vec3{2.0f}, glm::vec3{1.0f}};
-    //BoxCollider obb_test {glm::vec3{0.0f}, glm::vec3{0.5f, 2.0f, 1.0f}};
 
     float camera_move_speed = 5.0f;
     float model_move_speed = 2.0f;

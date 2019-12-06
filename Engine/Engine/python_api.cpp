@@ -1,6 +1,8 @@
 #include "engine.hpp"
 #include "python_api.hpp"
 
+#include "Engine/python_state_api.hpp"
+
 namespace engine {
 
 static const std::string DEFAULT_MODULE = R"(""" Template Python Script """
@@ -17,6 +19,16 @@ def on_click(obj):
 )";
 
 bool handle_exception(std::string name) {
+    // TODO: Fix this, example here:
+    // https://docs.python.org/3/c-api/intro.html#exceptions
+    if (!PyErr_ExceptionMatches(PyExc_ModuleNotFoundError)) {
+        ENGINE_ERROR("Unhandled error");
+    } else {
+        /* Clear the error and use zero: */
+        //PyErr_Clear();
+        // Do handling here then continue
+    }
+
     if (PyErr_Occurred()) {
         PyObject *type, *value, *traceback;
 
@@ -57,6 +69,9 @@ PythonScript::PythonScript(std::string name, std::shared_ptr<Object> parent): Sc
     script_module = PyImport_Import(module_name);
     if (script_module == NULL) {
         if (handle_exception("<class 'ModuleNotFoundError'>")) {
+            ENGINE_ERROR("Module {0} not found - does script exist?", name);
+            // Code to create script file, add to a button
+            /* 
             ENGINE_INFO("Python script does not exist, creating base file - {0}", name);
             std::ofstream out( "./scripts/" + name + ".py" );
             out << DEFAULT_MODULE;
@@ -68,6 +83,7 @@ PythonScript::PythonScript(std::string name, std::shared_ptr<Object> parent): Sc
                 script_failed = true;
                 return;
             }
+            */
         } else {
             ENGINE_ERROR("Script {0} failed", name);
             script_failed = true;
@@ -335,7 +351,12 @@ void script_init() {
     //PyImport_AppendInittab("engine_static", &PyInit_engine_static);
     ENGINE_INFO("Initialising Python scripting");
     init_type();
-    PyImport_AppendInittab("engine", &PyInit_py_script);
+    if (!PyImport_AppendInittab("engine", &PyInit_py_script)) {
+        ENGINE_ERROR("Failed to append input module");
+    }
+    if (!PyImport_AppendInittab("engine_input", &PyInit_input)) {
+        ENGINE_ERROR("Failed to append input module");
+    }
     Py_Initialize();
 
     PyRun_SimpleString(
