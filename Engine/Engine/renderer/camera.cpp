@@ -9,6 +9,16 @@
 
 namespace engine {
 
+std::shared_ptr<Camera> main_camera {nullptr};
+
+void set_main_camera(std::shared_ptr<Camera> camera) {
+    main_camera = camera;
+}
+
+std::shared_ptr<Camera> get_main_camera() {
+    return main_camera;
+}
+
 OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
         : Camera(glm::ortho(left, right, bottom, top, -10.0f, 10.0f), glm::mat4(1.0f)) {
     view_projection_matrix = projection_matrix * view_matrix;

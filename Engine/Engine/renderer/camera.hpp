@@ -203,5 +203,8 @@ private:
     uint32_t viewport_height = 720;
 };
 
+void set_main_camera(std::shared_ptr<Camera> camera);
+std::shared_ptr<Camera> get_main_camera();
+
 }
 #endif

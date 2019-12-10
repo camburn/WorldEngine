@@ -329,8 +329,9 @@ public:
         float aspect = (float)width / (float)height;
 
         shadow_camera.reset( new OrthographicCamera {-5.0f, 5.0f, -5.0f, 5.0f} );
-        camera.reset(new NewPerspectiveCamera { 45.0f, aspect, 0.1f, 25.0f });
         debug_camera.reset(new NewPerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
+        camera.reset(new NewPerspectiveCamera { 45.0f, aspect, 0.1f, 25.0f });
+        set_main_camera(camera);
 
         camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
         debug_camera->set_position(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -341,7 +342,6 @@ public:
         deserialise_object();
 
         /*
-
         m_entities["square"].reset( new CustomEntity());
         m_entities["square"]->name = "Square Mesh";
 

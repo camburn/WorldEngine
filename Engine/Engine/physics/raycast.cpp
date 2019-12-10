@@ -37,4 +37,11 @@ Ray cast_ray(std::shared_ptr<Camera> &camera){
     return Ray(camera->get_position(), ray_world);
 }
 
+glm::vec3 intersect_ray_plane(Ray ray, glm::vec3 plane_point, glm::vec3 plane_normal) {
+    float dot = glm::dot(plane_point, -plane_normal);
+    float t = -(dot + ray.origin.z * plane_normal.z + ray.origin.y * plane_normal.y + ray.origin.x * plane_normal.x) /
+        (ray.direction.z * plane_normal.z + ray.direction.y * plane_normal.y + ray.direction.x * plane_normal.x);
+    return ray.origin + t * ray.direction;
+}
+
 }

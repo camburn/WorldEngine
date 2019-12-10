@@ -43,6 +43,7 @@ public:
 };
 
 Ray cast_ray(std::shared_ptr<Camera> &camera);
+glm::vec3 intersect_ray_plane(Ray ray, glm::vec3 plane_point, glm::vec3 plane_normal);
 
 class RaycastHitEvent: public Event {
 public:
