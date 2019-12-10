@@ -5,6 +5,7 @@
 
 namespace engine {
 
+// ===== Input Module =====
 static PyObject* py_get_mouse_position(PyObject *self, PyObject *args) {
     std::pair<float, float> result = get_mouse_position();
     return Py_BuildValue("ff", result.first, result.second);
@@ -56,8 +57,8 @@ PyMODINIT_FUNC PyInit_input(void) {
     if (m == NULL) {
         ENGINE_ASSERT(0, "Error creating Python Input module");
     }
-
     return m;
 }
+// ===== End Input Module =====
 
 } // namespace
