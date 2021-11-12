@@ -23,6 +23,9 @@ void deserialise_assets () {
     m_entities["primitive_sphere"] = generate_sphere();
     m_entities["primitive_sphere"]->name = "Sphere Mesh";
 
+    m_entities["primitive_plane"] = generate_plane();
+    m_entities["primitive_plane"]->name = "Plane Mesh";
+
     // Process configured assets
     std::ifstream assets_config("./config/assets.json");
     json assets_json;

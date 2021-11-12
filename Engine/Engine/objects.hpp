@@ -33,6 +33,7 @@ public:
     std::shared_ptr<Entity>& mesh() { return _mesh; }
     std::shared_ptr<Script>& script() { return _script; }
     Light& light() { return *_light; }
+    std::shared_ptr<Light>& light_reference() { return _light; }
     std::shared_ptr<Collider>& collider() { return _collider; }
 
     void attach(std::shared_ptr<Entity> mesh);

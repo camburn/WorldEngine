@@ -322,7 +322,7 @@ void display_loaded_textures(bool display) {
     ImGui::Begin("Textures");
     for (TexData data: textures) {
         std::stringstream iss;
-        iss << data.name << "(" << data.width << "x" << data.height << ")";
+        iss << data.id << ": " << data.name << "(" << data.width << "x" << data.height << ")";
         std::string name = iss.str();
         if (ImGui::TreeNode(name.c_str())) {
             auto size = ImGui::GetWindowSize();

@@ -440,6 +440,8 @@ public:
             }
         }
 
+        sun_directional_light = m_objects["sky_light"];
+
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
@@ -513,6 +515,9 @@ public:
             ImGui::InputFloat("Light A radius", &light_radius);
             ImGui::Checkbox("Rotate Light A", &light_rotate);
 
+            glm::vec3 shadow_cam_pos = sun_directional_light->transform().get_translation();
+            ImGui::InputFloat3("Shadow Camera Position", &shadow_cam_pos.x);
+
 
             ImGui::End(); // Scene Settings
         }
@@ -573,7 +578,7 @@ public:
                         */
 
                         glm::mat4 model_mat = object->transform().get_model_matrix();
-                        EditTransform(std::static_pointer_cast<Camera>(camera), model_mat);
+                        EditTransform(std::static_pointer_cast<Camera>(current_camera), model_mat);
                         object->transform().set_model_matrix(model_mat);
 
                         ImGui::EndTabItem();
@@ -747,17 +752,18 @@ public:
         if (light_rotate) {
             float lightX = sin(glfwGetTime()) * light_radius;
             float lightZ = cos(glfwGetTime()) * light_radius;
-            light_position = glm::vec3(lightX, light_position.y, lightZ);
+            sun_directional_light->transform().set_translation(glm::vec3(lightX, sun_directional_light->transform().get_translation().y, lightZ));
         }
         //m_objects["square"]->transform().set_translation(model_position);
         // === END CONTROLS ===
 
+        /*
         if (use_debug_cam)
             engine_debug::draw_cube_deferred(
                 Transform{glm::vec3(0.0f), glm::vec3(0.1f)},
                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
             );
-
+            */
         // ===== SHADOW MAP =====
         float fov = camera->fov;
         float ar = camera->aspect;
@@ -768,39 +774,27 @@ public:
             camera->get_forward_direction() * (near_plane + far_plane / 2)
         );
         shadow_camera->set_view(
-            cam_center, cam_center + glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+            sun_directional_light->transform().get_translation(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
         // Nvidia Styles
         glm::mat4 cam_view_matrix = camera->get_view_matrix();
+        glm::mat4 cam_proj_matrix = camera->get_projection_matrix();
         glm::mat4 inverse_cam_view_matrix = glm::inverse(cam_view_matrix);
         glm::mat4 light_view_matrix = shadow_camera->get_view_matrix();
 
-        glm::vec3 center = camera->get_position();
-        glm::vec3 view_dir = camera->get_forward_direction();
+        const glm::mat4 cam_inverse_matrix = glm::inverse(cam_proj_matrix * cam_view_matrix);
 
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        glm::vec3 right = glm::normalize(glm::cross(view_dir, up));
+        std::vector<glm::vec4> frustum_points;
 
-        glm::vec3 fc = center + view_dir * far_plane;
-        glm::vec3 nc = center + view_dir * near_plane;
-
-        float near_height = (near_plane * glm::tan(glm::radians(fov / 2.0f)));
-        float far_height = (far_plane * glm::tan(glm::radians(fov / 2.0f)));
-        float near_width = near_height * ar;
-        float far_width = far_height * ar;
-
-        std::vector<glm::vec4> frustum_points {
-            glm::vec4(nc - up*near_height - right*near_width, 1.0f),
-            glm::vec4(nc + up*near_height - right*near_width, 1.0f),
-            glm::vec4(nc + up*near_height + right*near_width, 1.0f),
-            glm::vec4(nc - up*near_height + right*near_width, 1.0f),
-
-            glm::vec4(fc - up*far_height - right*far_width, 1.0f),
-            glm::vec4(fc + up*far_height - right*far_width, 1.0f),
-            glm::vec4(fc + up*far_height + right*far_width, 1.0f),
-            glm::vec4(fc - up*far_height + right*far_width, 1.0f)
-        };
+        for (unsigned int x = 0; x < 2; ++x) {
+            for (unsigned int y = 0; y < 2; ++y) {
+                for (unsigned int z = 0; z < 2; ++z) {
+                    const glm::vec4 pt = cam_inverse_matrix * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
+                    frustum_points.push_back(pt / pt.w);
+                }
+            }
+        }
 
         float minX = std::numeric_limits<float>::max();
         float maxX = std::numeric_limits<float>::min();
@@ -810,8 +804,6 @@ public:
         float maxZ = std::numeric_limits<float>::min();
         
         for (glm::vec4 &vec: frustum_points) {
-            //glm::vec4 vw = inverse_cam_view_matrix * vec;  // world space
-            //glm::vec4 vw = cam_view_matrix * vec;
             glm::vec4 vl = light_view_matrix * vec;  // light space
 
             minX = std::min(minX, vl.x);
@@ -822,12 +814,31 @@ public:
             maxZ = std::max(maxZ, vl.z);
         }
 
+        constexpr float zMult = 10.0f;
+        if (minZ < 0)
+        {
+            minZ *= zMult;
+        }
+        else
+        {
+            minZ /= zMult;
+        }
+        if (maxZ < 0)
+        {
+            maxZ /= zMult;
+        }
+        else
+        {
+            maxZ *= zMult;
+        }
+
         shadow_camera.reset(
             new OrthographicCamera {minX, maxX, minY, maxY, minZ, maxZ}
         );
         shadow_camera->set_view(
-            cam_center, cam_center + glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+            sun_directional_light->transform().get_translation(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
+        //light_position
 
         shadow_map->bind();
         // Bind Shadow map shader here?!
@@ -877,10 +888,13 @@ public:
             //std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
         }
         if (use_shadow_cam) {
+            current_camera = shadow_camera;
             Renderer::begin_scene(shadow_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, shadow_map_width, shadow_map_height });
         } else if (use_debug_cam) {
+            current_camera = debug_camera;
             Renderer::begin_scene(debug_camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
         } else {
+            current_camera = camera;
             Renderer::begin_scene(camera, { glm::vec4{0.5f, 0.5f, 0.5f, 1.0f}, width, height });
         }
         texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
@@ -910,10 +924,18 @@ public:
 
         if (use_debug_cam) {
 
-            engine_debug::draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[4]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            engine_debug::draw_line(glm::vec3(frustum_points[1]), glm::vec3(frustum_points[5]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            engine_debug::draw_line(glm::vec3(frustum_points[2]), glm::vec3(frustum_points[6]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            engine_debug::draw_line(glm::vec3(frustum_points[3]), glm::vec3(frustum_points[7]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            Transform t = { cam_center, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+            engine_debug::draw_cube(t, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+            engine_debug::draw_line(glm::vec3(frustum_points[0]), glm::vec3(frustum_points[1]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[2]), glm::vec3(frustum_points[3]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[4]), glm::vec3(frustum_points[5]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[6]), glm::vec3(frustum_points[7]), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+            engine_debug::draw_line(glm::vec3(frustum_points[1]), glm::vec3(frustum_points[3]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[3]), glm::vec3(frustum_points[7]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[7]), glm::vec3(frustum_points[5]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+            engine_debug::draw_line(glm::vec3(frustum_points[5]), glm::vec3(frustum_points[1]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
 
             engine_debug::draw_line(
                 shadow_camera->get_position() + glm::vec3(minX, minY, maxZ),
@@ -941,15 +963,30 @@ public:
                 glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)
             );
 
-            Transform t = { {fc.x, fc.y, fc.z}, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-            engine_debug::draw_cube(t, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
-            t = { cam_center, glm::vec3(0.1, 0.1, 0.1), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-            engine_debug::draw_cube(t, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-            engine_debug::draw_line(glm::vec3(frustum_points[5]), glm::vec3(frustum_points[6]), glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+            // Draw shadow cam boundaries
+            engine_debug::draw_line({ minX, minY, minZ }, { maxX, maxY, minZ }, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+            engine_debug::draw_line({ maxX, minY, minZ }, { minX, maxY, minZ }, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+            engine_debug::draw_line({ minX, minY, maxZ }, { maxX, maxY, maxZ }, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+            engine_debug::draw_line({ maxX, minY, maxZ }, { minX, maxY, maxZ }, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+            glm::vec3 shadow_cam_pos = shadow_camera->get_position();
+            glm::vec3 shadow_cam_lookat = shadow_camera->get_look_at();
+
+            engine_debug::draw_line(shadow_cam_pos, shadow_cam_lookat, glm::vec4(1.0f, 0.0f, 0.3f, 1.0f));
 
             engine_debug::draw_deferred();
         }
+
+        // Draw shadow camera
+        /*
+        if (use_debug_cam) {
+            Transform t = { {0.0f, 0.0f, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+            engine_debug::draw_cube_deferred(t, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+            ENGINE_INFO("camera - {0}, {1}, {2}", minX, minY, minZ);
+            engine_debug::draw_deferred();
+        }*/
 
         for (auto& [name, object]: m_objects) {
             if (object->collider() != nullptr) {
@@ -1012,6 +1049,7 @@ private:
     std::shared_ptr<NewPerspectiveCamera> debug_camera;
     std::shared_ptr<Camera> ibl_camera;
     std::shared_ptr<OrthographicCamera> shadow_camera;
+    std::shared_ptr<Camera> current_camera;
 
     std::shared_ptr<VertexArray> cube_vao;
 
@@ -1030,9 +1068,11 @@ private:
     std::shared_ptr<TextureCubeMap> irradiance_map;
     std::shared_ptr<TextureCubeMap> prefilter_map;
 
+    std::shared_ptr<Object> sun_directional_light;
+
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
-    glm::vec3 light_position {3, 3, 3};
+    //glm::vec3 light_position {3, 3, 3};
     glm::vec3 light_color {0.01, 0.01, 0.01};
     glm::vec3 light_position_b {2, 0, 0};
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
@@ -1067,6 +1107,8 @@ private:
     // Window flags
     bool show_entity_window = true;
     bool show_scene_window = true;
+
+    bool run_once = false;
 };
 
 int main() {

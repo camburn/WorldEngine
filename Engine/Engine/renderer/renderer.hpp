@@ -23,9 +23,14 @@ struct SceneData {
     int height;
 };
 
+enum RENDER_FLAGS {
+    CULL_FACE_FRONT = 0x0,
+    CULL_FACE_BACK  = 0x1
+};
+
 class Renderer {
 public:
-
+    static void begin_scene(const std::shared_ptr<Camera> camera, const SceneData data, const int render_flags);
     static void begin_scene(const std::shared_ptr<Camera> camera, const SceneData data);
     static void end_scene();
 

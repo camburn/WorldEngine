@@ -7,6 +7,21 @@ namespace engine {
 
 Renderer::SceneState* Renderer::scene_state = new Renderer::SceneState;
 
+std::vector <std::function<void(bool)>> call_later;
+
+void Renderer::begin_scene(
+    const std::shared_ptr<Camera> camera,
+    const SceneData data,
+    const int render_flags
+) {
+    if ((render_flags & CULL_FACE_FRONT) == CULL_FACE_FRONT) {
+        renderer_api->cull_face_front(true);
+        std::function<void(bool)> tidy_cull_face = std::bind(&RendererAPI::cull_face_front, renderer_api, false);
+        call_later.push_back(tidy_cull_face);
+        //need to tidy this state on end_scene
+    }
+}
+
 
 void Renderer::begin_scene(
         const std::shared_ptr<Camera> camera,
@@ -18,7 +33,10 @@ void Renderer::begin_scene(
 }
 
 void Renderer::end_scene() {
-
+    for (auto &func : call_later) {
+        func(false);
+    }
+    call_later.clear();
 }
 
 void Renderer::submit(

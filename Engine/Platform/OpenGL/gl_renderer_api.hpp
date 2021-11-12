@@ -17,6 +17,8 @@ public:
 
     virtual void update_screen(int width, int height) override;
 
+    virtual void cull_face_front(bool enable);
+
     virtual void map_texture(const unsigned int tex_id) override;
     virtual void map_texture_unit(const unsigned int tex_id, const unsigned int unit) override;
 

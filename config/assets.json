@@ -33,5 +33,25 @@
         "path": "./assets/textures/rusted_iron/rustediron2_mra.png",
         "type": "texture",
         "name": "rustediron2_mra"
+    },
+    {
+        "path": "./assets/gltf/Castle/castle.gltf",
+        "type": "mesh",
+        "name": "castle_mesh"
+    },
+    {
+        "path": "./assets/textures/templategrid_albedo.png",
+        "type": "texture",
+        "name": "template_grid_albedo"
+    },
+    {
+        "path": "./assets/textures/templategrid_normal.png",
+        "type": "texture",
+        "name": "template_grid_normal"
+    },
+    {
+        "path": "./assets/textures/templategrid_rma.png",
+        "type": "texture",
+        "name": "template_grid_rma"
     }
 ]

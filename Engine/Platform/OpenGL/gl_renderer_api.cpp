@@ -17,6 +17,13 @@ void GLRendererAPI::update_screen(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+void GLRendererAPI::cull_face_front(bool enable) {
+    if (enable) {
+        glCullFace(GL_FRONT);
+    }
+    glCullFace(GL_BACK);
+}
+
 void GLRendererAPI::map_texture(const unsigned int tex_id) {
     glBindTexture(GL_TEXTURE_2D, tex_id);
 }

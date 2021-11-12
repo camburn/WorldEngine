@@ -19,6 +19,8 @@ public:
 
     virtual void update_screen(int width, int height) = 0;
 
+    virtual void cull_face_front(bool enable) = 0;
+
     virtual void draw_indexed(const std::shared_ptr<VertexArray>& vertex_array) = 0;
     virtual void draw_triangles(const std::shared_ptr<VertexArray>& vertex_array) = 0;
 

@@ -3,7 +3,7 @@
     "name": "Cube",
     "id": "cube_instance_1",
     "transform": {
-      "translation": [1.0, -1.5, 1.0],
+      "translation": [-2.0, 0.5, 3.0],
       "scale": [0.5, 0.5, 0.5]
     },
     "mesh": "cube_mesh",
@@ -19,7 +19,7 @@
     "name": "Damaged Helmet",
     "id": "damaged_helmet",
     "transform": {
-      "translation": [0.0, 0.0, 0.0]
+      "translation": [0.0, 1.8, -2.0]
     },
     "mesh": "damaged_helmet_mesh"
   },
@@ -27,10 +27,19 @@
     "name": "Flight Helmet",
     "id": "flight_helmet",
     "transform": {
-      "translation": [3.0, 0.0, 0.0],
+      "translation": [3.0, 1.8, 0.0],
       "scale": [4, 4, 4]
     },
     "mesh": "flight_helmet_mesh"
+  },
+  {
+    "name": "Castle",
+    "id": "castle",
+    "transform": {
+      "translation": [0.0, 0.0, -2.0],
+      "scale": [10, 10, 10]
+    },
+    "mesh": "castle_mesh"
   },
   {
     "name": "MRA Environment Test",
@@ -41,7 +50,7 @@
     "name": "Green Light",
     "id": "green_light",
     "transform": {
-      "translation": [-2.0, 0.0, 0.0]
+      "translation": [-2.0, 1.0, 0.0]
     },
     "light": {
       "type": "point",
@@ -53,7 +62,7 @@
     "name": "Red Light",
     "id": "red_light",
     "transform": {
-      "translation": [2.0, 0.0, 0.0]
+      "translation": [1.5, 2.0, 0.0]
     },
     "light": {
       "type": "point",
@@ -76,7 +85,7 @@
     "id": "rusted_sphere",
     "primitive": "sphere",
     "transform": {
-      "translation": [-3.0, 0.0, 0.0]
+      "translation": [-3.0, 1.5, 0.0]
     },
     "textures": [
       { 
@@ -97,5 +106,28 @@
       }
     ],
     "script": "ball_spin"
+  },
+  {
+    "name": "Ground",
+    "id": "ground_plane",
+    "primitive": "plane",
+    "transform": {
+      "translation": [0.0, 0.0, 0.0],
+      "scale": [10.0, 10.0, 10.0]
+    },
+    "textures": [
+      { 
+        "type": "albedo",
+        "texture": "template_grid_albedo"
+      },
+      { 
+        "type": "normal",
+        "texture": "template_grid_normal"
+      },
+      { 
+        "type": "ambient",
+        "texture": "template_grid_rma"
+      }
+    ]
   }
 ]

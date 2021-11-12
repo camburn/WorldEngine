@@ -55,6 +55,10 @@ public:
     virtual void on_ui_render(bool display) override;
     void set_view(glm::vec3 new_position, glm::vec3 new_look_at, glm::vec3 new_up);
 
+    glm::vec3 get_look_at() {
+        return look_at;
+    }
+
 private:
     glm::vec3 look_at {0.0f, 0.0f, 0.0f};
     glm::vec3 up {0.0f, 1.0f, 0.0f};
