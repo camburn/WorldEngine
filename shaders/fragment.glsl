@@ -103,6 +103,9 @@ vec3 fresnel_schlick_roughness(float cos_theta, vec3 F0, float roughness) {
 }
 
 float shadow_calculation(vec4 frag_pos_light_space) {
+    if (u_cast_shadows == 0 ) {
+        return 0.0;
+    }
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
     //float closest_depth = texture2D(shadow_map, proj_coords.xy).r;
@@ -110,19 +113,20 @@ float shadow_calculation(vec4 frag_pos_light_space) {
     // Light 0 is always the direction light
     vec3 normal = normalize(f_normal);
     vec3 light_dir = normalize(u_lights[0].position - f_worldpos);
-    //float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005);
-    float bias = 0.0;
+    float bias = max(0.0005 * (1.0 - dot(normal, light_dir)), 0.00005);
+    //float bias = 0.0;
     //float shadow = current_depth  - bias > closest_depth ? 1.0: 0.0;
 
     float shadow = 0.0;
     vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
-    for (int x = -1; x <= 1; ++x) {
-        for (int y = -1; y <= 1; ++y) {
+    int pcf_size = 6;
+    for (int x = -pcf_size; x <= pcf_size; ++x) {
+        for (int y = -pcf_size; y <= pcf_size; ++y) {
             float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
             shadow += current_depth - bias > pcf_depth ? 1.0: 0.0;
         }
     }
-    shadow /= 9.0;
+    shadow /= 32.0;
 
     if (proj_coords.z > 1.0) shadow = 0.0;
 
@@ -147,6 +151,7 @@ void main() {
 
     vec3 light_dot = vec3(0.0);
 
+    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -159,6 +164,7 @@ void main() {
 
         if (u_lights[i].direction) {  // Directional light
             light = -normalize(vec3(0) - u_lights[i].position);
+            light = light * shadow_color;
         } else {  //Attenuation is for a point light
             light = normalize(u_lights[i].position - f_worldpos);
             
@@ -215,12 +221,10 @@ void main() {
 
     //color += emission_sample.xyz;
 
-    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
+    
 
-    vec4 final_color = vec4((color * shadow_color), albedo_sample.a);
-    if (u_cast_shadows == 0 ) {
-        final_color = vec4(color, albedo_sample.a);
-    }
+    //vec4 final_color = vec4((color * shadow_color), albedo_sample.a);
+    vec4 final_color = vec4((color), albedo_sample.a);
 
     // Debug modes
     if (u_render_mode == 1) final_color = albedo_sample;

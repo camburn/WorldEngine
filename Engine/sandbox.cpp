@@ -1101,8 +1101,8 @@ private:
     int width = 1200;
     int height = 800;
 
-    int shadow_map_width = 1024;
-    int shadow_map_height = 1024;
+    int shadow_map_width = 4096;
+    int shadow_map_height = 4096;
 
     // Window flags
     bool show_entity_window = true;
