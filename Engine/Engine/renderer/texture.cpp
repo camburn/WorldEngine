@@ -20,12 +20,12 @@ std::shared_ptr<TextureHDR> TextureHDR::create(const std::string& path) {
 }
 
 std::shared_ptr<TextureCubeMap> TextureCubeMap::create(
-        uint32_t width, uint32_t height, bool generate_mipmaps,
+        uint32_t width, uint32_t height, engine::ImageFormat image_format, bool generate_mipmaps,
         engine::Filter min_filter, engine::Filter mag_filter
     ) {
     ENGINE_INFO("Creating Cube Map {0}x{1}", width, height);
     return std::make_shared<enginegl::GLTextureCubeMap>(
-        width, height, generate_mipmaps, min_filter, mag_filter
+        width, height, image_format, generate_mipmaps, min_filter, mag_filter
     );
 }
 

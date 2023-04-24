@@ -33,12 +33,18 @@ std::shared_ptr<IndexBuffer> IndexBuffer::create(void* indices, uint32_t count, 
 std::shared_ptr<FrameBuffer> FrameBuffer::create(uint32_t width, uint32_t height) {
     return std::make_shared<enginegl::OpenGLFrameBuffer>(width, height);
 }
-std::shared_ptr<FrameBuffer> FrameBuffer::create(
-    const std::shared_ptr<TextureDepth>& texture) {
 
+std::shared_ptr<FrameBuffer> FrameBuffer::create(const std::shared_ptr<TextureDepth>& texture) {
     return std::make_shared<enginegl::OpenGLDepthMap>(
         std::static_pointer_cast<enginegl::GLTextureDepth>(texture)
     );
 }
+
+std::shared_ptr<FrameBuffer> FrameBuffer::create(const std::shared_ptr<TextureCubeMap>& texture) {
+    return std::make_shared<enginegl::OpenGLDepthMap>(
+        std::static_pointer_cast<enginegl::GLTextureCubeMap>(texture)
+    );
+}
+
 
 } //namespace

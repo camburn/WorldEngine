@@ -208,7 +208,7 @@ static PyMemberDef py_script_members[] = {
 // METHODS
 
 PyObject* py_script_set_transform(PythonScript* self, PyObject* args, PyObject* kwargs) {
-    PyObject *name;
+    //PyObject *name;
     float x, y, z;
     static char *kwlist[] = {(char*)"x", (char*)"y", (char*)"z", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|fff", kwlist, &x, &y, &z) ) {

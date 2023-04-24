@@ -6,6 +6,14 @@
 
 namespace engine {
 
+
+enum ImageFormat {
+    R,
+    RGBA,
+    RGB,
+    DEPTH_COMPONENT
+};
+
 enum Filter {
     LINEAR,
     NEAREST,
@@ -42,6 +50,7 @@ public:
 
     static std::shared_ptr<TextureCubeMap> create(
         uint32_t width, uint32_t height,
+        engine::ImageFormat image_format = engine::RGB,
         bool generate_mipmaps = false,
         engine::Filter min_filter = engine::LINEAR,
         engine::Filter mag_filter = engine::LINEAR

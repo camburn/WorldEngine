@@ -13,9 +13,9 @@ PyEngine uses the premake build tool to generate appropriate make, msbuild
 projects.
 
 Requirements:
- - Premake5
- - Git LFS
 
+- Premake5
+- Git LFS
 
 ### Running Build Environment
 
@@ -27,6 +27,7 @@ PYTHON_PATH    # Directory containing the Python 3.7 libs and headers
 ```
 
 To setup build environment
+
 ``` bash
 # Clone main project
 git clone https://github.com/camburn/WorldEngine.git

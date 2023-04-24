@@ -69,6 +69,7 @@ private:
 class OpenGLDepthMap: public engine::FrameBuffer {
 public:
     OpenGLDepthMap(const std::shared_ptr<GLTextureDepth>& texture);
+    OpenGLDepthMap(const std::shared_ptr<GLTextureCubeMap>& texture);
 
     virtual ~OpenGLDepthMap();
 

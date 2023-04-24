@@ -139,13 +139,27 @@ OpenGLDepthMap::OpenGLDepthMap(const std::shared_ptr<GLTextureDepth>& texture) {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
-    ENGINE_TRACE("Depth map {0} created", frame_buffer);
+    ENGINE_TRACE("Depth map buffer {0} created", frame_buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+OpenGLDepthMap::OpenGLDepthMap(const std::shared_ptr<GLTextureCubeMap>& texture) {
+    glGenFramebuffers(1, &frame_buffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+    glFramebufferTexture(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture->get_id(), 0
+    );
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    ENGINE_TRACE("Depth map buffer {0} created", frame_buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 OpenGLDepthMap::~OpenGLDepthMap() {
     glDeleteBuffers(1, &frame_buffer);
-    ENGINE_TRACE("Depth map {0} garbage collected", frame_buffer);
+    ENGINE_TRACE("Depth map buffer {0} garbage collected", frame_buffer);
 }
 
 void OpenGLDepthMap::bind() const {

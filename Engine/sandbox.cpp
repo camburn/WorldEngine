@@ -86,6 +86,21 @@ public:
         {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)}
     };
 
+    struct lookat_up {
+            glm::vec3 look_at;
+            glm::vec3 up;
+    };
+
+    std::vector<lookat_up> point_shadow_views = {
+        //target, up
+        {glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)},
+        {glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)},
+        {glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
+        {glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)}
+    };
+
     MyLayer() {
 
         #ifdef OPENGL_COMPATIBILITY
@@ -210,7 +225,7 @@ public:
         auto fbo = FrameBuffer::create(512, 512);
         fbo->bind();
 
-        environment_map = TextureCubeMap::create(512, 512, false, NEAREST, LINEAR);
+        environment_map = TextureCubeMap::create(512, 512, RGB, false, NEAREST, LINEAR);
         hdr_map->bind(0);
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
@@ -250,8 +265,8 @@ public:
 
         // pre-filter
 
-        prefilter_map = TextureCubeMap::create(128, 128, true, LINEAR_MIPMAP_LINEAR, LINEAR);
-
+        prefilter_map = TextureCubeMap::create(128, 128, RGB, true, LINEAR_MIPMAP_LINEAR, LINEAR);
+        prefilter_map->bind();
         prefilter_shader->bind();
         fbo_filter = FrameBuffer::create(128, 128);
 
@@ -260,8 +275,8 @@ public:
 
         unsigned int max_mip_levels = 5;
         for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
-            unsigned int mip_width = 128 * std::pow(0.5f, mip);
-            unsigned int mip_height = 128 * std::pow(0.5f, mip);
+            unsigned int mip_width = 128 * (int)std::pow(0.5f, mip);
+            unsigned int mip_height = 128 * (int)std::pow(0.5f, mip);
             std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
@@ -329,6 +344,9 @@ public:
         float aspect = (float)width / (float)height;
 
         shadow_camera.reset( new OrthographicCamera {-5.0f, 5.0f, -5.0f, 5.0f} );
+
+        shadow_point_camera.reset(new PerspectiveCamera { 90.0f, (float)shadow_map_width / (float)shadow_map_height, 0.1f, 50.0f });
+
         debug_camera.reset(new NewPerspectiveCamera { 75.0f, aspect, 0.1f, 100.0f });
         camera.reset(new NewPerspectiveCamera { 45.0f, aspect, 0.1f, 25.0f });
         set_main_camera(camera);
@@ -340,81 +358,6 @@ public:
 
         deserialise_assets();
         deserialise_object();
-
-        /*
-        m_entities["square"].reset( new CustomEntity());
-        m_entities["square"]->name = "Square Mesh";
-
-        m_objects["square"].reset(new Object());
-        m_objects["square"]->attach(m_entities["square"]);
-        m_objects["square"]->name = "Square";
-        m_objects["square"]->transform().set_translation(model_position);
-
-        m_py_scripts["square"].reset(
-            new PythonScript("square_scripto", m_objects["square"] )
-        );
-        m_objects["square"]->attach(m_py_scripts["square"]);
-
-        std::vector<glm::vec4> data = {
-            {  3.0f, 0.0f,  3.0f, 1.0f },
-            {  3.0f, 0.0f, -3.0f, 1.0f },
-            { -3.0f, 0.0f, -3.0f, 1.0f },
-            { -3.0f, 0.0f,  3.0f, 1.0f }
-        };
-        std::vector<glm::vec4> colors = {
-            { 0.8f, 0.2f, 0.2f, 1.0f },
-            { 0.2f, 0.8f, 0.2f, 1.0f },
-            { 0.2f, 0.2f, 0.8f, 1.0f },
-            { 0.2f, 0.2f, 0.2f, 1.0f }
-        };
-        std::vector<glm::vec4> normals = {
-            { 0.0f, 1.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f, 0.0f }
-        };
-        std::vector<glm::vec2> texcoords = {
-            { 1.0f, 1.0f },
-            { 1.0f, 0.0f },
-            { 0.0f, 0.0f },
-            { 0.0f, 1.0f }
-        };
-
-        std::vector<uint32_t> i_data = { 0, 1, 3, 1, 2, 3 };
-
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("position", data);
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("normal", normals);
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_attribute_data("texcoord", texcoords);
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_index_data(i_data);
-
-        m_entities["square"]->add_uniform_data("u_color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
-
-        dirt_albedo_texture = Texture2D::create("./assets/textures/dry-dirt1-albedo_small.png");
-        dirt_normal_texture = Texture2D::create("./assets/textures/dry-dirt1-normal_small.png");
-        dirt_rma_texture = Texture2D::create("./assets/textures/dry-dirt1-rma.png");
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
-            "albedo", dirt_albedo_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
-            "normal", dirt_normal_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
-            "roughness_metallic", dirt_rma_texture
-        );
-        std::static_pointer_cast<CustomEntity>(m_entities["square"])->add_texture(
-            "ambient", dirt_rma_texture
-        );
-
-        /*
-        glm::vec3 tt = m_objects["cube_instance_1"]->transform().get_translation();
-        m_objects["cube_instance_1"]->attach(
-            std::shared_ptr<BoxCollider>(
-                new BoxCollider{
-                    m_objects["cube_instance_1"]->transform().get_translation(),
-                    glm::vec3{1.0f, 1.0f, 1.0f}
-                }
-            )
-        );*/
 
         for (auto& [name, entity]: m_entities) {
             entity->update_buffers(texture_shader);
@@ -441,10 +384,14 @@ public:
         }
 
         sun_directional_light = m_objects["sky_light"];
+        point_light_green = m_objects["green_light"];
 
         // SHADOW MAP SETUP
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
+
+        shadow_point_map = TextureCubeMap::create(shadow_map_width, shadow_map_height, engine::DEPTH_COMPONENT, false, NEAREST, NEAREST);
+        shadow_point_map_buffer = FrameBuffer::create(shadow_point_map);
 
     }
 
@@ -750,8 +697,8 @@ public:
             camera->set_position(glm::vec3(camX, 0.0f, camZ));
         }
         if (light_rotate) {
-            float lightX = sin(glfwGetTime()) * light_radius;
-            float lightZ = cos(glfwGetTime()) * light_radius;
+            float lightX = (float)sin(glfwGetTime()) * light_radius;
+            float lightZ = (float)cos(glfwGetTime()) * light_radius;
             sun_directional_light->transform().set_translation(glm::vec3(lightX, sun_directional_light->transform().get_translation().y, lightZ));
         }
         //m_objects["square"]->transform().set_translation(model_position);
@@ -839,10 +786,12 @@ public:
             sun_directional_light->transform().get_translation(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
         //light_position
+        // SHADOW RENDERING
+        // DIRECTION SHADOWS
 
-        shadow_map->bind();
         // Bind Shadow map shader here?!
         depth_map_shader->bind();
+        shadow_map->bind();
         shadow_map_buffer->bind();
         // Render things here
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
@@ -855,6 +804,40 @@ public:
         }
         depth_map_shader->unbind();
         shadow_map_buffer->unbind();
+        shadow_map->unbind();
+
+        // RENDER POINT SHADOWS
+        
+        shadow_point_map->bind();
+        depth_map_shader->bind();
+        shadow_point_map_buffer->bind();
+
+
+        for (unsigned int i = 0; i < 6; i++) {
+            // Why use a tuple over a struct?
+            auto view = point_shadow_views.at(i);
+
+            shadow_point_camera->set_view(
+                point_light_green->transform().get_translation(), view.look_at + point_light_green->transform().get_translation(), view.up
+            );
+            shadow_point_map->set_data(i);
+            Renderer::begin_scene(shadow_point_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
+
+            for (auto& [name, object]: m_objects) {
+                bool result = object->attached(Object::MESH);
+                if (object->attached(Object::MESH) && object->mesh()->draw) {
+                    Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
+                }
+            }
+            //break;
+        }
+
+
+        depth_map_shader->unbind();
+        shadow_point_map_buffer->unbind();
+        shadow_point_map->unbind();
+
+
         // === END SHADOW MAP ===
 
         texture_shader->bind();
@@ -899,6 +882,8 @@ public:
         }
         texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
         shadow_map->bind(texture_shader->uniform_texture_unit("shadow_map"));
+        shadow_point_map->bind(texture_shader->uniform_texture_unit("point_light_shadow_map"));
+
         irradiance_map->bind(texture_shader->uniform_texture_unit("irradiance_map"));
         prefilter_map->bind(texture_shader->uniform_texture_unit("prefilter_map"));
         if (use_generated_brdf) {
@@ -1019,6 +1004,7 @@ public:
             if (skybox_mode == 0) environment_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
             else if (skybox_mode == 1) irradiance_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
             else if (skybox_mode == 2) prefilter_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
+            else if (skybox_mode == 3) shadow_point_map->bind(skybox_shader->uniform_texture_unit("environment_map"));
             skybox_shader->upload_u_mat4("u_view", camera->get_view_matrix());
             skybox_shader->upload_u_mat4("u_projection", camera->get_projection_matrix());
             Renderer::submit(skybox_shader, cube_vao, glm::mat4(1.0f));
@@ -1047,6 +1033,7 @@ private:
 
     std::shared_ptr<NewPerspectiveCamera> camera;
     std::shared_ptr<NewPerspectiveCamera> debug_camera;
+    std::shared_ptr<PerspectiveCamera> shadow_point_camera;
     std::shared_ptr<Camera> ibl_camera;
     std::shared_ptr<OrthographicCamera> shadow_camera;
     std::shared_ptr<Camera> current_camera;
@@ -1064,17 +1051,21 @@ private:
     std::shared_ptr<TextureDepth> shadow_map;
     std::shared_ptr<FrameBuffer> shadow_map_buffer;
 
+    std::shared_ptr<TextureCubeMap> shadow_point_map;
+    std::shared_ptr<FrameBuffer> shadow_point_map_buffer;
+
     std::shared_ptr<TextureCubeMap> environment_map;
     std::shared_ptr<TextureCubeMap> irradiance_map;
     std::shared_ptr<TextureCubeMap> prefilter_map;
 
     std::shared_ptr<Object> sun_directional_light;
+    std::shared_ptr<Object> point_light_green;
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
     //glm::vec3 light_position {3, 3, 3};
     glm::vec3 light_color {0.01, 0.01, 0.01};
-    glm::vec3 light_position_b {2, 0, 0};
+    //glm::vec3 light_position_b {2, 0, 0};
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};
     glm::vec3 light_color_c {0.1, 0.2, 0.1};
@@ -1098,8 +1089,8 @@ private:
     int render_mode = 0;
     int skybox_mode = 1;
 
-    int width = 1200;
-    int height = 800;
+    int width = 1920;
+    int height = 1080;
 
     int shadow_map_width = 4096;
     int shadow_map_height = 4096;
@@ -1112,7 +1103,7 @@ private:
 };
 
 int main() {
-    engine::Application application{1200, 800};
+    engine::Application application{1920, 1080};
     application.push_layer(new MyLayer());
     application.run();
     return 0;

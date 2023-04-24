@@ -108,7 +108,7 @@ public:
     }
 
     float zoom_speed() const {
-        float dis = distance * 0.2;
+        float dis = distance * 0.2f;
         dis = std::max(dis, 0.0f);
         float speed = dis * dis;
         speed = std::min(speed, 100.0f);

@@ -19,7 +19,10 @@ uniform sampler2D roughness_metallic;
 uniform sampler2D ambient;
 uniform sampler2D emission;
 
+//Direction Light Shadow Map
 uniform sampler2D shadow_map;
+//Point Light Shadow map (Cube)
+uniform samplerCube point_light_shadow_map;
 
 // IBL Materials
 uniform sampler2D brdf_map;
@@ -133,6 +136,21 @@ float shadow_calculation(vec4 frag_pos_light_space) {
     return shadow;
 }
 
+float shadow_calculation_simple(vec3 frag_pos, vec3 light_position){
+    vec3 frag_pos_vector = frag_pos.xyz - light_position;
+
+    float closest_depth = texture(point_light_shadow_map, frag_pos_vector).r;
+
+    //closest_depth *= 20.0;
+
+    float current_depth = length(frag_pos_vector);
+
+    float bias = 0.05; 
+    float shadow = current_depth -  bias > closest_depth ? 1.0 : 0.0;
+    return closest_depth;
+}
+
+
 void main() {
 
     vec4 albedo_sample = pow(texture2D(albedo, f_texcoord), vec4(2.2, 2.2, 2.2, 1)); // sRGB Converter
@@ -151,7 +169,8 @@ void main() {
 
     vec3 light_dot = vec3(0.0);
 
-    float shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
+    float shadow_color = 1.0;// - (shadow_calculation(f_frag_pos_light_space) * 0.5);
+    float point_shadow_color = 1.0;
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -164,9 +183,17 @@ void main() {
 
         if (u_lights[i].direction) {  // Directional light
             light = -normalize(vec3(0) - u_lights[i].position);
-            light = light * shadow_color;
+            if (u_lights[i].cast_shadows){
+                shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
+                light = light * shadow_color;
+            }
+            
         } else {  //Attenuation is for a point light
             light = normalize(u_lights[i].position - f_worldpos);
+            if (u_lights[i].cast_shadows){
+                point_shadow_color = shadow_calculation_simple(f_worldpos, u_lights[i].position);
+                light = light * point_shadow_color;
+            }
             
             float distance = length(u_lights[i].position - f_worldpos);
             float attenuation = 1.0 / (distance * distance);
@@ -242,11 +269,12 @@ void main() {
     else if (u_render_mode == 13) final_color = vec4(f_texcoord, 0, 1); // texture_normal
     else if (u_render_mode == 14) final_color = vec4(vec3(albedo_sample.a), 1); // texture_normal
     else if (u_render_mode == 15) final_color = vec4(vec3(shadow_color), 1);
-    else if (u_render_mode == 16) final_color = vec4(R, 1); // reflection
-    else if (u_render_mode == 17) final_color = vec4(specular, 1); // Specular
-    else if (u_render_mode == 18) final_color = vec4(ambient_value, 1); // Ambient color
-    else if (u_render_mode == 19) final_color = vec4(diffuse, 1); // diffuse
-    else if (u_render_mode == 20) final_color = vec4(kD, 1); // kD
+    else if (u_render_mode == 16) final_color = vec4(vec3(point_shadow_color), 1);
+    else if (u_render_mode == 17) final_color = vec4(R, 1); // reflection
+    else if (u_render_mode == 18) final_color = vec4(specular, 1); // Specular
+    else if (u_render_mode == 19) final_color = vec4(ambient_value, 1); // Ambient color
+    else if (u_render_mode == 20) final_color = vec4(diffuse, 1); // diffuse
+    else if (u_render_mode == 21) final_color = vec4(kD, 1); // kD
 
     out_color = final_color;
 }

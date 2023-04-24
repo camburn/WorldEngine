@@ -62,6 +62,7 @@ class GLTextureCubeMap: public engine::TextureCubeMap, public GLTexture {
 public:
     GLTextureCubeMap(
         uint32_t width, uint32_t height,
+        engine::ImageFormat image_format,
         bool generate_mipmaps,
         engine::Filter min_filter,
         engine::Filter mag_filter
@@ -80,6 +81,7 @@ public:
 private:
     uint32_t width;
     uint32_t height;
+    engine::ImageFormat image_format_state;
 };
 
 class GLTextureDepth: public engine::TextureDepth, public GLTexture {

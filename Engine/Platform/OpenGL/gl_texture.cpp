@@ -205,9 +205,12 @@ void GLTextureDepth::unbind() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height, 
+GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height, engine::ImageFormat image_format,
         bool generate_mipmaps, engine::Filter min_filter, engine::Filter mag_filter
     ) {
+
+    image_format_state = image_format;
+
     GLenum gl_min_filter = GL_LINEAR;
     if (min_filter == engine::NEAREST) {
         gl_min_filter = GL_NEAREST;
@@ -220,6 +223,24 @@ GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height,
     } else if (mag_filter == engine::LINEAR_MIPMAP_LINEAR){
         ENGINE_ERROR("GL_TEXTURE_MAG_FILTER does not support mip-mapping specify an alternative filter");
     }
+    GLint gl_image_format = GL_RGB;
+    GLint gl_image_format_internal = GL_RGB16;
+    switch(image_format) {
+        case engine::RGB:
+            gl_image_format = GL_RGB;
+            gl_image_format_internal = GL_RGB16;
+            break;
+        case engine::RGBA:
+            gl_image_format = GL_RGBA;
+            gl_image_format_internal = GL_RGBA;
+            break;
+        case engine::DEPTH_COMPONENT:
+            gl_image_format = GL_DEPTH_COMPONENT;
+            gl_image_format_internal = GL_DEPTH_COMPONENT;
+            break;
+        default:
+            ENGINE_ERROR("Unsupported image format used to store texture data");
+    }
 
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
@@ -231,11 +252,16 @@ GLTextureCubeMap::GLTextureCubeMap(uint32_t width, uint32_t height,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     for (unsigned int i = 0; i < 6; ++i) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16,
-            width, height, 0, GL_RGB, GL_FLOAT, (void*)nullptr
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_image_format_internal,
+            width, height, 0, gl_image_format, GL_FLOAT, (void*)nullptr
         );
     }
     if (generate_mipmaps) glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+        ENGINE_ERROR("Framebuffer is not complete, this is a problem");
+    }
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     textures.push_back(TexData{texture_id, (int)height, (int)width, "Cubemap"});
@@ -265,9 +291,23 @@ GLTextureCubeMap::~GLTextureCubeMap() {
 
 void GLTextureCubeMap::set_data(uint32_t face_index, uint32_t mip) {
     ENGINE_ASSERT(face_index < 6, "Cube map only has 6 faces, index out of range");
+
+    GLint attachment = GL_COLOR_ATTACHMENT0;
+    switch (image_format_state) {
+    case engine::RGB:
+        attachment = GL_COLOR_ATTACHMENT0;
+        break;
+    case engine::RGBA:
+        attachment = GL_COLOR_ATTACHMENT0;
+        break;
+    case engine::DEPTH_COMPONENT:
+        attachment = GL_DEPTH_ATTACHMENT;
+        break;
+    }
+
     // Load data into the cube map from the framebuffer
     // This will have to be expanded to handle load from depth buffers aswell
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment,
         GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index, texture_id, mip
     );
 }
