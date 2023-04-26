@@ -176,31 +176,14 @@ void Shader::inspect_uniforms() {
         std::string name = std::string(c_name);
         if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE ) {
             // Assign a texture unit
-            uniforms.try_emplace(name, i, name, type, size, texture_unit);
+            GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
+            uniforms.try_emplace(name, attribute_location, name, type, size, texture_unit);
             ENGINE_INFO("Uniform #{0} Type: {1} Name: {2} TextureUnit: {3}", i, enginegl::GLENUM_NAMES.at(type), name, texture_unit);
             texture_unit++;
         } else {
-            // This doesn't appear to be neccessary? why did I put this in?
-            if (0) {//(name.find("[") < name.length()) {
-                int index = name.find("[");
-                GLint attribute_location= -2;
-                int counter = 0;
-                while (true) {
-                    //name.pop_back(); name.pop_back();
-                    //name = name + std::to_string(counter) + "]";
-                    name[index + 1] = std::to_string(counter)[0];
-                    attribute_location = glGetUniformLocation(shader_id, name.c_str());
-                    if (attribute_location == -1)
-                        break;
-                    ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);
-                    uniforms.try_emplace(name, attribute_location, name, type, size);
-                    counter++;
-                }
-            } else {
-                GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
-                ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);
-                uniforms.try_emplace(name, attribute_location, name, type, size);
-            }
+            GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
+            ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);
+            uniforms.try_emplace(name, attribute_location, name, type, size);
         }
     }
 }

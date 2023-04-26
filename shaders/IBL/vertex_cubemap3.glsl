@@ -4,7 +4,7 @@ layout(location=0) in vec4 position;
 
 out vec3 f_localpos;
 
-uniform mat4 u_view_projection;
+layout(location = 0) uniform mat4 u_view_projection;
 
 void main() {
     f_localpos = position.xyz;

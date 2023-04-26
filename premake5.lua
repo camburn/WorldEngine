@@ -167,7 +167,7 @@ project "Engine"
 
         includedirs
         {
-            "D:/Python38/include",
+            "C:/Program Files/Python311/include",
         }
 
         defines
@@ -179,13 +179,13 @@ project "Engine"
 
         libdirs
         {
-            "D:/Python38/libs"
+            "C:/Program Files/Python311/libs"
         }
 
         links 
         { 
             "opengl32.lib",
-            "python38"
+            "python311"
         }
 
     filter "configurations:Debug"

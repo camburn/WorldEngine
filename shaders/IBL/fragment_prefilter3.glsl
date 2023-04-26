@@ -4,9 +4,9 @@ in vec3 f_localpos;
 
 out vec4 out_color;
 
-uniform samplerCube environment_map;
-uniform float roughness;
-uniform float cube_map_resolution = 512;
+layout(location = 3) uniform samplerCube environment_map;
+layout(location = 1) uniform float roughness;
+layout(location = 2) uniform float cube_map_resolution = 512;
 
 const uint SAMPLE_COUNT = 1024u;
 const float PI = 3.14159265359;

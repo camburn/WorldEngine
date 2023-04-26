@@ -275,8 +275,8 @@ public:
 
         unsigned int max_mip_levels = 5;
         for (unsigned int mip = 0; mip < max_mip_levels; ++mip) {
-            unsigned int mip_width = 128 * (int)std::pow(0.5f, mip);
-            unsigned int mip_height = 128 * (int)std::pow(0.5f, mip);
+            unsigned int mip_width = (unsigned int)(128.0f * std::pow(0.5f, mip));
+            unsigned int mip_height = (unsigned int)(128.0f * std::pow(0.5f, mip));
             std::static_pointer_cast<FrameBuffer>(fbo_filter)->resize(mip_width, mip_height);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
@@ -812,26 +812,27 @@ public:
         depth_map_shader->bind();
         shadow_point_map_buffer->bind();
 
-
         for (unsigned int i = 0; i < 6; i++) {
             // Why use a tuple over a struct?
-            auto view = point_shadow_views.at(i);
+            lookat_up view = point_shadow_views.at(i);
 
+            // TODO: Optimisation: These can be processed in one render pass instead of 6 - can use a geometry shader to accomplish this.
             shadow_point_camera->set_view(
                 point_light_green->transform().get_translation(), view.look_at + point_light_green->transform().get_translation(), view.up
             );
+            //Set the cubemap surface to draw to.
             shadow_point_map->set_data(i);
             Renderer::begin_scene(shadow_point_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
 
+            //Draw the objects
+            // TODO: Optimisation: Add a depth check on objects to see if they are in range of the light otherwise don't draw them.
             for (auto& [name, object]: m_objects) {
                 bool result = object->attached(Object::MESH);
                 if (object->attached(Object::MESH) && object->mesh()->draw) {
                     Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
                 }
             }
-            //break;
         }
-
 
         depth_map_shader->unbind();
         shadow_point_map_buffer->unbind();
