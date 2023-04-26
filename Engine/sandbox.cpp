@@ -52,12 +52,13 @@ std::unordered_map<int, std::string> render_modes {
     {12, "Normal Map"},
     {13, "Texture Coordinates"},
     {14, "Transparency"},
-    {15, "Shadows"},
-    {16, "Reflection"},
-    {17, "Specular"},
-    {18, "Ambient"},
-    {19, "Diffuse"},
-    {20, "kD"},
+    {15, "Direction Shadow Map"},
+    {16, "Point Shadow Map"},
+    {17, "Reflection"},
+    {18, "Specular"},
+    {19, "Ambient"},
+    {20, "Diffuse"},
+    {21, "kD"},
 };
 
 
@@ -701,16 +702,9 @@ public:
             float lightZ = (float)cos(glfwGetTime()) * light_radius;
             sun_directional_light->transform().set_translation(glm::vec3(lightX, sun_directional_light->transform().get_translation().y, lightZ));
         }
-        //m_objects["square"]->transform().set_translation(model_position);
+
         // === END CONTROLS ===
 
-        /*
-        if (use_debug_cam)
-            engine_debug::draw_cube_deferred(
-                Transform{glm::vec3(0.0f), glm::vec3(0.1f)},
-                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-            );
-            */
         // ===== SHADOW MAP =====
         float fov = camera->fov;
         float ar = camera->aspect;
