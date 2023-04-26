@@ -724,7 +724,8 @@ public:
             sun_directional_light->transform().get_translation(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
-        // Nvidia Styles
+        // Nvidia implementation of view frustrum culling to only show whats in camera view.
+        // TODO: Bugfix: This may not be working correctly its worth investigating further
         glm::mat4 cam_view_matrix = camera->get_view_matrix();
         glm::mat4 cam_proj_matrix = camera->get_projection_matrix();
         glm::mat4 inverse_cam_view_matrix = glm::inverse(cam_view_matrix);
@@ -785,15 +786,14 @@ public:
         shadow_camera->set_view(
             sun_directional_light->transform().get_translation(), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
         );
-        //light_position
-        // SHADOW RENDERING
-        // DIRECTION SHADOWS
 
-        // Bind Shadow map shader here?!
+        // ===== SHADOW MAP GENERATION =====
+        // --- DIRECTION SHADOWS
+
         depth_map_shader->bind();
         shadow_map->bind();
         shadow_map_buffer->bind();
-        // Render things here
+
         Renderer::begin_scene(shadow_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
 
         for (auto& [name, object]: m_objects) {
@@ -806,14 +806,15 @@ public:
         shadow_map_buffer->unbind();
         shadow_map->unbind();
 
-        // RENDER POINT SHADOWS
+        // --- POINT SHADOWS
+        // TODO: Bugfix: This is not working correctly
         
         shadow_point_map->bind();
         depth_map_shader->bind();
         shadow_point_map_buffer->bind();
 
         for (unsigned int i = 0; i < 6; i++) {
-            // Why use a tuple over a struct?
+
             lookat_up view = point_shadow_views.at(i);
 
             // TODO: Optimisation: These can be processed in one render pass instead of 6 - can use a geometry shader to accomplish this.
@@ -839,7 +840,7 @@ public:
         shadow_point_map->unbind();
 
 
-        // === END SHADOW MAP ===
+        // ===== END SHADOW MAP GENERATION =====
 
         texture_shader->bind();
         int light_counter = 0;
@@ -869,7 +870,6 @@ public:
             width = Application::get().get_window().get_width();
             height = Application::get().get_window().get_height();
             float aspect = (float)width / (float)height;
-            //std::static_pointer_cast<PerspectiveCamera>(camera)->set_proj_matrix(45.0f, aspect, 0.1f, 100.0f);
         }
         if (use_shadow_cam) {
             current_camera = shadow_camera;
@@ -902,9 +902,11 @@ public:
         // Draw light positions
         for (auto& [name, object]: m_objects) {
             if (object->attached(Object::LIGHT)) {
-                glm::vec3 obj_pos = object->transform().get_translation();
-                Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
-                engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));
+                if (object->light().enabled) {
+                    glm::vec3 obj_pos = object->transform().get_translation();
+                    Transform t = { object->light().position + obj_pos, glm::vec3(0.05, 0.05, 0.05), glm::quat(1.0f, 0.0f, 0.0f, 0.0f) };
+                    engine_debug::draw_cube(t, glm::vec4(object->light().color, 1.0f));
+                }
             }
         }
 
