@@ -105,17 +105,19 @@ vec3 fresnel_schlick_roughness(float cos_theta, vec3 F0, float roughness) {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cos_theta, 5.0);
 }
 
-float shadow_calculation(vec4 frag_pos_light_space) {
+float shadow_calculation(vec4 frag_pos_light_space, vec3 light_position) {
     if (u_cast_shadows == 0 ) {
         return 0.0;
     }
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
+    // testing
     //float closest_depth = texture2D(shadow_map, proj_coords.xy).r;
+    // testing
     float current_depth = proj_coords.z;
     // Light 0 is always the direction light
     vec3 normal = normalize(f_normal);
-    vec3 light_dir = normalize(u_lights[0].position - f_worldpos);
+    vec3 light_dir = normalize(light_position - f_worldpos);
     float bias = max(0.0005 * (1.0 - dot(normal, light_dir)), 0.00005);
     //float bias = 0.0;
     //float shadow = current_depth  - bias > closest_depth ? 1.0: 0.0;
@@ -137,17 +139,19 @@ float shadow_calculation(vec4 frag_pos_light_space) {
 }
 
 float shadow_calculation_simple(vec3 frag_pos, vec3 light_position){
+
     vec3 frag_pos_vector = frag_pos.xyz - light_position;
 
     float closest_depth = texture(point_light_shadow_map, frag_pos_vector).r;
 
-    //closest_depth *= 20.0;
+    closest_depth *= 50.0;
 
     float current_depth = length(frag_pos_vector);
 
-    float bias = 0.05; 
+    float bias = 0.0005; 
     float shadow = current_depth -  bias > closest_depth ? 1.0 : 0.0;
-    return closest_depth;
+    //return closest_depth / 50.0;
+    return shadow;
 }
 
 
@@ -184,14 +188,14 @@ void main() {
         if (u_lights[i].direction) {  // Directional light
             light = -normalize(vec3(0) - u_lights[i].position);
             if (u_lights[i].cast_shadows){
-                shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space) * 0.5);
+                shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space, u_lights[i].position) * 0.5);
                 light = light * shadow_color;
             }
             
         } else {  //Attenuation is for a point light
             light = normalize(u_lights[i].position - f_worldpos);
             if (u_lights[i].cast_shadows){
-                point_shadow_color = shadow_calculation_simple(f_worldpos, u_lights[i].position);
+                point_shadow_color = 1.0 - shadow_calculation_simple(f_worldpos, u_lights[i].position);
                 light = light * point_shadow_color;
             }
             

@@ -1,6 +1,7 @@
 #version 450
 
 #define BIAS 0.01
+in vec4 frag_pos;
 
 out vec4 out_color;
 

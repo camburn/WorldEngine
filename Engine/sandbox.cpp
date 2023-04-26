@@ -139,6 +139,7 @@ public:
 
         std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map3.glsl";
         std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map3.glsl";
+        std::string fs_shadow_mapper_point = "./shaders/shadow_mapping/fragment_depth_map_point.glsl";
 
         // IBL Shaders
         std::string vs_file_ibl_equi_to_cube = "./shaders/IBL/vertex_cubemap3.glsl";
@@ -161,6 +162,7 @@ public:
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
+        depth_map_point_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper_point });
         //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
 
         // IBL Shaders
@@ -804,8 +806,11 @@ public:
         // TODO: Bugfix: This is not working correctly
         
         shadow_point_map->bind();
-        depth_map_shader->bind();
+        depth_map_point_shader->bind();
         shadow_point_map_buffer->bind();
+
+        depth_map_point_shader->upload_u_vec3("light_pos", point_light_green->transform().get_translation());
+        depth_map_point_shader->upload_u_float1("far_plane", 50.0f);
 
         for (unsigned int i = 0; i < 6; i++) {
 
@@ -813,7 +818,9 @@ public:
 
             // TODO: Optimisation: These can be processed in one render pass instead of 6 - can use a geometry shader to accomplish this.
             shadow_point_camera->set_view(
-                point_light_green->transform().get_translation(), view.look_at + point_light_green->transform().get_translation(), view.up
+                point_light_green->transform().get_translation(),
+                view.look_at + point_light_green->transform().get_translation(),
+                view.up
             );
             //Set the cubemap surface to draw to.
             shadow_point_map->set_data(i);
@@ -824,12 +831,12 @@ public:
             for (auto& [name, object]: m_objects) {
                 bool result = object->attached(Object::MESH);
                 if (object->attached(Object::MESH) && object->mesh()->draw) {
-                    Renderer::submit_entity(depth_map_shader, object->mesh(), object->transform());
+                    Renderer::submit_entity(depth_map_point_shader, object->mesh(), object->transform());
                 }
             }
         }
 
-        depth_map_shader->unbind();
+        depth_map_point_shader->unbind();
         shadow_point_map_buffer->unbind();
         shadow_point_map->unbind();
 
@@ -1027,6 +1034,7 @@ private:
 
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> depth_map_shader;
+    std::shared_ptr<Shader> depth_map_point_shader;
 
     std::shared_ptr<NewPerspectiveCamera> camera;
     std::shared_ptr<NewPerspectiveCamera> debug_camera;
@@ -1060,9 +1068,7 @@ private:
 
     glm::mat4 model_matrix {1.0f};
     glm::vec3 model_position {0.0f, -2.0f, 0.0f};
-    //glm::vec3 light_position {3, 3, 3};
     glm::vec3 light_color {0.01, 0.01, 0.01};
-    //glm::vec3 light_position_b {2, 0, 0};
     glm::vec3 light_color_b {0.2, 0.1, 0.1};
     glm::vec3 light_position_c {-2, 0, 0};
     glm::vec3 light_color_c {0.1, 0.2, 0.1};
