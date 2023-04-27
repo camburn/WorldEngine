@@ -16,8 +16,23 @@ namespace engine {
 Shader::Shader(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path)
         : vs_shader_path(vertex_shader_file_path), fs_shader_path(fragment_shader_file_path) {
 
+    gs_shader_path = "";
+    gs_data = "";
+
     GLuint id = enginegl::load_build_program(vertex_shader_file_path, fragment_shader_file_path,
         vs_data, fs_data);
+    ENGINE_ASSERT(id, "Shaders could not compile");
+    shader_id = id;
+    //bind();
+    inspect_uniforms();
+    inspect_attributes();
+}
+
+Shader::Shader(std::string& vertex_shader_file_path, std::string& geometry_shader_file_path, std::string& fragment_shader_file_path)
+    : vs_shader_path(vertex_shader_file_path), gs_shader_path(geometry_shader_file_path), fs_shader_path(fragment_shader_file_path) {
+
+    GLuint id = enginegl::load_build_program(vertex_shader_file_path, geometry_shader_file_path, fragment_shader_file_path,
+        vs_data, gs_data, fs_data);
     ENGINE_ASSERT(id, "Shaders could not compile");
     shader_id = id;
     //bind();
@@ -31,7 +46,7 @@ Shader::~Shader() {
 
 bool Shader::recompile() {
     ENGINE_INFO("Recompiling shaders");
-    GLuint id = enginegl::build_program(vs_data.data(), fs_data.data());
+    GLuint id = enginegl::build_program(vs_data.data(), fs_data.data(), gs_data.data());
     if (!id) return false;
     glDeleteProgram(shader_id);
     shader_id = id;
@@ -42,7 +57,7 @@ bool Shader::recompile() {
 }
 
 GLuint Shader::build() {
-    return enginegl::build_program(vs_shader_path, fs_shader_path);
+    return enginegl::build_program(vs_data.data(), fs_data.data(), gs_data.data());
 }
 
 void Shader::bind() {
@@ -174,12 +189,22 @@ void Shader::inspect_uniforms() {
     for (i = 0; i < count; i++) {
         glGetActiveUniform(shader_id, i, bufSize, &length, &size, &type, c_name);
         std::string name = std::string(c_name);
-        if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE ) {
+        if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE) {
             // Assign a texture unit
             GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
             uniforms.try_emplace(name, attribute_location, name, type, size, texture_unit);
             ENGINE_INFO("Uniform #{0} Type: {1} Name: {2} TextureUnit: {3}", i, enginegl::GLENUM_NAMES.at(type), name, texture_unit);
             texture_unit++;
+        }
+        else if (size > 1) {
+            std::string base_uniform_name = name.substr(0, name.find("["));
+            for (int n = 0; n < size; n++) {
+                std::string uniform_name = base_uniform_name + "[" + std::to_string(n) + "]";
+                GLint attribute_location = glGetUniformLocation(shader_id, uniform_name.c_str());
+                ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, uniform_name);
+                uniforms.try_emplace(uniform_name, attribute_location, uniform_name, type, size);
+            }
+
         } else {
             GLint attribute_location = glGetUniformLocation(shader_id, name.c_str());
             ENGINE_INFO("Uniform #{0}, Type: {1}, Size: {2} Name: {3}", attribute_location, enginegl::GLENUM_NAMES.at(type), size, name);

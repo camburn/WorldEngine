@@ -53,20 +53,49 @@ GLuint load_build_program(
     vs_data = read_file(vertex_shader_file_path);
     fs_data = read_file(fragment_shader_file_path);
 
-    return build_program(vs_data, fs_data);
+    return build_program(vs_data, fs_data, "");
 }
 
-GLuint build_program(std::string vs, std::string fs) {
+GLuint load_build_program(
+    std::string& vertex_shader_file_path,
+    std::string& geometry_shader_file_path,
+    std::string& fragment_shader_file_path,
+    std::string& vs_data,
+    std::string& gs_data,
+    std::string& fs_data) {
+
+    vs_data = read_file(vertex_shader_file_path);
+    gs_data = read_file(geometry_shader_file_path);
+    fs_data = read_file(fragment_shader_file_path);
+
+    return build_program(vs_data, fs_data, gs_data);
+}
+
+GLuint build_program(std::string vs, std::string fs, std::string gs) {
+    bool build_gs = true;
+    if (gs.empty()) {
+        build_gs = false;
+    }
 
     ENGINE_DEBUG("Building Program");
 
-    GLuint vertex_shader_id = load_shader(vs, glCreateShader(GL_VERTEX_SHADER));
-    GLuint fragment_shader_id = load_shader(fs, glCreateShader(GL_FRAGMENT_SHADER));
+    GLuint vertex_shader_id, fragment_shader_id, geometry_shader_id;
+    vertex_shader_id = load_shader(vs, glCreateShader(GL_VERTEX_SHADER));
+    fragment_shader_id = load_shader(fs, glCreateShader(GL_FRAGMENT_SHADER));
 
-    if (!vertex_shader_id || !fragment_shader_id) {
-        return 0;
+    if (build_gs) {
+        geometry_shader_id = load_shader(gs, glCreateShader(GL_GEOMETRY_SHADER));
+
+        if (!vertex_shader_id || !fragment_shader_id || !geometry_shader_id) {
+            return 0;
+        }
     }
-
+    else {
+        if (!vertex_shader_id || !fragment_shader_id) {
+            return 0;
+        }
+    }
+     
     GLuint program_id = glCreateProgram();
 
     GLint result = GL_FALSE;
@@ -76,6 +105,11 @@ GLuint build_program(std::string vs, std::string fs) {
 
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
+
+    if (build_gs) {
+        glAttachShader(program_id, geometry_shader_id);
+    }
+
     glLinkProgram(program_id);
 
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
@@ -102,6 +136,10 @@ GLuint build_program(std::string vs, std::string fs) {
     glDetachShader(program_id, fragment_shader_id);
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
+    if (build_gs) {
+        glDetachShader(program_id, geometry_shader_id);
+        glDeleteShader(geometry_shader_id);
+    }
     return program_id;
 }
 

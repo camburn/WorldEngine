@@ -139,6 +139,9 @@ public:
 
         std::string vs_shadow_mapper = "./shaders/shadow_mapping/vertex_depth_map3.glsl";
         std::string fs_shadow_mapper = "./shaders/shadow_mapping/fragment_depth_map3.glsl";
+
+        std::string vs_shadow_mapper_point = "./shaders/shadow_mapping/vertex_depth_map_point.glsl";
+        std::string gs_shadow_mapper_point = "./shaders/shadow_mapping/geometry_depth_map_point.glsl";
         std::string fs_shadow_mapper_point = "./shaders/shadow_mapping/fragment_depth_map_point.glsl";
 
         // IBL Shaders
@@ -162,7 +165,7 @@ public:
 
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
-        depth_map_point_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper_point });
+        depth_map_point_shader.reset(new Shader{ vs_shadow_mapper_point, gs_shadow_mapper_point, fs_shadow_mapper_point });
         //simple_shader.reset(new Shader{ vs_file_simple, fs_file_simple });
 
         // IBL Shaders
@@ -393,7 +396,7 @@ public:
         shadow_map = TextureDepth::create(shadow_map_width, shadow_map_height);
         shadow_map_buffer = FrameBuffer::create(shadow_map);
 
-        shadow_point_map = TextureCubeMap::create(shadow_map_width, shadow_map_height, engine::DEPTH_COMPONENT, false, NEAREST, NEAREST);
+        shadow_point_map = TextureCubeMap::create(shadow_map_width, shadow_map_height, engine::DEPTH_COMPONENT, false, LINEAR, LINEAR);
         shadow_point_map_buffer = FrameBuffer::create(shadow_point_map);
 
     }
@@ -811,6 +814,9 @@ public:
 
         depth_map_point_shader->upload_u_vec3("light_pos", point_light_green->transform().get_translation());
         depth_map_point_shader->upload_u_float1("far_plane", 50.0f);
+        
+
+        //depth_map_point_shader->upload
 
         for (unsigned int i = 0; i < 6; i++) {
 
@@ -822,17 +828,19 @@ public:
                 view.look_at + point_light_green->transform().get_translation(),
                 view.up
             );
+            depth_map_point_shader->upload_u_mat4("u_view_projections[" + std::to_string(i) + "]", shadow_point_camera->get_view_projection_matrix());
             //Set the cubemap surface to draw to.
-            shadow_point_map->set_data(i);
-            Renderer::begin_scene(shadow_point_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
+            //shadow_point_map->set_data(i);
 
-            //Draw the objects
-            // TODO: Optimisation: Add a depth check on objects to see if they are in range of the light otherwise don't draw them.
-            for (auto& [name, object]: m_objects) {
-                bool result = object->attached(Object::MESH);
-                if (object->attached(Object::MESH) && object->mesh()->draw) {
-                    Renderer::submit_entity(depth_map_point_shader, object->mesh(), object->transform());
-                }
+        }
+        Renderer::begin_scene(shadow_point_camera, { glm::vec4(1.0f), shadow_map_width, shadow_map_height });
+
+        //Draw the objects
+        // TODO: Optimisation: Add a depth check on objects to see if they are in range of the light otherwise don't draw them.
+        for (auto& [name, object] : m_objects) {
+            bool result = object->attached(Object::MESH);
+            if (object->attached(Object::MESH) && object->mesh()->draw) {
+                Renderer::submit_entity(depth_map_point_shader, object->mesh(), object->transform());
             }
         }
 

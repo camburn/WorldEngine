@@ -16,6 +16,7 @@ namespace engine {
 class Shader {
 public:
     Shader(std::string &vertex_shader_file_path, std::string &fragment_shader_file_path);
+    Shader(std::string &vertex_shader_file_path, std::string &geometry_shader_file_path, std::string &fragment_shader_file_path);
     ~Shader();
     void bind();
     void unbind();
@@ -80,8 +81,10 @@ private:
     std::map<int, Attribute> attributes;
     std::set<unsigned int> registered_vertex_arrays;
     std::string vs_shader_path;
+    std::string gs_shader_path;
     std::string fs_shader_path;
     std::string fs_data;
+    std::string gs_data;
     std::string vs_data;
 
     GLuint build();
