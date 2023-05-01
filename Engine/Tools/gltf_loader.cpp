@@ -127,6 +127,8 @@ void draw_node_graph(NodeObject &root_node) {
     ImGui::End();
 }
 
+
+
 TextureObject process_texture(std::shared_ptr<Model> &model, Texture& texture, std::string name, const std::shared_ptr<engine::Shader> &shader) {
     Sampler sampler; //Use default sampler if one is not specified
     if (texture.sampler > -1) {
@@ -169,7 +171,7 @@ TextureObject process_default_texture(
 TextureObject process_default_texture(
     std::shared_ptr<Model> &model, std::string name, const std::shared_ptr<engine::Shader> &shader, unsigned char color = 0xff) {
         return process_default_texture(model, name, shader, color, color, color);
-    }
+    } 
 
 MaterialObject process_material(std::shared_ptr<Model> &model, Material &material,
         const std::shared_ptr<engine::Shader> &shader) {
@@ -219,6 +221,12 @@ MaterialObject process_material(std::shared_ptr<Model> &model, Material &materia
         material_object.textures.push_back(
             process_texture(model, model->textures[mr_index], "roughness_metallic", shader)
         );
+    } else {
+        double metallicFactor = material.pbrMetallicRoughness.metallicFactor;
+        double roughnessFactor = material.pbrMetallicRoughness.roughnessFactor;
+        material_object.textures.push_back(
+            process_default_texture(model, "roughness_metallic", shader, 0x00, roughnessFactor * 255, metallicFactor * 255)
+         );
     }
     int ao_index = material.occlusionTexture.index;
     if (ao_index > -1) {
@@ -469,3 +477,12 @@ NodeObject gltf_to_opengl(ModelObjects& m_obj, std::shared_ptr<Model> &model, co
     return node_object;
 }
  
+
+
+void show_materials() {
+    for (auto& [index, material] : map_materials) {
+        for (TextureObject& texture : material.textures) {
+            //texture.
+        }
+    }
+}

@@ -536,8 +536,7 @@ public:
 
                         ImGui::EndTabItem();
                     }
-                    if (object->attached(Object::MESH) && ImGui::BeginTabItem("Mesh"))
-                    {
+                    if (object->attached(Object::MESH) && ImGui::BeginTabItem("Mesh")) {
                         glm::vec3 translation = object->transform().get_translation();
                         glm::vec3 scale = object->transform().get_scale();
                         glm::quat rotation = object->transform().get_rotation();
@@ -552,6 +551,17 @@ public:
                         object->transform().set_rotation(rotation);
 
                         ImGui::EndTabItem();
+                    }
+                    if (object->attached(Object::MESH) && ImGui::BeginTabItem("Mesh Heirachy")) {
+                        const std::shared_ptr<GltfEntity> &gltf_entity = std::static_pointer_cast<GltfEntity>(object->mesh());
+                        if (gltf_entity != nullptr) {
+                            NodeObject &node = gltf_entity->get_node();
+
+                            draw_node_graph(node);
+
+                            ImGui::EndTabItem();
+                        }
+                        
                     }
                     if (object->attached(Object::LIGHT) && ImGui::BeginTabItem("Light")) {
                         int misc_flags = ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoInputs;

@@ -131,7 +131,7 @@ float shadow_calculation(vec4 frag_pos_light_space, vec3 light_position) {
             shadow += current_depth - bias > pcf_depth ? 1.0: 0.0;
         }
     }
-    shadow /= 16.0;
+    shadow /= 8.0;
 
     if (proj_coords.z > 1.0) shadow = 0.0;
 
@@ -171,7 +171,7 @@ void main() {
     vec3 R = reflect(-V, N);
 
     const vec3 f_dielectric = vec3(0.04);
-     vec3 F0 = mix(f_dielectric, albedo_sample.xyz, metallic);
+    vec3 F0 = mix(f_dielectric, albedo_sample.xyz, metallic);
 
     vec3 light_dot = vec3(0.0);
 
@@ -190,20 +190,21 @@ void main() {
         if (u_lights[i].direction) {  // Directional light
             light = -normalize(vec3(0) - u_lights[i].position);
             if (u_lights[i].cast_shadows){
-                shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space, u_lights[i].position) * 0.5);
+                shadow_color = 1.0 - (shadow_calculation(f_frag_pos_light_space, u_lights[i].position));
                 light = light * shadow_color;
             }
             
         } else {  //Attenuation is for a point light
             light = normalize(u_lights[i].position - f_worldpos);
-            if (u_lights[i].cast_shadows){
-                point_shadow_color = 1.0 - shadow_calculation_simple(f_worldpos, u_lights[i].position);
-                light = light * point_shadow_color;
-            }
-            
+
             float distance = length(u_lights[i].position - f_worldpos);
             float attenuation = 1.0 / (distance * distance);
             radiance *= attenuation;
+            if (u_lights[i].cast_shadows) {
+                point_shadow_color = 1.0 - shadow_calculation_simple(f_worldpos, u_lights[i].position);
+                point_shadow_color *= attenuation;
+                light = light * point_shadow_color;
+            }
         }
         // Not using it results in a directional light
 
