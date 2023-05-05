@@ -122,6 +122,23 @@ public:
     static std::shared_ptr<VertexBuffer> create(void* vertices, uint32_t size);
 };
 
+
+class ShaderStorageBuffer {
+public:
+    virtual ~ShaderStorageBuffer() = default;
+
+    virtual void bind() const = 0;
+    virtual void bind(uint32_t index) const = 0;
+    virtual void unbind() const = 0;
+
+    virtual void read_data() = 0;
+
+    virtual const engine::BufferLayout& get_layout() const = 0;
+    virtual void set_layout(const engine::BufferLayout& layout) = 0;
+
+    static std::shared_ptr<ShaderStorageBuffer> create(void* vertices, uint32_t size);
+};
+
 class IndexBuffer {
 public:
     virtual ~IndexBuffer() = default;

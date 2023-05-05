@@ -3,15 +3,15 @@
     "name": "Cube",
     "id": "cube_instance_1",
     "transform": {
-      "translation": [-2.0, 0.5, 3.0],
-      "scale": [0.5, 0.5, 0.5]
+      "translation": [ -2.0, 0.5, 3.0 ],
+      "scale": [ 0.5, 0.5, 0.5 ]
     },
     "mesh": "cube_mesh",
     "collider": {
       "transform": {
-        "translation": [0.0, 0.0, 0.0]
+        "translation": [ 0.0, 0.0, 0.0 ]
       },
-      "size": [1.0, 1.0, 1.0]
+      "size": [ 1.0, 1.0, 1.0 ]
     },
     "script": "cube"
   },
@@ -19,16 +19,43 @@
     "name": "Damaged Helmet",
     "id": "damaged_helmet",
     "transform": {
-      "translation": [0.0, 1.8, -2.0]
+      "translation": [ 0.0, 1.8, -2.0 ]
     },
     "mesh": "damaged_helmet_mesh"
+  },
+  {
+    "name": "Island",
+    "id": "island_base",
+    "transform": {
+      "translation": [ 0.0, 0.0, 0.0 ],
+      "scale": [ 0.01, 0.01, 0.01 ]
+    },
+    "mesh": "sea_keep_lonely_watcher"
+  },
+  {
+    "name": "Plants Pack",
+    "id": "plants_pack",
+    "transform": {
+      "translation": [ 0.0, 0.0, 0.0 ],
+      "scale": [ 1.0, 1.0, 1.0 ]
+    },
+    "mesh": "plants_pack_mesh"
+  },
+  {
+    "name": "Castle of Loarre",
+    "id": "castle_of_loarre",
+    "transform": {
+      "translation": [ 0.0, 0.0, 0.0 ],
+      "scale": [ 0.050, 0.050, 0.050 ]
+    },
+    "mesh": "castle_of_loarre_mesh"
   },
   {
     "name": "Flight Helmet",
     "id": "flight_helmet",
     "transform": {
-      "translation": [3.0, 1.8, 0.0],
-      "scale": [4, 4, 4]
+      "translation": [ 3.0, 1.8, 0.0 ],
+      "scale": [ 4, 4, 4 ]
     },
     "mesh": "flight_helmet_mesh"
   },
@@ -36,10 +63,19 @@
     "name": "Castle",
     "id": "castle",
     "transform": {
-      "translation": [0.0, 0.0, -2.0],
-      "scale": [10, 10, 10]
+      "translation": [ 0.0, 0.0, -2.0 ],
+      "scale": [ 10, 10, 10 ]
     },
     "mesh": "castle_mesh"
+  },
+  {
+    "name": "Walking",
+    "id": "walking",
+    "transform": {
+      "translation": [ 0.0, 0.0, 0.0 ],
+      "scale": [ 1, 1, 1 ]
+    },
+    "mesh": "walking_mesh"
   },
   {
     "name": "MRA Environment Test",
@@ -50,11 +86,11 @@
     "name": "Green Light",
     "id": "green_light",
     "transform": {
-      "translation": [-2.0, 1.0, 0.0]
+      "translation": [ -2.0, 1.0, 0.0 ]
     },
     "light": {
       "type": "point",
-      "color": [0.1, 0.2, 0.1]
+      "color": [ 0.1, 0.2, 0.1 ]
     },
     "script": "green_light_script"
   },
@@ -62,22 +98,22 @@
     "name": "Red Light",
     "id": "red_light",
     "transform": {
-      "translation": [1.5, 2.0, 0.0]
+      "translation": [ 1.5, 2.0, 0.0 ]
     },
     "light": {
       "type": "point",
-      "color": [0.2, 0.1, 0.1]
+      "color": [ 0.2, 0.1, 0.1 ]
     }
   },
   {
     "name": "Sky Light",
     "id": "sky_light",
     "transform": {
-      "translation": [3.0, 3.0, 3.0]
+      "translation": [ 3.0, 3.0, 3.0 ]
     },
     "light": {
       "type": "direction",
-      "color": [0.01, 0.01, 0.01]
+      "color": [ 0.12, 0.06, 0.01 ]
     }
   },
   {
@@ -85,22 +121,22 @@
     "id": "rusted_sphere",
     "primitive": "sphere",
     "transform": {
-      "translation": [-3.0, 1.5, 0.0]
+      "translation": [ -3.0, 1.5, 0.0 ]
     },
     "textures": [
-      { 
+      {
         "type": "albedo",
         "texture": "rustediron2_basecolor"
       },
-      { 
+      {
         "type": "normal",
         "texture": "rustediron2_normal"
       },
-      { 
+      {
         "type": "roughness_metallic",
         "texture": "rustediron2_mra"
       },
-      { 
+      {
         "type": "ambient",
         "texture": "rustediron2_mra"
       }
@@ -112,19 +148,19 @@
     "id": "ground_plane",
     "primitive": "plane",
     "transform": {
-      "translation": [0.0, 0.0, 0.0],
-      "scale": [10.0, 10.0, 10.0]
+      "translation": [ 0.0, 0.0, 0.0 ],
+      "scale": [ 10.0, 10.0, 10.0 ]
     },
     "textures": [
-      { 
+      {
         "type": "albedo",
         "texture": "template_grid_albedo"
       },
-      { 
+      {
         "type": "normal",
         "texture": "template_grid_normal"
       },
-      { 
+      {
         "type": "ambient",
         "texture": "template_grid_rma"
       }

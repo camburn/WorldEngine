@@ -24,6 +24,10 @@ void Entity::add_vertex_array(std::shared_ptr<VertexArray> vao) {
     vaos.push_back(std::move(vao));
 }
 
+bool Entity::animated() {
+    return has_animations;
+}
+
 void CustomEntity::add_attribute_data(std::string name, std::vector<glm::vec4> &data) {
     if (attribute_size <= 0) {
         attribute_size = data.size();
@@ -154,6 +158,7 @@ std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
     if (!ret) ENGINE_ASSERT(false, "Failed to parse glTF");
 
     std::shared_ptr<GltfEntity> entity = std::make_shared<GltfEntity>(model);
+
     entity->file_name = file_name;
 
     return entity; 
@@ -161,9 +166,19 @@ std::shared_ptr<GltfEntity> GltfEntity::load_from_file(std::string file_name) {
 
 GltfEntity::GltfEntity(std::shared_ptr<tinygltf::Model> model_data) {
     model = model_data;
+    if (model->animations.size() > 0) {
+        // This entity has animations - mark it as so
+        has_animations = true;
+    }
 }
 
 void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
+    if (animated()) {
+        for (std::shared_ptr<ShaderStorageBuffer> ssbo : ssbos) {
+            //shader-> Check if shader supports animations
+            ssbo->bind(0);
+        }
+    }
     if (buffered) return;
     if (handled_shaders.count(shader->get_id()) > 0 ) return;
     ModelObjects m_obj;
@@ -171,6 +186,7 @@ void GltfEntity::update_buffers(const std::shared_ptr<Shader>& shader) {
     node_object = gltf_to_opengl(m_obj, model, shader);
     texture_ids = m_obj.texture_ids;
     vaos = m_obj.vaos;
+    ssbos = m_obj.ssbos;
     handled_shaders.emplace(shader->get_id());
     buffered = true;
     min_extents = m_obj.min_extents;

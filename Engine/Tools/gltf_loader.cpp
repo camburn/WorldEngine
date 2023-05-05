@@ -276,6 +276,14 @@ std::shared_ptr<engine::VertexBuffer> process_buffer_view(std::shared_ptr<Model>
     );
 }
 
+std::shared_ptr<engine::ShaderStorageBuffer> process_ssbo_view(std::shared_ptr<Model>& model, BufferView& buffer_view) {
+    ENGINE_TRACE("Processed Vertex Buffer; Offset: {0}, Length: {1}", buffer_view.byteOffset, buffer_view.byteLength);
+    return engine::ShaderStorageBuffer::create(
+        &model->buffers[buffer_view.buffer].data.at(0) + buffer_view.byteOffset,
+        buffer_view.byteLength
+    );
+}
+
 void describe_buffer(Accessor &accessor, uint32_t location, uint32_t stride) {
     ENGINE_TRACE("glVertexAttribPointer({0}, {1}, {2}, {3}, {4}, {5})",
         location,
@@ -305,6 +313,7 @@ MeshObject process_mesh(
         ModelObjects& m_obj, std::shared_ptr<Model> &model, Mesh &mesh,
         const std::shared_ptr<engine::Shader> &shader) {
     MeshObject mesh_object;
+    ENGINE_INFO("Processing mesh: {0}", mesh.name);
     for (Primitive &primitive: mesh.primitives) {
         PrimitiveObject primitive_object;
         primitive_object.vao = engine::VertexArray::create();
@@ -368,9 +377,26 @@ MeshObject process_mesh(
                 GLuint attr_loc = shader->attribute_location(name);
                 describe_buffer(accessor, attr_loc, buffer_view.byteStride);
             }
+            else {
+                ENGINE_DEBUG("Shader does not support primitive attribute {0}", name);
+            }
         }
         vao->unbind();
         mesh_object.primitives.push_back(primitive_object);
+    }
+
+    for (Skin& primitive : model->skins) {
+        int accessor_view_index = primitive.inverseBindMatrices;
+        Accessor accessor = model->accessors[accessor_view_index];
+        BufferView buffer_view = model->bufferViews[accessor.bufferView];
+        if (accessor.type == TINYGLTF_TYPE_MAT4) {
+            std::shared_ptr<engine::ShaderStorageBuffer> ssbo = process_ssbo_view(model, buffer_view);
+            m_obj.ssbos.push_back(ssbo);
+        }
+        else {
+            ENGINE_WARN("Accessor type {0} not supported for skins", accessor.type);
+        }
+
     }
     // Calculate object extent
     for (auto &prim: mesh_object.primitives) {

@@ -1,57 +1,77 @@
 [
-    {
-        "path": "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf",
-        "type": "mesh",
-        "name": "damaged_helmet_mesh"
-    },
-    {
-        "path": "./assets/gltf/FlightHelmet/FlightHelmet.gltf",
-        "type": "mesh",
-        "name": "flight_helmet_mesh"
-    },
-    {
-        "path": "./assets/gltf/EnvironmentTest/EnvironmentTest.gltf",
-        "type": "mesh",
-        "name": "mra_environment_test_mesh"
-    },
-    {
-        "path": "./assets/gltf/Cube/Cube.gltf",
-        "type": "mesh",
-        "name": "cube_mesh"
-    },
-    {
-        "path": "./assets/textures/rusted_iron/rustediron2_basecolor.png",
-        "type": "texture",
-        "name": "rustediron2_basecolor"
-    },
-    {
-        "path": "./assets/textures/rusted_iron/rustediron2_normal.png",
-        "type": "texture",
-        "name": "rustediron2_normal"
-    },
-    {
-        "path": "./assets/textures/rusted_iron/rustediron2_mra.png",
-        "type": "texture",
-        "name": "rustediron2_mra"
-    },
-    {
-        "path": "./assets/gltf/Castle/castle.gltf",
-        "type": "mesh",
-        "name": "castle_mesh"
-    },
-    {
-        "path": "./assets/textures/templategrid_albedo.png",
-        "type": "texture",
-        "name": "template_grid_albedo"
-    },
-    {
-        "path": "./assets/textures/templategrid_normal.png",
-        "type": "texture",
-        "name": "template_grid_normal"
-    },
-    {
-        "path": "./assets/textures/templategrid_rma.png",
-        "type": "texture",
-        "name": "template_grid_rma"
-    }
+  {
+    "path": "./assets/gltf/DamagedHelmet/DamagedHelmet.gltf",
+    "type": "mesh",
+    "name": "damaged_helmet_mesh"
+  },
+  {
+    "path": "./assets/gltf/FlightHelmet/FlightHelmet.gltf",
+    "type": "mesh",
+    "name": "flight_helmet_mesh"
+  },
+  {
+    "path": "./assets/gltf/sea_keep_lonely_watcher/scene.gltf",
+    "type": "mesh",
+    "name": "sea_keep_lonely_watcher"
+  },
+  {
+    "path": "./assets/gltf/TropicalPlantsPack/scene.gltf",
+    "type": "mesh",
+    "name": "plants_pack_mesh"
+  },
+  {
+    "path": "./assets/gltf/CastleOfLoarre/scene.gltf",
+    "type": "mesh",
+    "name": "castle_of_loarre_mesh"
+  },
+  {
+    "path": "./assets/gltf/Walking/Walking.gltf",
+    "type": "mesh",
+    "name": "walking_mesh"
+  },
+  {
+    "path": "./assets/gltf/EnvironmentTest/EnvironmentTest.gltf",
+    "type": "mesh",
+    "name": "mra_environment_test_mesh"
+  },
+  {
+    "path": "./assets/gltf/Cube/Cube.gltf",
+    "type": "mesh",
+    "name": "cube_mesh"
+  },
+  {
+    "path": "./assets/textures/rusted_iron/rustediron2_basecolor.png",
+    "type": "texture",
+    "name": "rustediron2_basecolor"
+  },
+  {
+    "path": "./assets/textures/rusted_iron/rustediron2_normal.png",
+    "type": "texture",
+    "name": "rustediron2_normal"
+  },
+  {
+    "path": "./assets/textures/rusted_iron/rustediron2_mra.png",
+    "type": "texture",
+    "name": "rustediron2_mra"
+  },
+  {
+    "path": "./assets/gltf/Castle/castle.gltf",
+    "type": "mesh",
+    "name": "castle_mesh"
+  },
+  {
+    "path": "./assets/textures/templategrid_albedo.png",
+    "type": "texture",
+    "name": "template_grid_albedo"
+  },
+  {
+    "path": "./assets/textures/templategrid_normal.png",
+    "type": "texture",
+    "name": "template_grid_normal"
+  },
+  {
+    "path": "./assets/textures/templategrid_rma.png",
+    "type": "texture",
+    "name": "template_grid_rma"
+  }
 ]

@@ -134,6 +134,7 @@ public:
         std::string vs_file_simple = "./shaders/vertex_simple.glsl";
         std::string fs_file_simple = "./shaders/fragment_simple.glsl";
 
+        std::string vs_file_animated_texture = "./shaders/vertex_animated.glsl";
         std::string vs_file_texture = "./shaders/vertex.glsl";
         std::string fs_file_texture = "./shaders/fragment.glsl";
 
@@ -163,6 +164,7 @@ public:
 
         script_init(); // Initialise Python Scripting
 
+        animated_texture_shader.reset(new Shader{ vs_file_animated_texture, fs_file_texture });
         texture_shader.reset(new Shader{ vs_file_texture, fs_file_texture });
         depth_map_shader.reset(new Shader{ vs_shadow_mapper, fs_shadow_mapper });
         depth_map_point_shader.reset(new Shader{ vs_shadow_mapper_point, gs_shadow_mapper_point, fs_shadow_mapper_point });
@@ -366,9 +368,24 @@ public:
         deserialise_object();
 
         for (auto& [name, entity]: m_entities) {
-            entity->update_buffers(texture_shader);
-            entity->draw = false;
+            if (!entity->animated()) {
+                entity->update_buffers(texture_shader);
+                entity->draw = false;
+            }
         }
+
+        texture_shader->unbind();
+
+        animated_texture_shader->bind();
+
+        for (auto& [name, entity] : m_entities) {
+            if (entity->animated()) {
+                entity->update_buffers(animated_texture_shader);
+                entity->draw = false;
+            }
+        }
+
+        animated_texture_shader->unbind();
 
         for (auto& [name, object]: m_objects) {
             if (!object->attached(Object::COLLIDER)
@@ -913,10 +930,52 @@ public:
         }
 
         for (auto& [name, object]: m_objects) {
-            if (object->attached(Object::MESH) && object->mesh()->draw) {
+            if (object->attached(Object::MESH) && object->mesh()->draw && !object->mesh()->animated()) {
                 Renderer::submit_entity(texture_shader, object->mesh(), object->transform());
             }
         }
+
+
+        // Horrible copy-paste job for animation shader - all this per shader code needs to be set in a nicer way
+        if (true) {
+            animated_texture_shader->bind();
+            int light_counter = 0;
+            for (auto& [name, object] : m_objects) {
+                if (object->attached(Object::LIGHT)) {
+                    std::string u_light_name = "u_lights[" + std::to_string(light_counter) + "]";
+                    // TODO: Get a final transform (object + light) to get a position in a better way
+                    glm::vec3 obj_pos = object->transform().get_translation();
+                    animated_texture_shader->upload_u_vec3(u_light_name + ".position", object->light().position + obj_pos);
+                    animated_texture_shader->upload_u_vec3(u_light_name + ".color", object->light().get_hdr_color());
+                    animated_texture_shader->upload_u_int1(u_light_name + ".cast_shadows", object->light().cast_shadows);
+                    animated_texture_shader->upload_u_int1(u_light_name + ".enabled", object->light().enabled);
+                    animated_texture_shader->upload_u_int1(u_light_name + ".direction", object->light().direction);
+                    light_counter += 1;
+                }
+            }
+
+            animated_texture_shader->upload_u_vec3("u_camera_position", camera->get_position());
+            animated_texture_shader->upload_u_int1("u_render_mode", render_mode);
+            animated_texture_shader->upload_u_int1("u_cast_shadows", cast_shadows);
+            animated_texture_shader->upload_u_mat4("u_light_space_matrix", shadow_camera->get_view_projection_matrix());
+            shadow_map->bind(animated_texture_shader->uniform_texture_unit("shadow_map"));
+            shadow_point_map->bind(animated_texture_shader->uniform_texture_unit("point_light_shadow_map"));
+            irradiance_map->bind(animated_texture_shader->uniform_texture_unit("irradiance_map"));
+            prefilter_map->bind(animated_texture_shader->uniform_texture_unit("prefilter_map"));
+            if (use_generated_brdf) {
+                brdf_map->bind(animated_texture_shader->uniform_texture_unit("brdf_map"));
+            }
+            else {
+                brdf_map_file->bind(animated_texture_shader->uniform_texture_unit("brdf_map"));
+            }
+
+            for (auto& [name, object] : m_objects) {
+                if (object->attached(Object::MESH) && object->mesh()->draw && object->mesh()->animated()) {
+                    Renderer::submit_entity(animated_texture_shader, object->mesh(), object->transform());
+                }
+            }
+        }
+        // End main render pass
 
         // Draw light positions
         for (auto& [name, object]: m_objects) {
@@ -1050,6 +1109,7 @@ private:
     std::shared_ptr<Shader> brdf_shader;
     std::shared_ptr<Shader> skybox_shader;
 
+    std::shared_ptr<Shader> animated_texture_shader;
     std::shared_ptr<Shader> texture_shader;
     std::shared_ptr<Shader> depth_map_shader;
     std::shared_ptr<Shader> depth_map_point_shader;

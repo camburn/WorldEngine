@@ -40,6 +40,38 @@ void OpenGLVertexBuffer::read_data() {
     ENGINE_WARN("Reading buffer data");
 }
 
+//SSBO
+OpenGLShaderStorageBuffer::OpenGLShaderStorageBuffer(void* data, uint32_t size) {
+    buffer_size = size;
+    glGenBuffers(1, &ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_STATIC_READ);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    ENGINE_TRACE("SSBO {0} created", ssbo);
+}
+
+OpenGLShaderStorageBuffer::~OpenGLShaderStorageBuffer() {
+    glDeleteBuffers(1, &ssbo);
+    //ENGINE_TRACE("Vertex buffer {0} garbage collected", vertex_buffer);
+}
+
+void OpenGLShaderStorageBuffer::bind() const {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+}
+
+void OpenGLShaderStorageBuffer::bind(uint32_t index) const {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, ssbo);
+}
+
+void OpenGLShaderStorageBuffer::unbind() const {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void OpenGLShaderStorageBuffer::read_data() {
+    
+}
+
 // IndexBuffer
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(std::shared_ptr<OpenGLIndexBuffer> &other, uint32_t count, uint32_t offset): count(count), offset(offset) {

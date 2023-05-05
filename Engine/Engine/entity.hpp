@@ -33,6 +33,8 @@ public:
 
     virtual void on_ui_render(bool display) = 0;
 
+    bool animated();
+
     std::vector<std::shared_ptr<VertexArray>>::iterator begin() { return vaos.begin(); }
     std::vector<std::shared_ptr<VertexArray>>::iterator end() { return vaos.end(); }
     std::vector<std::shared_ptr<VertexArray>>::const_iterator begin() const { return vaos.begin(); }
@@ -53,6 +55,8 @@ public:
 
 protected:
     std::vector<std::shared_ptr<VertexArray>> vaos;
+    std::vector<std::shared_ptr<ShaderStorageBuffer>> ssbos;
+    bool has_animations = false;
 };
 
 class CustomEntity: public Entity {
@@ -129,6 +133,7 @@ private:
     std::unordered_set<uint32_t> handled_shaders;
     NodeObject node_object;
     bool buffered = false;
+
 };
 
 } // Namespace

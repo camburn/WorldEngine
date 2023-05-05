@@ -18,6 +18,7 @@
 struct ModelObjects {
     std::vector<GLuint> texture_ids;
     std::vector<std::shared_ptr<engine::VertexArray>> vaos;
+    std::vector<std::shared_ptr<engine::ShaderStorageBuffer>> ssbos;
     glm::vec3 min_extents {0.0f};
     glm::vec3 max_extents {0.0f};
 };

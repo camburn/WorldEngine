@@ -9,6 +9,10 @@ std::shared_ptr<VertexBuffer> VertexBuffer::create(void* vertices, uint32_t size
     return std::make_shared<enginegl::OpenGLVertexBuffer>(vertices, size);
 }
 
+std::shared_ptr<ShaderStorageBuffer> ShaderStorageBuffer::create(void* vertices, uint32_t size) {
+    return std::make_shared<enginegl::OpenGLShaderStorageBuffer>(vertices, size);
+}
+
 std::shared_ptr<IndexBuffer> IndexBuffer::create(std::shared_ptr<IndexBuffer> buffer, uint32_t count, uint32_t offset) {
     auto gl_buffer = std::dynamic_pointer_cast<enginegl::OpenGLIndexBuffer>(buffer);
     return std::make_shared<enginegl::OpenGLIndexBuffer>(gl_buffer, count, offset);

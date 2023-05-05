@@ -33,9 +33,6 @@ void deserialise_assets () {
 
     for (auto &object: assets_json) {
         if (object["type"] == "mesh") {
-            if (object["name"] == "sea_keep_lonely_watcher") {
-                ENGINE_DEBUG("Processing::sea_keep_lonely_watcher");
-            }
             m_entities[object["name"]] = GltfEntity::load_from_file(object["path"]);
             m_entities[object["name"]]->name = object["name"];
         } else if (object["type"] == "texture") {

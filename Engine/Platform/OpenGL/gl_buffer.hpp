@@ -26,6 +26,28 @@ private:
     engine::BufferLayout m_layout;
 };
 
+class OpenGLShaderStorageBuffer : public engine::ShaderStorageBuffer {
+public:
+    OpenGLShaderStorageBuffer(void* vertices, uint32_t size);
+
+    virtual ~OpenGLShaderStorageBuffer();
+
+    virtual void bind() const override;
+    void bind(uint32_t index) const;
+
+    virtual void unbind() const override;
+
+    virtual void read_data() override;
+
+    virtual const engine::BufferLayout& get_layout() const override { return m_layout; }
+    virtual void set_layout(const engine::BufferLayout& layout) override { m_layout = layout; }
+
+private:
+    uint32_t buffer_size;
+    uint32_t ssbo;
+    engine::BufferLayout m_layout;
+};
+
 class OpenGLIndexBuffer: public engine::IndexBuffer {
 public:
     OpenGLIndexBuffer(uint32_t* indices, uint32_t count);

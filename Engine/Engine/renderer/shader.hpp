@@ -50,7 +50,9 @@ private:
         {"POSITION", "position"},
         {"NORMAL", "normal"},
         {"TEXCOORD_0", "texcoord"},
-        {"TANGENT", "tangent"}
+        {"TANGENT", "tangent"},
+        {"WEIGHTS_0", "weights_0"},
+        {"JOINTS_0", "joints_o"}
     };
     
     struct Uniform {
