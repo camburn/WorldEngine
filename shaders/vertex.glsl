@@ -4,6 +4,12 @@ layout(location=0) in vec4 position;
 layout(location=1) in vec4 normal;
 layout(location=2) in vec2 texcoord;
 
+layout (std140, binding = 0) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
+
 uniform mat4 u_view_projection;
 uniform mat4 u_model;
 uniform mat4 u_light_space_matrix;
@@ -20,5 +26,5 @@ void main() {
     
     f_worldpos = (u_model * vec4(position.xyz, 1)).xyz;
     f_frag_pos_light_space = u_light_space_matrix * vec4(f_worldpos, 1);
-    gl_Position = u_view_projection * u_model * position;
+    gl_Position = u_view_projection * u_model * position * projection;
 }

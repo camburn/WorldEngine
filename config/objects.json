@@ -109,12 +109,13 @@
     "name": "Sky Light",
     "id": "sky_light",
     "transform": {
-      "translation": [ 3.0, 3.0, 3.0 ]
+      "translation": [ 0.0, 5.0, 0.0 ]
     },
     "light": {
       "type": "direction",
       "color": [ 0.12, 0.06, 0.01 ]
-    }
+    },
+    "script": "sky_light_script"
   },
   {
     "name": "Rusted Sphere",

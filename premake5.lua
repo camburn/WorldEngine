@@ -167,7 +167,7 @@ project "Engine"
 
         includedirs
         {
-            "C:/Program Files/Python311/include",
+            "D:/Programs/Python311/include",
         }
 
         defines
@@ -179,7 +179,7 @@ project "Engine"
 
         libdirs
         {
-            "C:/Program Files/Python311/libs"
+            "D:/Programs/Python311/libs"
         }
 
         links 

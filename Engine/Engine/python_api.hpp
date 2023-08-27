@@ -52,6 +52,8 @@ public:
 
 private:
     bool script_failed = false;
+    friend PyObject* py_script_set_enabled(PythonScript* self, PyObject* args, PyObject* kwargs);
+    friend PyObject* py_script_get_enabled(PythonScript* self, PyObject* Py_UNUSED(ignored));
     friend PyObject* py_script_set_transform(PythonScript *self, PyObject *args, PyObject *kwargs);
     friend PyObject* py_script_get_transform(PythonScript *self, PyObject *Py_UNUSED(ignored));
     friend PyObject* py_script_get_rotation(PythonScript *self, void *closure);

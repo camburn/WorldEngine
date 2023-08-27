@@ -107,6 +107,24 @@ private:
     uint32_t stride = 0;
 };
 
+class UniformBuffer {
+public:
+    virtual ~UniformBuffer() = default;
+
+    virtual void bind() const = 0;
+    virtual void bind(const uint32_t binding_point) const = 0;
+    virtual void bind_to_shader(const uint32_t shader_id, const std::string binding_name) const = 0;
+    virtual void bind(const uint32_t binding_point, const uint32_t offset, const uint32_t size) const = 0;
+    virtual void unbind() const = 0;
+
+    virtual void update(void* data) const = 0;
+    virtual void update(void* data, const uint32_t offset, const uint32_t size) const = 0;
+
+    virtual void read_data() = 0;
+private:
+
+};
+
 class VertexBuffer {
 public:
     virtual ~VertexBuffer() = default;

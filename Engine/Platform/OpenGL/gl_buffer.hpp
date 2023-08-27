@@ -26,6 +26,28 @@ private:
     engine::BufferLayout m_layout;
 };
 
+class OpenGLUniformbuffer : public engine::UniformBuffer {
+public:
+    OpenGLUniformbuffer(void* data, uint32_t size);
+
+    virtual ~OpenGLUniformbuffer();
+
+    virtual void bind() const override;
+    void bind(const uint32_t binding_point) const override;
+    void bind_to_shader(const uint32_t shader_id, const std::string binding_name) const override;
+    void bind(const uint32_t binding_point, const uint32_t offset, const uint32_t size) const override;
+    virtual void unbind() const override;
+
+    void update(void* data) const override;
+    void update(void* data, const uint32_t offset, const uint32_t size) const override;
+    virtual void read_data() override;
+
+private:
+    uint32_t buffer_size;
+    uint32_t uniform_buffer;
+    engine::BufferLayout m_layout;
+};
+
 class OpenGLShaderStorageBuffer : public engine::ShaderStorageBuffer {
 public:
     OpenGLShaderStorageBuffer(void* vertices, uint32_t size);

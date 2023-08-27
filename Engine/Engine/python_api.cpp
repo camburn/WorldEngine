@@ -207,6 +207,38 @@ static PyMemberDef py_script_members[] = {
 
 // METHODS
 
+
+PyObject* py_script_set_enabled(PythonScript* self, PyObject* args, PyObject* kwargs) {
+    //PyObject *name;
+    int enabled;
+    static char* kwlist[] = { (char*)"enabled", NULL };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|p", kwlist, &enabled)) {
+        return NULL;
+    }
+
+    if (self->parent->attached(Object::LIGHT)) {
+        self->parent->light().enabled = enabled;
+    }
+    else if (self->parent->attached(Object::MESH)) {
+        self->parent->mesh()->draw = enabled;
+    }
+
+    return Py_BuildValue("");
+}
+
+PyObject* py_script_get_enabled(PythonScript* self, PyObject* Py_UNUSED(ignored)) {
+
+    bool enabled = false;
+    if (self->parent->attached(Object::LIGHT)) {
+        enabled = self->parent->light().enabled;
+    }
+    else if (self->parent->attached(Object::MESH)) {
+        enabled = self->parent->mesh()->draw;
+    }
+
+    return Py_BuildValue("b", enabled);
+}
+
 PyObject* py_script_set_transform(PythonScript* self, PyObject* args, PyObject* kwargs) {
     //PyObject *name;
     float x, y, z;
@@ -227,6 +259,8 @@ PyObject* py_script_get_transform(PythonScript *self, PyObject *Py_UNUSED(ignore
 static PyMethodDef py_script_methods[] = {
     {"update_transform", (PyCFunction) py_script_set_transform, METH_VARARGS | METH_KEYWORDS, "Multiply args."},
     {"get_transform", (PyCFunction) py_script_get_transform, METH_NOARGS, "Multiply args."},
+    {"get_enabled", (PyCFunction)py_script_get_enabled, METH_NOARGS, "Is object enabled."},
+    {"set_enabled", (PyCFunction)py_script_set_enabled, METH_VARARGS | METH_KEYWORDS, "Set object enabled."},
     //{"update_object_rotation", engine_updateobjectrotation, METH_VARARGS | METH_KEYWORDS, "Multiply args."},
     {NULL}  // Sentinel
 };
@@ -285,6 +319,7 @@ int py_script_set_name(PythonScript *self, PyObject *value, void *closure) {
 static PyGetSetDef py_script_getseters[] = {
     {"rotation", (getter)py_script_get_rotation, (setter)py_script_set_rotation, "Object rotation", NULL},
     {"name", (getter)py_script_get_name, (setter)py_script_set_name, "Script Name", NULL},
+    {"enabled", (getter)py_script_get_enabled, (setter)py_script_set_enabled, "Object Enabled", NULL},
     {NULL}  // Sentinel
 };
 

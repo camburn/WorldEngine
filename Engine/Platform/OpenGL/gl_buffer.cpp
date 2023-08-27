@@ -203,4 +203,55 @@ void OpenGLDepthMap::unbind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+OpenGLUniformbuffer::OpenGLUniformbuffer(void* data, uint32_t size) {
+    buffer_size = size;
+    glGenBuffers(1, &uniform_buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
+    glBufferData(GL_UNIFORM_BUFFER, size, data, GL_STATIC_DRAW);
+    ENGINE_TRACE("Uniform buffer {0} created", uniform_buffer);
+}
+
+OpenGLUniformbuffer::~OpenGLUniformbuffer() {
+    glDeleteBuffers(1, &uniform_buffer);
+    ENGINE_TRACE("Uniform buffer {0} garbage collected", uniform_buffer);
+}
+
+void OpenGLUniformbuffer::bind() const {
+    ENGINE_WARN("Uniform buffer {0} bound, but this command doesn't make sense, should bind with a bindpoint point", uniform_buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
+}
+
+void OpenGLUniformbuffer::bind(const uint32_t binding_point) const {
+    glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, uniform_buffer);
+}
+
+void OpenGLUniformbuffer::bind(const uint32_t binding_point, const uint32_t offset, const uint32_t size) const {
+    glBindBufferRange(GL_UNIFORM_BUFFER, binding_point, uniform_buffer, offset, size);
+}
+
+void OpenGLUniformbuffer::update(void* data) const {
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
+    glBufferData(GL_UNIFORM_BUFFER, buffer_size, data, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void OpenGLUniformbuffer::update(void* data, const uint32_t offset, const uint32_t size) const {
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, offset, buffer_size, data);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void OpenGLUniformbuffer::bind_to_shader(const uint32_t shader_id, const std::string binding_name) const {
+    unsigned int lights_index = glGetUniformBlockIndex(shader_id, binding_name.data());
+    glUniformBlockBinding(shader_id, lights_index, 2);
+}
+
+void OpenGLUniformbuffer::unbind() const {
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void OpenGLUniformbuffer::read_data() {
+
+}
+
 } // Namespace
