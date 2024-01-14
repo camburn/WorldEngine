@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 
 
+_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
 namespace enginegl {
 
 const std::map<GLenum, std::string> gl_error_types = {
