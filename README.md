@@ -1,80 +1,50 @@
 
 # PyEngine
 
-Welcome to the world of the PyEngine! A C++ OpenGL engine written with an embedded Python
-interpreter.
+Welcome to the world of the PyEngine! A C++ OpenGL engine written with an
+embedded Python interpreter.
 
-The goals of this is to be able to dynamically manage your engine with powerful Python commands.
-It also enables game logic to the written in Python.
+The goals of this is to be able to dynamically manage your engine with powerful
+Python commands. It also enables game logic to the written in Python.
 
 ## Building
 
-PyEngine uses the SCons build tool. To build a python environment should be configued with scons installed.
+PyEngine uses the premake build tool to generate appropriate make, msbuild
+projects.
 
-The virtualenv requires an up to date version of pip, setuptools, pyyaml, and wheel before scons can be isntalled.
+Requirements:
+
+- Premake5
+- Git LFS
 
 ### Running Build Environment
 
 Before building the following environment variables should be set:
 
 ``` bash
-EXTERNAL_LIBS  # Directory containing the external dependencies libs and headers
-
 # Windows Only
-PYTHON_PATH    # Directory containing the Python 3.6 libs and headers
-WIN_KIT_DIR    # Directory containing the Windows 10 development kit
+PYTHON_PATH    # Directory containing the Python 3.7 libs and headers
+```
+
+To setup build environment
+
+``` bash
+# Clone main project
+git clone https://github.com/camburn/WorldEngine.git
+# Clone third party projects
+git submodule update --init --recursive
 ```
 
 #### Linux
 
 ``` bash
-python3 -m venv scons_env
-source scons_env/bin/activate
-pip install -U pip setuptools wheel pyyaml
-pip install scons
-cd /path/to/project/dir
-
-scons
+premake5 gmake 2 --opengl2
+make
 ```
 
 #### Windows
 
 ``` cmd
-py -3 -m venv scons_env
-./scons_env/Scripts/activate.bat
-python -m pip install --upgrade pip setuptools wheel pyyaml
-python -m pip install scons
-cd /path/to/project/dir
-
-scons.py
-```
-
-### Dependencies
-
-PyEngine contains the following dependencies:
-
-- assimp
-- freetype
-- glew
-- glfw
-- glm
-- shapelib
-- soil
-
-Most of these libraries are compiled and linked against statically. A few are
-header only (glm). A bundled zip can be downloaded that contains all the libraries see the
-[External Libraries](https://github.com/camburn/WorldEngine/releases/tag/external_libs)
-release. On linux (Ubuntu) most dependencies are available as apt packages.
-
-In addition the following Packages are required:
-
-``` bash
-# All
-Python 3.6 with built libs and headers (recommend debug libs as well)
-
-# Windows Only:
-Windows 10 Development Kit (10.0.14393.0)
-
-# Linux Only:
-G++
+premake5 gmake 2 --opengl3
+msbuild WorldEngine.sln
 ```
