@@ -1,11 +1,13 @@
 
 # PyEngine
 
-Welcome to the world of the PyEngine! A C++ OpenGL engine written with an
+Welcome to the world of the PyEngine! A C++ OpenGL (vulkan in progress) renderer written with an
 embedded Python interpreter.
 
 The goals of this is to be able to dynamically manage your engine with powerful
 Python commands. It also enables game logic to the written in Python.
+
+This project is purely for interest and learning, I find the programming interesting.
 
 ## Building
 
